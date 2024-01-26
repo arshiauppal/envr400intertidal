@@ -1,0 +1,241 @@
+﻿Site TA,Site & transect,Transect Point (m),Date,Time,Total Cover (%),Algae,Sessile Invertebrates,Algae,Sessile invertebrates,Mobile Invertebrates,All Invertebrates,Comments
+3,TA-3-2,2, 2019-05-16,10:08:00 AM,25,5,20,4,2,3,5,"Mussel, barnacle, worm, snail, limpet"
+3,TA-3-2,5, 2019-05-16,10:23:00 AM,10,1,10,1,2,2,4,"Mussel, barnacle, snail, limpet "
+3,TA-3-4,18, 2019-05-16,11:40:00 AM,10,5,10,3,2,3,5,"Mussel, barnacle, snail, limpet, crab"
+3,TA-3-4,20, 2019-05-16,11:45:00 AM,15,10,5,3,2,3,5,"Mussel, barnacle, snail, limpet"
+3,TA-3-5,4, 2019-05-21,1:15:00 PM,20,5,15,2,2,1,3,"Mussel, barnacle, snail"
+3,TA-3-5,22, 2019-05-21,1:55:00 PM,60,50,10,1,,,3,N/A
+3,TA-3-7,2, 2019-05-21,2:42:00 PM,25,5,20,2,2,2,4,"Mussel, barnacle, snail, limpet"
+3,TA-3-7,29, 2019-05-21,3:30:00 PM,0,0,0,0,0,0,0,N/A
+5,TA-5-1,4, 2019-05-22,1:30:00 PM,99,80,19,3,2,5,7,"Sowbug, fly, barnacle, mussel, isopod, limpet, worm. Invertebrate cover determined by moving algae"
+5,TA-5-1,4, 2019-05-22,1:40:00 PM,99,75,24,3,2,5,7,"Isopod, worm, barnacle, sowbug, mussel, crab, limpet"
+5,TA-5-2,3, 2019-05-22,3:04:00 PM,95,35,60,4,1,3,4,"Barnacle, caprellid, limpet, snail"
+5,TA-5-2,20, 2019-05-22,3:28:00 PM,10,1,9,1,1,0,1,Barnacle
+5,TA-5-4,7, 2019-05-22,1:17:00 PM,30,20,10,3,2,3,5,"Barnacle, mussel, limpet, worm, fly"
+5,TA-5-4,25, 2019-05-22,1:54:00 PM,5,2,3,2,2,4,6,"Barnacle, mussel, limpet, worm, snail, anthropod"
+5,TA-5-7,11, 2019-05-22,3:05:00 PM,30,20,10,3,2,3,5,"Barnacle, mussel, limpet, isopod, amphipod "
+5,TA-5-7,17, 2019-05-22,3:13:00 PM,20,19,1,3,1,2,3,"Barnacle, limpet, isopod "
+1,TA-1-1,22, 2019-05-30,9:34:00 AM,60,10,50,2,2,2,4,"Mussel, barnacle, snail, limpet"
+1,TA-1-1,23, 2019-05-30,9:47:00 AM,45,5,40,1,2,1,3,"Mussel, barnacle, snail"
+1,TA-1-2,17, 2019-05-30,9:36:00 AM,30,25,5,3,2,5,7,"Mussel, barnacle, snail, limpet, stripped snail, crab, termite "
+1,TA-1-2,23, 2019-05-30,10:05:00 AM,50,20,30,2,2,3,5,"Mussel, barnacle, snail, limpet, midge fly"
+1,TA-1-6,17, 2019-05-30,11:44:00 AM,2,1,2,1,2,3,5,"Barnacles, snail, limpet, mussels, midge "
+1,TA-1-6,25, 2019-05-30,11:44:00 AM,5,3,2,3,2,3,5,"Amphipod, snails (striped and regular), barnacles, mussels, limpet"
+1,TA-1-8,6, 2019-05-30,11:00:00 AM,20,5,18,1,2,2,4,"Barnacles, mussels, snails, limpet"
+1,TA-1-8,18, 2019-05-30,11:00:00 AM,5,3,2,3,2,3,5,"Barnacles, mussels, snails, limpet, crab"
+2,TA-2-3,5, 2019-05-31,11:00:00 AM,10,5,10,1,2,3,5,"Barnacles, snail, mussels, limpet, fly "
+2,TA-2-3,18, 2019-05-31,11:05:00 AM,70,30,60,1,2,1,3,"Barnacles, snails, mussels "
+2,TA-2-5,14, 2019-05-31,10:40:00 AM,60,40,20,3,2,1,3,"Mussels, barnacles, limpets"
+2,TA-2-5,24, 2019-05-31,11:07:00 AM,40,25,30,2,2,4,6,"Shore crab, isopod, mussels, barnacles, limpet, snails "
+2,TA-2-7,13, 2019-05-31,10:10:00 AM,80,50,40,4,2,2,4,"Limpets, flies, barnacles, mussels "
+2,TA-2-7,23, 2019-05-31,10:16:00 AM,20,20,5,2,1,2,3,"Barnacles, flies"
+2,TA-2-8,2, 2019-05-31,9:20:00 AM,100,100,1,2,1,1,2,"Barnacles, flies"
+2,TA-2-8,29, 2019-05-31,10:26:00 AM,90,90,5,4,1,0,1,Barnacles 
+6,TA-6-1,5,2019-03-06,11:38:00 AM,60,60,1,3,1,0,1,Barnacles
+6,TA-6-1,16,2019-03-06,12:00:00 PM,90,90,1,1,0,1,1,Snail 
+6,TA-6-2,6,2019-03-06,N/A,40,40,0,4,0,1,1,Midge
+6,TA-6-2,1,2019-03-06,11:24:00 AM,100,100,0,4,0,2,2,"Midge, amphipod "
+6,TA-6-6,11,2019-03-06,12:43:00 PM,90,90,1,2,1,0,1,Barnacles
+6,TA-6-6,20,2019-03-06,12:47:00 PM,90,90,1,3,1,0,1,Mussels 
+6,TA-6-7,5,2019-03-06,12:42:00 PM,35,30,10,3,2,0,2,Barnacles
+6,TA-6-7,10,2019-03-06,12:47:00 PM,100,40,15,1,2,3,4,"Mussels, barnacles, littorine snails, crabs"
+4,TA-4-1,6,2019-04-06,12:26:00 PM,60,40,20,3,2,1,3,"Aquatic worm, barnacles, mussels "
+4,TA-4-1,29,2019-04-06,12:42:00 PM,5,5,0,3,0,0,0,
+4,TA-4-2,10,2019-04-06,12:40:00 PM,70,70,0,2,0,0,0,
+4,TA-4-2,23,2019-04-06,1:02:00 PM,15,1,15,2,2,1,3,"Mussels, barnacles, limpets"
+4,TA-4-3,12,2019-04-06,1:02:00 PM,95,85,10,2,2,1,3,"Mussels, limpets, barnacles "
+4,TA-4-3,24,2019-04-06,1:40:00 PM,60,50,10,2,2,2,4,"Snails, mussels, barnacles, limpets"
+4,TA-4-8,8,2019-04-06,1:30:00 PM,30,30,0,3,0,0,0,
+4,TA-4-8,25,2019-04-06,1:54:00 PM,30,1,29,1,2,0,2,"Mussel, barnacle"
+1,TA-1-1,9,2020-05-26,1:55:00 PM,98,25,98,2,2,1,3,"Sea lettuce, brown about 1cm long, barnacles, mussels, limpets"
+1,TA-1-1,27,2020-05-26,1:23:00 PM,50,50,0,2,0,0,0,"Sea lettuce, brown algae fluffy invasive?"
+1,TA-1-5,1,2020-05-26,2:34:00 PM,65,5,60,3,,,3,
+1,TA-1-5,11,2020-05-26,2:28:00 PM,40,30,10,4,2,2,4,"Barnacles, littorina, limpets, mussels"
+1,TA-1-3,14,2020-05-26,2:47:00 PM,0,0,0,1,0,0,0,just sand
+1,TA-1-3,1,2020-05-26,2:40:00 PM,40,20,20,1,1,0,1,"Sea lettuce, barnacles"
+1,TA-1-6,21,2020-05-26,12:59:00 PM,5,1,4,3,,,3,
+1,TA-1-6,30,2020-05-26,1:06:00 PM,15,15,0,3,0,1,1,Tiny fly
+2,TA-2-3,7,2020-05-27,1:45:00 PM,45,25,40,1,2,3,5,"Rockweed, mussels, limpets, barnacles, littorine snail, rockweed isopod"
+2,TA-2-3,5,2020-05-27,1:57:00 PM,70,15,70,3,2,1,3,"Filament ulva, leafy ulva, brown algae, mussels, barnacles, small insect"
+2,TA-2-4,10,2020-05-27,3:48:00 PM,80,20,80,1,2,1,3,"sea lettuce, barnacles, mussels, limpects"
+2,TA-2-4,11,2020-05-27,3:48:00 PM,60,1,60,2,2,1,3,"sea lettuce, rockweed, barnacles, mussels, limpets"
+2,TA-2-7,12,2020-05-27,2:37:00 PM,70,65,1,4,0,1,1,"2 ulva ssp, red alga, brown alga, littorina snail"
+2,TA-2-7,25,2020-05-27,2:40:00 PM,95,75,20,3,2,0,2,"1 ulva ssp, 2 brown algae, mussels, barnacles"
+2,TA-2-5,28,2020-05-27,1:44:00 PM,95,80,15,3,2,0,2,"brown algae, sea lettuce, rockweed, barnacles, mussels"
+2,TA-2-5,29,2020-05-27,1:36:00 PM,95,20,75,2,2,2,4,"brown algae, sea lettuce, mussels, barnacles, tiny crab, conical snail"
+6,TA-6-1,12,2020-06-03,8:41:00 AM,1,1,1,2,2,3,5,"sea lettuce, brown algae, mask limpet, barnacle, pacific blue mussel, littorine snails, green shore crab (lots of baby crabs)"
+6,TA-6-3,6,2020-06-03,10:37:00 AM,80,60,20,3,2,3,5,"midges, mussels, barnacles, littorina, limpet"
+6,TA-6-1,7,2020-06-03,9:30:00 AM,100,100,20,2,2,,4,"flies, mussels, barnacles, sea lettuce, brown algae"
+6,TA-6-3,9,2020-06-03,10:39:00 AM,95,95,5,2,1,1,2,"Brown algae, ulva, small fly, mussels"
+6,TA-6-5,16,2020-06-03,8:48:00 AM,75,70,5,2,2,3,5,"Barnacles, mussels, midges, limpet, littorina"
+6,TA-6-5,12,2020-06-03,8:44:00 AM,95,95,0,2,0,0,0,2 brown algae. In tide pool
+6,TA-6-6,26,2020-06-03,9:33:00 AM,1,1,0,2,0,0,0,"ulva, rockweed, barel shells"
+6,TA-6-6,16,2020-06-03,9:36:00 AM,100,95,5,2,1,2,3,"brown, ulva, mussels, small flies, littorina"
+5,TA-5-1,4,2020-06-09,1:01:00 PM,90,40,80,3,2,2,4,"barnacles, mussels, limpet, white worms"
+5,TA-5-1,18,2020-06-09,1:05:00 PM,20,15,10,3,2,1,3,"barnacles, mussels, littorina"
+5,TA-5-2,16,2020-06-09,2:17:00 PM,10,1,10,2,2,2,4,"mussels, barnacles, limpets, littorina"
+5,TA-5-2,7,2020-06-09,2:21:00 PM,40,40,5,1,2,3,5,"nermatean worm, barnacles, mussels, limpet, midge fly"
+5,TA-5-3,30,2020-06-09,12:52:00 PM,35,0,35,0,2,2,3,"limpetts, mussels, barnacles, midge fly"
+5,TA-5-3,9,2020-06-09,2:09:00 PM,50,50,25,3,2,4,6,"turkish washcloth, sea lettuce, brown algae, limpet, mussels, snails, rockweed isopod, scud, barnacle"
+5,TA-5-8,20,2020-06-09,3:36:00 PM,80,80,1,3,2,2,4,"barnacles, green worm, white worm, mussels"
+5,TA-5-8,22,2020-06-09,3:40:00 PM,35,30,10,2,2,0,2,"mussels, barnacles"
+4,TA-4-1,26,2020-06-04,9:35:00 AM,40,25,20,3,2,3,5,"rockweed, barnacles, limpet, mussels, gut weed, sea moss, littorina, scud"
+4,TA-4-1,17,2020-06-04,9:47:00 AM,95,1,95,2,2,2,4,"mussels, rockweed, sea moss, barnacles, limpets, midges"
+4,TA-4-2,16,2020-06-04,12:10:00 PM,99,50,99,2,2,2,4,"barnacles, mussels, midges, limpets, sea lettuce, rockweed"
+4,TA-4-2,4,2020-06-04,11:38:00 AM,95,90,75,2,2,2,4,"mussels, midges, limpets, barnacles, sea lettuce, turkish washcloth"
+4,TA-4-3,6,2020-06-18,8:54:00 AM,95,90,20,3,2,3,5,"mussels, barnacles, limpets, 2 ssp. Midges"
+4,TA-4-3,21,2020-06-18,9:17:00 AM,90,50,40,3,2,2,4,"mussels, barnacles, littorine snail, small midge"
+4,TA-4-8,1,2020-06-18,10:06:00 AM,45,45,15,4,1,3,4,"gutweed, rockweed, sea lettuce, barnacles, midges, sea moss, snails, rock isopod"
+4,TA-4-8,5,2020-06-18,9:59:00 AM,80,80,50,4,2,2,4,"blue mussels, brown algae, gutweed, rockweed, barnacles, sea lettuce, midges, limpets"
+3,TA-3-7,5,2020-06-10,3:25:00 PM,35,10,30,2,2,2,3,"sea lettuce, barnacles, turkish washcloth, limpets, littorine snails"
+3,TA-3-7,16,2020-06-10,3:29:00 PM,100,60,40,2,2,2,4,"on top of a large rock. mussels, sea lettuce, brown algae, barnacles, littrine snails, limpets"
+3,TA-3-5,8,2020-06-10,2:15:00 PM,98,50,50,3,2,3,5,"rockweed, brown algae, sea lettuce, mussels, barnacles, littorine snail, limpet, green shore crab"
+3,TA-3-5,17,2020-06-10,2:29:00 PM,97,25,80,2,2,4,6,"brown algae, turkish washcloth, barnacles, mussels, limpets, littorina snail, p. littleneck clam, green shore crab"
+3,TA-3-4,6,2020-06-10,2:57:00 PM,30,1,30,2,1,0,1,barnacles
+3,TA-3-4,21,2020-06-10,2:53:00 PM,95,30,80,2,2,2,4,"mussels, barnacles, limpets, littorina"
+3,TA-3-2,3,2020-06-10,1:40:00 PM,95,30,95,3,2,2,4,"brown, rockweed, ulva, mussels, acorn barnacles, laval worm, littorina"
+3,TA-3-2,4,2020-06-10,1:45:00 PM,95,40,90,4,2,2,4,"red coralline, fusca, ulva, brown, limpets, larval worm, acorn barnacles, mussels"
+3,TA-3-3,7,2021-06-04,8:29:00 AM,45,35,9,1,3,1,4,"Rockweed, barnacles, limpets, mussels, littorine snail"
+3,TA-3-3,19,2021-06-04,9:48:00 AM,10,10,0,1,0,0,0,Algae was sea lettuce
+3,TA-3-5,8,2021-06-04,10:47:00 AM,50,15,34,3,2,1,3,"Rockweed, sea lettuce, filamentuous red seaweed, mussels, barnacles, 1 littorine"
+3,TA-3-5,6,2021-06-04,10:43:00 AM,90,40,49,2,3,1,4,"Rockweed, filamentuous red sea weed, mussels, barnacles, littorine snail"
+3,TA-3-7,1,2021-06-04,9:55:00 AM,95,55,40,3,2,2,4,"sea lettuce, rockweed, limpet, checkered perriwinkle, acorn barnacle, blue mussel"
+3,TA-3-7,3,2021-06-04,10:31:00 AM,97,44,53,5,2,3,5,"filamentuous red sea weed, sea lettuce, rock weed, checkered perriwinkle, limpet (two types), grape tongue seaweed"
+3,TA-3-6,6,2021-06-04,9:16:00 AM,95,5,90,3,2,2,4,"Sea lettuce, saccarina family,brown mussels, 1 larger periwinckle, limpets, acorn barnacles, pacific blue mussel, checkered periwinkle"
+3,TA-3-6,8,2021-06-04,9:27:00 AM,65,10,55,3,2,2,4,"rockweed, mask limpet, acorn barnacle, pacific blue mussel, checkered perriwinkle"
+1,TA-1-6,4,27/5/2021,1:57:00 PM,90,40,50,3,2,1,3,"barnacles, mussels, limpets"
+1,TA-1-6,11,27/5/2021,2:02:00 PM,95,5,90,2,2,0,2,"barnacles, mussels"
+1,TA-1-5,8,27/5/2021,1:05:00 PM,90,45,45,3,2,0,2,"barnacles, mussels; photo taken at 1:24"
+1,TA-1-5,17,27/5/2021,1:26:00 PM,75,40,35,4,2,0,2,
+1,TA-1-3,3,25/5/2021,11:52:00 AM,95,90,5,2,1,1,2,"mussels, sea lettuce, brown algea, small fruit flies "
+1,TA-1-3,26,25/5/2021,12:30:00 PM,80,5,75,2,1,1,2,"limpits, mussels, fruit flies"
+4,TA-4-1,24,25/5/2021,11:27:00 AM,60,10,50,3,2,1,3,"Mussels, barnacles, midge, 3 types of algae"
+4,TA-4-1,1,25/5/2021,10:56:00 AM,90,80,10,4,2,1,2,"mussels, barnacles, midge "
+4,TA-4-4,6,25/5/2021,12:28:00 PM,100,95,5,3,1,1,2,"mussels, littorine snail"
+4,TA-4-4,21,25/5/2021,12:19:00 PM,60,20,40,4,2,1,3,"mussels, barnacles, littorine snail"
+4,TA-4-7,24,25/5/2021,12:00:00 PM,80,32,48,1,2,1,3,"mussels, barnacles, littorine snail; corrected percent cover values"
+4,TA-4-7,27,25/5/2021,12:05:00 PM,70,30,40,1,2,1,3,"rockweed, mussels, barnacles, littorine snail"
+2,TA-2-2,6,2021-08-06,12:18:00 PM,100,90,10,4,3,1,4,"rockweed, sea lettuce, red/brown algae, giant acorn barnacle, common acorn barnacle, pacific blue mussel, ulva lactuca, green shore crab"
+2,TA-2-2,18,2021-08-06,1:08:00 PM,85,55,30,1,2,2,4,"rockweed, common acorn barnacle, pacific blue mussel"
+2,TA-2-1,4,2021-08-06,11:17:00 AM,65,45,20,3,1,0,1,"sea lettuce, red brown algae, rockweed, pacific blue mussels"
+2,TA-2-1,22,2021-08-06,11:59:00 AM,66,33,33,1,2,4,6,"mask limpet, red mite, 1 green shore crab, rockweed, commmon acorn barnacles, pacific blkue mussel, limpets, checkered periwinkle"
+2,TA-2-4,16,2021-08-06,11:24:00 AM,97,57,40,2,2,1,3,"rockweed, sea lettuce, barnacles, acorn blue mussel, littorine snail "
+2,TA-2-4,25,2021-08-06,12:00:00 PM,98,83,15,2,2,2,4,"rockweed, sea lettuce, green shore crab, hermit crab"
+2,TA-2-7,15,2021-08-06,12:10:00 PM,100,90,10,2,2,1,3,"rockweed, sea lettuce, blue mussel, acorn barnacle, 2 small fruit fly tyoe bugs"
+2,TA-2-7,20,2021-08-06,12:54:00 PM,90,75,15,2,2,1,3,"rockweed, sea lettuce, blue mussel, acorn barnacle, small fruit fly type bug"
+5,TA-5-2,18,2021-06-10,11:49:00 AM,98,45,54,1,2,2,4,"rockweed, pacific blue mussels, acorn barnacle, sea snail, limpets"
+5,TA-5-2,17,2021-06-10,12:02:00 PM,77.5,2,75,2,2,1,3,"sea lettuce, rockweed, pacific blue mussels, acorn barnacles, sea snail"
+5,TA-5-1,22,2021-06-10,11:48:00 AM,98,80,19,2,4,1,5,"rockweed, seabelt"
+5,TA-5-1,15,2021-06-10,11:15:00 AM,100,0,99,0,2,1,3,"mussels, barnacles"
+5,TA-5-4,22,2021-06-10,1:47:00 PM,100,95,4.5,1,1,1,1,"snail, pacific blue mussels"
+5,TA-5-4,23,2021-06-10,1:50:00 PM,98,96,2,0,1,1,0,mussels; corrected percent cover values
+6,TA-6-8,13,2021-06-15,3:52:00 PM,30,15,13,2,2,2,4,"sea lettuce, rock weed, barnacle, mussels, limpets, littorine snails"
+6,TA-6-8,12,2021-06-15,3:45:00 PM,70,30,39,2,2,3,5,"sea lettuce, rockweed, mussels, barnacles, littorine snails, limpet, shore crab"
+6,TA-6-2,13,2021-06-15,2:40:00 PM,96,82,14,3,2,0,2,"sea lettuce, sea moss, pacific blue mussel, acorn barnacle, slimy brown algae; corrected percent cover values"
+6,TA-6-2,9,2021-06-15,2:48:00 PM,92,25,69,2,1,2,3,"sea lettuce, slimy brown algae, pacific blue mussel, rockweed isopod, square tooth sea flea"
+6,TA-6-6,10,2021-06-15,5:01:00 PM,98,88,10,2,1,0,1,"slimy brown algae, sea lettuce, blue mussels"
+6,TA-6-6,29,2021-06-15,5:01:00 PM,50,45,5,2,1,1,2,"slimy brown algae, sea lettuce, blue mussels, sea flea"
+6,TA-6-5,11,2021-06-15,3:51:00 PM,55,33,22,2,3,0,3,"brown algae, rockweed, blue mussels, limpets (masked), acorn barnacle; corrected percent cover values"
+6,TA-6-5,3,2021-06-15,3:45:00 PM,65,65,0,5,0,0,0,"brown algae, sea lettuce, rockweed, wireweed, irridescent seaweed; corrected percent cover values"
+1,TA-1-8,21,2021-06-16,5:29:00 PM,50,10,39,3,2,4,6,"sea lettuce, rockweed, brown slimy algae, acorn barnacle, blue mussel, isopod (big black), isopod (small, yellow), limpet, littorine snail"
+1,TA-1-8,24,2021-06-16,5:41:00 PM,95,50,49,1,2,1,3,"rockweed, acorn barnacle, blue mussel, littorine snail"
+4,TA-4-3,3,2021-06-16,3:42:00 PM,100,70,30,2,1,3,4,"sea lettuce (broad leaf), unidentified  brown/red algae, 1 plate limpet, pacific blue mussels, smalle white invertebrate (2 mm long) similar to a flea, worm-like invertebrate with brown stripes (4mm), moved quickly"
+4,TA-4-3,3,2021-06-16,4:28:00 PM,100,10,90,2,1,0,1,"pacific blue mussel, unidentified brown/red algae, rockweed, limpet (4-5) (plate) (mask)"
+5,TA-5-6,6,2021-06-16,6:02:00 PM,90,75,15,1,1,2,3,"unidentified brown/red algae, pacific blue mussel, checkered periwinkle, limpets"
+5,TA-5-6,11,2021-06-16,6:23:00 PM,90,50,40,2,3,2,5,"limpets, rockweed, unidentified brown/red algae, checkered periwinkle, acorn barnacles, pacific blue mussel, pacific oyster"
+1,TA-1-2,10,2022-05-31,12:30:00 PM,90,65,35,2,2,1,3,
+1,TA-1-2,16,2022-05-31,12:38:00 PM,95,75,25,3,2,0,2,
+1,TA-1-3,2,2022-05-31,1:54:00 PM,30,95,3,2,1,1,2,Aquatic worm 
+1,TA-1-3,30,2022-05-31,1:49:00 PM,95,80,15,3,3,2,5,
+1,TA-1-6,6,2022-05-31,12:24:00 PM,95,65,35,4,2,0,2,"Sea lettuce (ulva), Filamentous red aglae (Polysiphonia?), Bull kelp, Red carpet-like algae"
+1,TA-1-6,22,2022-05-31,12:31:00 PM,95,60,40,3,3,1,4,"Rockweed, Sea lettuce (ulva), Red carpet-like algae, Unidentified limpet"
+1,TA-1-7,10,2022-05-31,1:45:00 PM,95,59,40,0,1,2,3,"Checkered periwinkle, Limpet, Carpet-like red algae is dried and covers up majority of rock. Elevated on flat rock - explains dessication of barnacles & algae, dried Sea lettuce & acorn barnacles"
+1,TA-1-7,27,2022-05-31,1:58:00 PM,95,55,45,2,2,2,4,"Lots of Rockweed, Pacific blue mussel, Acron barnacles, Limpet. Small amount of Sea lettuce, Checkered periwinkles"
+2,TA-2-1,15,2022-06-01,1:00:00 PM,100,99,0.5,3,1,1,2,"Periwinkle snail, Acorn barnacles, Sea lettuce, Filamentous red seaweed, Unidentified brown algae"
+2,TA-2-1,24,2022-06-01,1:06:00 PM,60,97,2,5,2,1,3,"Acorn barnacle, Mud snail, Pacific blue mussel, Littleneck clam, Rockweed, Filamentous red seaweed, Sea lettuce, Turkish washcloth, Wireweed"
+2,TA-2-2,7,2022-06-01,2:16:00 PM,30,10,89.5,1,2,1,3,"Rockweed, Pacfic blue mussels, Acorn barnacle, Checkered periwinkle snail"
+2,TA-2-2,10,2022-06-01,2:20:00 PM,80,5,90,1,2,2,4,"Rockweed, Pacific blue mussel, Acorn barnacle, Checkered periwinkle snail, Crab"
+2,TA-2-5,9,2022-06-01,1:22:00 PM,95,70,30,2,2,0,2,"Pacific Blue mussel, Acorn barnacles, Sea lettuce (ulva, intestinalis and lactuca)"
+2,TA-2-5,14,2022-06-01,1:16:00 PM,5,100,0,1,0,0,0,Sea lettuce
+2,TA-2-7,18,2022-06-01,3:00:00 PM,80,60,40,3,2,0,2,"Pacific blue mussels, Acorn barnacles, Sea lettuce (maybe lactuca and instestinalis), Unidentified green algae (very stringy)"
+2,TA-2-7,1,2022-06-01,2:35:00 PM,75,40,60,1,2,1,3,"Sea lettuce (ulva), Acorn barnacles, Pacific blue mussels, Limpets"
+3,TA-3-1,14,2022-06-02,1:40:00 PM,20,5,95,1,1,0,1,"Acorn barnacles, Rockweed"
+3,TA-3-1,25,2022-06-02,1:50:00 PM,1,0,100,0,1,0,1,Acorn barnacles
+3,TA-3-3,3,2022-06-02,3:00:00 PM,100,2,95,3,2,2,4,"Rockweed, Sea lettuce, Filamentous red seaweed, Snails, Limpets"
+3,TA-3-3,15,2022-06-02,3:23:00 PM,100,95,5,1,2,0,2,"Rockweed, Acorn barnacles, Pacific blue mussels"
+3,TA-3-6,4,2022-06-24,9:46:00 AM,90,60,40,2,3,0,3,"Sea lettuce, Filamentous red seaweed, Pacific blue mussels, Acorn barnacles, Limpets"
+3,TA-3-6,6,2022-06-24,9:51:00 AM,97,30,70,3,2,3,5,"Sea lettuce, Rockweed, Filamentous red seaweed, Acorn barnacles, Pacific blue mussels, snails, crab, limpet"
+3,TA-3-7,14,2022-06-24,10:25:00 AM,99,5,95,3,2,1,3,"Rockweed, Sea lettuce, Filamentous red seaweed, Pacific blue mussels, Acorn barnacles"
+3,TA-3-7,16,2022-06-24,10:38:00 AM,99,60,40,3,2,1,3,"Rockweed, Sea lettuce, Filamentous red seaweed, Pacific blue mussels, Acorn barnacles"
+4,TA-4-2,1,2022-05-20,3:57:00 PM,15,70,30,3,1,0,1,
+4,TA-4-2,18,2022-05-20,3:54:00 PM,85,30,90,2,5,0,5,
+4,TA-4-3,25,2022-05-20,4:58:00 PM,5,100,0,1,0,0,0,
+4,TA-4-3,29,2022-05-20,4:56:00 PM,0,0,0,0,0,0,0,
+4,TA-4-5,12,2022-05-20,5:47:00 PM,80,70,5,4,1,0,1,"Black pine seaweed, Rockweed, Sea lettuce, Sea cauliflower, Littorine snail "
+4,TA-4-5,18,2022-05-20,5:56:00 PM,3,0,100,0,2,0,2,"Barnacle, Limpet "
+4,TA-4-7,5,2022-05-20,3:50:00 PM,100,30,70,3,1,1,2,
+4,TA-4-7,17,2022-05-20,4:30:00 PM,85,15,70,1,3,1,4,"Rockweed, Acorn Barnacles, Mussels, Pacific Oyster, Littorine Snail"
+5,TA-5-1,20,2022-05-19,2:10:00 PM,90,20,80,2,2,0,2,
+5,TA-5-1,2,2022-05-19,2:07:00 PM,15,50,50,3,2,0,2,
+5,TA-5-3,25,2022-05-19,3:02:00 PM,95,30,70,2,3,0,3,
+5,TA-5-3,6,2022-05-19,2:58:00 PM,100,70,30,3,2,0,2,
+5,TA-5-5,20,2022-05-19,2:09:00 PM,45,20,30,4,2,3,5,"Sea lettuce, Sugar wrack kelp, Limpet, Mud snails, Periwinkle"
+5,TA-5-5,0,2022-05-19,2:28:00 PM,100,85,10,3,3,0,3,
+5,TA-5-7,14,2022-05-19,3:35:00 PM,10,2,5,2,2,0,2,"Sea lettuce, Sugar kelp, Pacific blue mussel, Barnacle"
+5,TA-5-7,5,2022-05-19,3:26:00 PM,100,25,75,3,1,0,1,"Sea Lettuce, Sugar kelp, Sea moss, Pacific blue mussel"
+6,TA-6-1,22,2022-05-17,12:58:00 PM,5,99,1,2,1,0,1,"Acorn barnacles, Green algae (ulva)/Sea lettuce, Unidentified brown algae"
+6,TA-6-1,17,2022-05-17,1:31:00 PM,90,97,3,5,1,0,1,"Acorn barnacles, Green algae (ulva), Filamentous red algae"
+6,TA-6-4,11,2022-05-17,12:50:00 PM,5,90,10,1,1,0,1,Sugar wrack kelp?
+6,TA-6-4,8,2022-05-17,12:55:00 PM,70,60,40,5,2,1,3,
+6,TA-6-5,7,2022-05-17,1:55:00 PM,90,100,0,2,0,0,0,
+6,TA-6-5,3,2022-05-17,1:50:00 PM,0.5,0,100,0,1,0,0,blue mussels
+6,TA-6-8,18,2022-05-17,2:55:00 PM,65,10,60,1,3,2,5,"Checkered periwinkles, Limpet, Acorn barnacles, Another barnacle species"
+6,TA-6-8,12,2022-05-17,2:50:00 PM,75,10,90,2,2,1,3,"Limpet, Acorn Barnacles, Unidentified barnacle"
+6,TA-6-3,12,2023-05-24,2:00:00 PM,100,95,5,1,1,0,1,
+6,TA-6-3,8,2023-05-24,2:04:00 PM,60,83,8,1,1,1,2,shore crab
+6,TA-6-5,22,2023-05-24,2:09:00 PM,100,100,0,3,0,0,0,"tiny fly (~3mm), green big leaf - ulva fenestrata, green thin tube - ulva intestinalis, red algae branches"
+6,TA-6-5,26,2023-05-24,2:05:00 PM,30,90,10,2,1,0,1,"tiny terrestrial insect, mytilus trosseles, ulva intestinalis"
+6,TA-6-7,5,2023-05-24,3:16:00 PM,85,80,3,1,2,0,2,
+6,TA-6-7,1,2023-05-24,3:21:00 PM,95,63,42,2,1,0,1,
+6,TA-6-8,2,2023-05-24,4:11:00 PM,30,97,3,3,1,1,2,"turkish washcloth, sea lettuce, red filamentous"
+6,TA-6-8,14,2023-05-24,3:11:00 PM,60,50,50,3,2,2,4,"algae: red crusty, large red, green, small flying insect, 1 type of snail, limpet"
+5,TA-5-3,23,2023-06-01,9:53:00 AM,13,77,15,3,1,1,2,"green algae, dark red algae, soft red algae, crab, barnacles. 1% relative abundance mobile invertebrates"
+5,TA-5-3,2,2023-06-01,10:18:00 AM,80,88,10,2,2,2,4,"leafy green and soft brow algae, 1 shore crab, 1 shrimp. 2% mobile invertebrates"
+5,TA-5-5,10,2023-06-01,11:01:00 AM,70,96,3,1,2,1,3,"green leafy algae, mussels, barnacles, limpet. 1% mobile"
+5,TA-5-5,7,2023-06-01,11:14:00 AM,30,100,0,1,0,0,0,green lettuce
+5,TA-5-7,11,2023-06-01,11:10:00 AM,100,99,1,2,2,0,2,"sea lettuce, unknown brown algae, mussels, barnacles"
+5,TA-5-7,26,2023-06-01,11:15:00 AM,30,83,8,3,1,2,3,"rockweed, sea lettuce, limpets, littorine snails, barnacles, sea moss. 2.5% mobile"
+5,TA-5-8,28,2023-06-01,12:05:00 PM,20,98,2,2,2,0,2,"sea lettuce, barnacle"
+5,TA-5-8,9,2023-06-01,11:32:00 AM,95,98,2,3,2,0,2,"barnacles, sea lettuce, red filamentous, rockweed, mussels"
+4,TA-4-2,10,2023-06-02,11:08:00 AM,100,20,80,2,2,0,2,"acorn barnacles, blue mussels, ulva spp., brown mat algae"
+4,TA-4-2,20,2023-06-02,11:43:00 AM,40,50,50,3,2,0,2,"fucus distichus, ulva spp., brown mat algae, balanus glandula, blue mussels"
+4,TA-4-3,10,2023-06-02,11:00:00 AM,10,5,90,1,2,2,4,"fucus, limpet, mussels, barnacles, snail. 0.5% mobile"
+4,TA-4-3,3,2023-06-02,11:05:00 AM,2,0,25,0,1,1,2,"snail, visible algae not attached to substrate. 0.5% mobile"
+4,TA-4-4,2,2023-06-02,12:25:00 PM,60,17,83,2,2,0,2,"ulva spp., fucus distichus, blue mussels, balanus spp."
+4,TA-4-4,10,2023-06-02,12:30:00 PM,70,71,19,3,2,1,3,"ulva spp., fucus distichus, blue mussels, brown mat algae, littorina spp. 1% mobile"
+4,TA-4-5,19,2023-06-02,11:54:00 AM,10,30,65,2,2,1,3,"sea lettuce (tube & blade), mussels and barnacles, limpets. 0.5% mobile"
+4,TA-4-5,5,2023-06-02,11:58:00 AM,80,75,24,2,2,1,3,"mussels and barnacles, limpets, sea lettuce "
+3,TA-3-2,24,2023-06-06,2:52:00 PM,15,7,93,1,2,0,2,"barnacles, rockweed, mussel"
+3,TA-3-2,21,2023-06-06,2:58:00 PM,25,40,56,1,2,1,3,"limpet, mussels, barnacles, rockweed. 1% mobile"
+3,TA-3-4,27,2023-06-06,1:32:00 PM,50,50,50,1,2,2,4,"green shell snail w white stripes, barnacles, mussels, limpets, rockweed. 1% mobile"
+3,TA-3-4,13,2023-06-06,2:06:00 PM,17,3,88,1,2,2,4,"limpets, barnacles, mussels, littorine snail. 1.5% mobile"
+3,TA-3-5,11,2023-06-06,2:09:00 PM,35,14,86,2,3,1,4,"limpets, barnacles, mussels, littorine snail. 0.5% mobile"
+3,TA-3-5,6,2023-06-06,2:16:00 PM,85,2,97,1,2,1,3,"barnacles, limpets, mussels. 0.5% mobile"
+3,TA-3-6,5,2023-06-06,2:58:00 PM,85,24,76,2,2,0,2,"barnacles, mussels"
+3,TA-3-6,25,2023-06-06,2:30:00 PM,15,50,50,2,2,0,2,"barnacles, mussels"
+2,TA-2-2,7,2023-06-07,3:12:00 PM,20,35,50,3,2,1,3,3% mobile
+2,TA-2-2,1,2023-06-07,3:20:00 PM,30,30,67,2,3,1,4,"oyster, mussels, snails. 1% mobile"
+2,TA-2-3,10,2023-06-07,3:35:00 PM,25,40,40,2,2,1,3,"snails, mussels, barnacles, rockweed, sea lettuce. 5% mobile"
+2,TA-2-3,6,2023-06-07,4:00:00 PM,70,43,54,1,2,1,3,"isopod, snails, barnacles, mussels, rockweed. 2% mobile"
+2,TA-2-5,23,2023-06-07,2:21:00 PM,25,10,86,2,2,1,3,"sea lettuce, red seaweed, barnacles, mussels, limpets. 1% mobile"
+2,TA-2-5,8,2023-06-07,2:55:00 PM,40,75,25,1,2,1,3,"sea lettuce, acorn barnacles, mussels, limpet"
+2,TA-2-8,30,2023-06-07,1:57:00 PM,100,40,59.5,2,2,1,3,"rockweed, sea lettuce, barnacles (maybe), blue mussels, limpets. 0.5% mobile, maybe 3 sessile diversity count"
+2,TA-2-8,15,2023-06-07,2:15:00 PM,95,16,84,1,2,0,2,"sea lettuce, mussels, acorn barnacles"
+1,TA-1-2,7,2023-06-30,9:49:00 AM,100,90,9.5,1,2,2,4,"blue mussels, 1 snail, 1 limpet, <5 barnacles. 0.5% mobile cover"
+1,TA-1-2,24,2023-06-30,10:07:00 AM,5,90,10,1,1,0,1,"mussels, sea lettuce  "
+1,TA-1-3,6,2023-06-30,10:39:00 AM,98,98,2,2,2,0,2,"rockweed, sea lettuce, blue mussels, acorn barnacles"
+1,TA-1-3,8,2023-06-30,10:42:00 AM,85,41,59,2,2,1,3,limpet
+1,TA-1-4,27,2023-06-30,10:29:00 AM,35,100,0,4,0,0,0,
+1,TA-1-4,11,2023-06-30,10:34:00 AM,90,16,83,2,2,1,3,"barnacles, mussels, limpet. 1% mobile cover"
+1,TA-1-7,3,2023-06-30,10:07:00 AM,70,7,91,1,2,1,3,"barnacles, mussel, limpet"
+1,TA-1-7,20,2023-06-30,9:21:00 AM,5,20,80,1,2,0,2,"blue mussels, acorn barnacles"

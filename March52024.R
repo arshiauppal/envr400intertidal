@@ -1,55 +1,52 @@
 # March 5, 2024
 
-require(dplyr)
+# Load packages 
+#=================================================================================================================================
+require(dbplyr)
 require(stringr)
 require(ggplot2)
+require(lubridate)
 
-# read data
+# Read data
 #=================================================================================================================================
 transect <- read.csv("data/Transect.csv", check.names = FALSE, na.strings=c("N/A", ""))
 quad1m <- read.csv("data/1m.csv", check.names = FALSE, na.strings=c("N/A", ""))
 quad0.25m <- read.csv("data/0.25m.csv", check.names = FALSE, na.strings=c("N/A", ""))
 limpet <- read.csv("data/Limpet.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
-# clean data
+# Clean data
 #=================================================================================================================================
 # Creating a year column
+  separateYear <- function(data, date_column_name = "Date") {
+    data$Year <- format(as.Date(data[[date_column_name]]), "%Y")
+    return(data) }
+  
+  transect <- separateYear(transect, date_column_name = "Date")
+  quad1m <- separateYear(quad1m, date_column_name = "Date")
+  quad0.25m <- separateYear(quad0.25m, date_column_name = "Date")
+  limpet <- separateYear(limpet, date_column_name = "Date")
+  
+# Change 0 and 1 values to true false/ presence absence - make a function ****
+  #Code not working - need to make a function
+  convertColumnsToLogical <- function(data, start_col, end_col) {
+    data <- data %>%
+      mutate(across(start_col:end_col, as.logical))
+    return(data)}
+  
+  quad0.25m <- convertColumnsToLogical(data = quad0.25m, start_col = 'SUM_WORM', end_col = 'SUM_HERMIT_CRAB')
+  
+  # The original code that we want to turn into a function
+  quad0.25m <- quad0.25m |> 
+    mutate(across('SUM_WORM': 'SUM_HERMIT_CRAB', as.logical))
 
-#Changing all dates to NA - unsure how to fix
-format_date <- function(data, columnName) {
-  data$Date <- format(as.Date(data[[columnName]], "%d/%m/%Y", na.rm = TRUE), "%d/%m/%Y")
-  data$Year <- format(as.Date(data$Date, "%d/%m/%Y"), "%Y") 
-  return(data)}
-
-transect <- format_date(transect, "Date")
-
-transect$Date <- format(as.Date(transect$Date), "%d/%m/%Y")
-transect$Year <-  format(as.Date(transect$Date, "%d/%m/%Y"), "%Y")
-
-quad1m$Date <- format(as.Date(quad1m$Date), "%d/%m/%Y")
-quad1m$Year <- quad1m$Date
-quad1m$Year <-  format(as.Date(quad1m$Date, "%d/%m/%Y"), "%Y")
-
-quad0.25m$Date <- format(as.Date(quad0.25m$Date), "%d/%m/%Y")
-quad0.25m$Year <- quad0.25m$Date
-quad0.25m$Year <-  format(as.Date(quad0.25m$Date, "%d/%m/%Y"), "%Y")
-
-limpet$Date <- format(as.Date(limpet$Date), "%d/%m/%Y")
-limpet$Year <- limpet$Date
-limpet$Year <-  format(as.Date(limpet$Date, "%d/%m/%Y"), "%Y")
-
-# change 0 and 1 values to true false/ presence absence - make a function ****
-quad0.25m <- quad0.25m |> 
-  mutate(across('SUM WORM': 'SUM HERMIT CRAB', as.logical))
-
-transect <- transect |> 
-  mutate(across('Ochre': 'Molted', as.logical))
+  transect <- transect |> 
+    mutate(across('Ochre': 'Molted', as.logical))
 
 # Christina Plot
 #=================================================================================================================================
 
-# plot variable per TA, averaged per site visit
-plot_var_per_TA <- function(varname, plot_varname, data=transect){
+# plot variable per TA, averaged per site visit - Transect
+  plot_var_per_TA <- function(varname, plot_varname, data=transect){
   
   # create data frame with relevant columns
   df_var <- data.frame(site_TA = data$Site_TA,
@@ -64,10 +61,11 @@ plot_var_per_TA <- function(varname, plot_varname, data=transect){
     geom_bar(stat = "identity", position = "dodge") +
     ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
   
-}
+  }
+
 plot_var_per_TA("Density_of_Sea_Stars_Count", "Mean count of sea stars per field visit")
 
-
+# DO FOR THE IDENTITY OF THE STAR
 
 # get the season
 get_season <- function(date){
@@ -92,34 +90,32 @@ limpet$month <- month(as.Date(limpet$Date))
 # create data frame with relevant columns
 df_limp <- data.frame(site_TA = limpet$Site_TA,
                       year = limpet$Year,
-                      var = limpet[,"Mean_Length_mm"],
+                      length = limpet[,"Mean_Length_mm"],
+                      width = limpet[,"Mean_Width_mm"],
                       month = limpet$month)
 df_limp$site_TA <- as.character(df_limp$site_TA)
 
 # aggregate by year and site (mean per visit)
-df_limp_agg <- aggregate(var ~ year + site_TA, data=df_limp, FUN=mean)
-ggplot(data = df_limp_agg, aes(x = year, y = var, group = site_TA, fill = site_TA)) +
+# Length
+df_limp_agg_length <- aggregate(length ~ year + site_TA, data=df_limp, FUN=mean)
+ggplot(data = df_limp_agg_length, aes(x = year, y = length, group = site_TA, fill = site_TA)) +
   geom_bar(stat = "identity", position = "dodge") +
   ylab("Mean limpet length (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
 
+# Width
+df_limp_agg_width <- aggregate(width ~ year + site_TA, data=df_limp, FUN=mean)
+ggplot(data = df_limp_agg_width, aes(x = year, y = width, group = site_TA, fill = site_TA)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  ylab("Mean limpet width (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
 
-# aggregate by month and site (mean per visit)
+# aggregate by month and site (mean per visit) - * Not liking the seasonality - incorporate once we get our data sorted
 df_limp_agg <- aggregate(var ~ month + site_TA, data=df_limp, FUN=mean)
 ggplot(data = df_limp_agg, aes(x = month, y = var, group = site_TA, fill = site_TA)) +
   geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
   ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
 
 
-# Old Plots
-  # Sea star transect plots 
-  Transect_Sea_Star <- ggplot(transect, aes(x = Year, y = Density of Sea Stars (Count), fill = Year)) +
-  geom_bar(stat = "identity")
-Transect_Sea_Star
 
-# Limpet Size distribution per site
-Limpet_Length_Site <- ggplot(limpet, aes(x = "Site TA", y = "Mean Length (mm)", fill = "Site TA")) + 
-  geom_bar(stat = 'identity')
-Limpet_Length_Site
 
 
 

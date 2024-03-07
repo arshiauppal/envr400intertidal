@@ -3,8 +3,8 @@ require(stringr)
 
 # read data
 #=================================================================================================================================
-transect <- read.csv("data/Transect_Data.csv", check.names = FALSE, na.strings=c("N/A", ""))
-quad100 <- read.csv("data/1m_Quadrat.csv", check.names = FALSE, na.strings=c("N/A", ""))
+`transect <- read.csv("data/Transect_Data.csv", check.names = FALSE, na.strings=c("N/A", ""))
+quad100 <- read.csv("data/1m_Quadrat.csv", check.names = FALSE, na.strings=c("N/A", ""))``
 quad25 <- read.csv("data/0.25m_Quadrat.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
 # clean data

@@ -67,7 +67,7 @@ limpet$month <- month(as.Date(limpet$Date))
 #=================================================================================================================================
 
 # plot variable per TA, averaged per site visit - Transect
-plot_var_per_TA <- function(varname, plot_varname, data=transect){
+plot_var_per_TA_Transect <- function(varname, plot_varname, data=transect){
   
   # create data frame with relevant columns
   df_var <- data.frame(site_TA = data$Site_TA,
@@ -113,8 +113,43 @@ ggplot(data = df_limp_agg_width, aes(x = year, y = width, group = site_TA, fill 
   geom_bar(stat = "identity", position = "dodge") +
   ylab("Mean limpet width (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
 
-# aggregate by month and site (mean per visit) - * Not liking the seasonality - incorporate once we get our data sorted
+# aggregate by month and site (mean per visit) - *NOT WORKING* * Not liking the seasonality - incorporate once we get our data sorted
 df_limp_agg <- aggregate(var ~ month + site_TA, data=df_limp, FUN=mean)
 ggplot(data = df_limp_agg, aes(x = month, y = var, group = site_TA, fill = site_TA)) +
   geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
   ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
+
+# plot 1m quadrat
+#=================================================================================================================================
+
+plot_var_per_TA_1m <- function(varname, plot_varname, data=quad1m){
+  
+  # create data frame with relevant columns
+  df_var <- data.frame(site_TA = data$Site_TA,
+                       year = data$Year,
+                       var = data[,varname])
+  df_var$site_TA <- as.character(df_var$site_TA) 
+  
+  # aggregate to the mean per visit (or check what makes sense for you: e.g. average monthly count, etc.)
+  df_var <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
+  
+  ggplot(data = df_var, aes(x = year, y = var, group = site_TA, fill = site_TA)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
+  
+}
+
+# Littorine Snails
+plot_var_per_TA_1m("Littorine_snails", "Mean count of littorine snails per field visit")
+
+# Nucella Snails
+plot_var_per_TA_1m("Nucella_snails", "Mean count of nucella snails per field visit")
+
+# Limpet Count
+
+plot_var_per_TA_1m("Limpets", "Mean count of limpets per field visit")
+
+# plot 0.25m quadrat
+#=================================================================================================================================
+
+

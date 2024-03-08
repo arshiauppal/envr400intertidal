@@ -15,7 +15,7 @@ limpet <- read.csv("data/Limpet.csv", check.names = FALSE, na.strings=c("N/A", "
 # clean data
 #=================================================================================================================================
 # add a year column
-
+# need to make generalized - think we should make transect just dataframe but then it stops working - talk to Christina
 add_year_column <- function(transect, date_column_name) {
   transect[[date_column_name]] <- format(as.Date(transect[["Date"]]), "%d/%m/%Y")
   transect$Year <- format(as.Date(transect[[date_column_name]], "%d/%m/%Y"), "%Y")
@@ -23,33 +23,20 @@ add_year_column <- function(transect, date_column_name) {
 }
 
 transect <- add_year_column(transect, "Date")
-transect
-
 quad1m <- add_year_column(quad1m, "Date")
-quad1m
-
 quad0.25m <- add_year_column(quad0.25m, "Date")
-quad0.25m
-
 limpet <- add_year_column(limpet, "Date")
-limpet
-
 
 # change 0 and 1 values to true false/presence absence
-change_0_1_to_logical <- function(df, start_col_index, end_col_index) {
+change_to_logical <- function(df, start_col_index, end_col_index) {
   df <- df %>%
     mutate(across(start_col_index:end_col_index, as.logical))
   return(df)
 }
 
-quad0.25m <- change_0_1_to_logical(quad0.25m, 14, 44)
-quad0.25m
+quad0.25m <- change_to_logical(quad0.25m, 14, 44)
 
-quad1m <- change_0_1_to_logical(quad1m, 12, 36)
-quad1m
-
-transect <- change_0_1_to_logical(transect, 12, 14)
-transect
+transect <- change_to_logical(transect, 12, 14)
 
 # Christina Plot
 #=================================================================================================================================

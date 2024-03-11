@@ -68,9 +68,9 @@ limpet$month <- month(as.Date(limpet$Date))
 #=================================================================================================================================
 
 #description - then describe the inputs
-'''
-  variable = **
-  '''
+''
+  variable
+''
 
 # plot variable per TA, averaged per site visit
 plot_var_per_TA_Transect <- function(varname, plot_varname, data){
@@ -95,6 +95,35 @@ plot_var_per_TA_Transect("Density_of_Sea_Stars_Count", "Mean count of sea stars 
 # DO FOR THE IDENTITY OF THE STAR
 
 #geom_tile
+
+
+create_species_plot <- function(data, species_column) {
+  ggplot(data, aes_string(x = "Year", y = "Site_TA", fill = species_column)) +
+    geom_tile(colour ='black') +
+    scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red")) +  # Adjust colors as needed
+    labs(x = "Year", y = "Sampling Site", fill = paste0(species_column, " Presence")) +
+    theme_minimal() +
+    theme(
+      panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
+      panel.grid.minor = element_blank(),  # Remove minor gridlines
+      axis.text.y = element_text(angle = 0, hjust = 0.5)  # Adjust y-axis text alignment
+    ) +
+    scale_y_continuous(breaks = unique(data$Site_TA))  # Set breaks for y-axis
+}
+
+
+# Create separate plots for each species using the function
+plot_ochre <- create_species_plot(transect, "Ochre")
+plot_leather <- create_species_plot(transect, "Leather")
+plot_molted <- create_species_plot(transect, "Molted")
+
+# Display the plots
+plot_ochre
+plot_leather
+plot_molted
+
+
+
 
 
 # plot limpet data
@@ -140,5 +169,76 @@ plot_var_per_TA_1m("Limpets", "Mean count of limpets per field visit", quad1m)
 
 # plot 0.25m quadrat
 #=================================================================================================================================
+# plot variable per TA, averaged per site visit
 
 
+# Define a function to create a multi-colored bar graph
+#plot_cover_per_0.25_quadrant <- function(quad0.25m) {
+
+#data_clean <- quad0.25m %>%
+  #filter(!is.na('Total_Cover_%') & !is.na('Algae_%_cover') & !is.na('Sessile_Invertebrates_%_cover'))
+
+  
+  
+  #data_summary <- data_clean %>%
+    #group_by(Site_TA) %>%
+    #summarize(Total_Cover = mean('Total_Cover_%'),
+             # Algae_percent = mean('Algae_%_cover'),
+             # Invertebrates_percent = mean('Sessile_Invertebrates_%_Cover'))
+  #print(data_summary)
+  
+  # Create the bar graph
+  #ggplot(data_summary, aes(x = Site_TA)) +
+   # geom_bar(aes(y = Algae_percent, fill = "Algae"), stat = "identity", position = "stack") +
+    #geom_bar(aes(y = Invertebrates_percent, fill = "Invertebrates"), stat = "identity", position = "stack") +
+   # scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
+   # labs(x = "Site", y = "Percentage of Total Cover", fill = "Cover Type") +
+    #theme_minimal()
+#}
+
+# Assuming your data frame is named 'data' with columns: Site_TA, Total_Cover_%, Algae_%_cover, Sessile_Invertebrates_%_cover
+plot_cover_per_0.25_quadrant(quad0.25m)
+
+
+plot_cover_per_0.25_quadrant <- function(varname, plot_varname, data){
+  
+  # create data frame with relevant columns
+  df_var <- data.frame(site_TA = data$Site_TA,
+                       year = data$Year,
+                       var = data[,varname])
+  df_var$site_TA <- as.character(df_var$site_TA) 
+  
+  # aggregate to the mean per visit (or check what makes sense for you: e.g. average monthly count, etc.)
+  df_var <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
+  
+  ggplot(data = df_var, aes(x = year, y = var, group = site_TA, fill = site_TA)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
+  
+}
+
+plot_var_per_TA_Transect("Total_Cover_%", "Total % Cover of Algae and Invertebrates Combined", quad0.25m)
+
+#------
+install.packages("reshape2")
+plot_cover_components <- function(quad0.25m) {
+  # Calculate percentage of total cover comprised of algae and invertebrates
+  quad0.25m$Algae_percent <- quad0.25m$'Algae_%_cover' / quad0.25m$'Total_Cover_%' * 100
+  quad0.25m$Invertebrates_percent <- quad0.25m$'Sessile_Invertebrates_%_Cover' / quad0.25m$'Total_Cover_%' * 100
+  
+  # Aggregate data by year and site_TA
+  data_agg <- aggregate(cbind(Algae_percent, Invertebrates_percent) ~ Year + Site_TA, data = quad0.25m, FUN = mean, na.action = na.omit)
+  
+  # Reshape data for plotting
+  data_plot <- reshape2::melt(data_agg, id.vars = c("Year", "Site_TA"))
+  
+  # Create the multi-colored bar graph
+  ggplot(data = data_plot, aes(x = Year, y = value, fill = variable)) +
+    geom_bar(stat = "identity", position = "stack") +
+    labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
+    facet_wrap(~ Site_TA) +
+    theme_minimal()
+}
+
+# Call the function to create the multi-colored bar graph
+plot_cover_components(quad0.25m)

@@ -38,6 +38,102 @@ quad0.25m <- change_to_logical(quad0.25m, 14, 44)
 
 transect <- change_to_logical(transect, 12, 14)
 
+
+
+# Define function to create bar graph of mean limpet length and width by year not working
+create_bar_graph <- function() {
+  # Calculate mean length and width by year
+  mean_length <- tapply(limpet$Mean_Length_mm, limpet$Year, mean)
+  mean_width <- tapply(limpet$Mean_Width_mm, limpet$Year, mean)
+  
+  # Create a new data frame
+  limpet_mean <- data.frame(
+    Year = as.integer(names(limpet$mean_length)),
+    Mean_Length_mm = as.numeric(limpet$mean_length),
+    Mean_Width_mm = as.numeric(limpet$mean_width)
+  )
+  # Check for missing or infinite values
+  if (any(is.infinite(limpet_mean$Mean_Length_mm)) || any(is.infinite(limpet_mean$Mean_Width_mm))) {
+    stop("Some mean values are infinite.")
+  }
+  
+  print(limpet_mean)
+  # Plot the bar graph
+  par(mfrow = c(1, 2))  # Set the plotting layout to have 1 row and 2 columns
+  barplot(limpet_mean$Mean_Length_mm, names.arg = limpet_mean$Year,
+          col = "blue", main = "Mean Limpet Length by Year",
+          xlab = "Year", ylab = "Mean Length")
+  barplot(limpet_mean$Mean_Width_mm, names.arg = limpet_mean$Year,
+          col = "red", main = "Mean Limpet Width by Year",
+          xlab = "Year", ylab = "Mean Width")
+
+}
+
+# Call the function
+create_bar_graph()
+
+plot_var_per_TA <- function(varname, plot_varname, data=quad1m){
+  
+  # create data frame with relevant columns
+  df_var <- data.frame(site_TA = data$Site_TA,
+                       year = data$Year,
+                       var = data[,varname])
+  df_var$site_TA <- as.character(df_var$site_TA) 
+  
+  # aggregate to the mean per visit (or check what makes sense for you: e.g. average monthly count, etc.)
+  df_var <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
+  
+  ggplot(data = df_var, aes(x = year, y = var, group = site_TA, fill = site_TA)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
+  
+}
+
+plot_var_per_TA("Littorine_snails", "Mean count of littorine snails per field visit")
+
+#--------------------
+
+plot_var_per_TA <- function(varname, plot_varname, data=quad1m){
+  
+  # create data frame with relevant columns
+  df_var <- data.frame(site_TA = data$Site_TA,
+                       year = data$Year,
+                       var = data[,varname])
+  df_var$site_TA <- as.character(df_var$site_TA) 
+  
+  # aggregate to the mean per visit (or check what makes sense for you: e.g. average monthly count, etc.)
+  df_var <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
+  
+  ggplot(data = df_var, aes(x = year, y = var, group = site_TA, fill = site_TA)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
+  
+}
+
+plot_var_per_TA("Nucella_snails", "Mean count of nucella snails per field visit")
+
+#---------------
+plot_var_per_TA <- function(varname, plot_varname, data=limpet){
+  
+  # create data frame with relevant columns
+  df_var <- data.frame(site_TA = data$Site_TA,
+                       year = data$Year,
+                       var = data[,varname])
+  df_var$site_TA <- as.character(df_var$site_TA) 
+  
+  # aggregate to the mean per visit (or check what makes sense for you: e.g. average monthly count, etc.)
+  df_var <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
+  
+  ggplot(data = df_var, aes(x = year, y = var, group = site_TA, fill = site_TA)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
+  
+}
+
+plot_var_per_TA("Mean_Length_mm", "Mean length of limpets per field visit")
+
+
+
 # Christina Plot
 #=================================================================================================================================
 

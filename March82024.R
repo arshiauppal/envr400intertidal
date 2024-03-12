@@ -1,4 +1,4 @@
-# March 7, 2024 - Jess
+# March 7, 2024 - Jess, im gonna end it all 
 
 require(dplyr)
 require(stringr)
@@ -68,12 +68,9 @@ limpet$month <- month(as.Date(limpet$Date))
 #=================================================================================================================================
 
 #description - then describe the inputs
-''
-  variable
-''
 
 # plot variable per TA, averaged per site visit
-plot_var_per_TA_Transect <- function(varname, plot_varname, data){
+plot_var_per_TA <- function(varname, plot_varname, data){
   
   # create data frame with relevant columns
   df_var <- data.frame(site_TA = data$Site_TA,
@@ -90,15 +87,12 @@ plot_var_per_TA_Transect <- function(varname, plot_varname, data){
   
 }
 
-plot_var_per_TA_Transect("Density_of_Sea_Stars_Count", "Mean count of sea stars per field visit", transect)
+plot_var_per_TA("Density_of_Sea_Stars_Count", "Mean count of sea stars", transect)
 
-# DO FOR THE IDENTITY OF THE STAR
+# Identity of Sea Star - excludes all NA values, need to figure out how to have different ones depending on what is avaliable for each site
 
-#geom_tile
-
-
-create_species_plot <- function(data, species_column) {
-  ggplot(data, aes_string(x = "Year", y = "Site_TA", fill = species_column)) +
+logical_plot <- function(data, species_column) {
+  ggplot(data, aes_string(x = "Year", y = "Site_TA", fill = species_column), na.rm = TRUE) +
     geom_tile(colour ='black') +
     scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red")) +  # Adjust colors as needed
     labs(x = "Year", y = "Sampling Site", fill = paste0(species_column, " Presence")) +
@@ -113,17 +107,14 @@ create_species_plot <- function(data, species_column) {
 
 
 # Create separate plots for each species using the function
-plot_ochre <- create_species_plot(transect, "Ochre")
-plot_leather <- create_species_plot(transect, "Leather")
-plot_molted <- create_species_plot(transect, "Molted")
+plot_ochre <- logical_plot(transect, "Ochre")
+plot_leather <- logical_plot(transect, "Leather")
+plot_molted <- logical_plot(transect, "Molted")
 
 # Display the plots
 plot_ochre
 plot_leather
 plot_molted
-
-
-
 
 
 # plot limpet data
@@ -159,18 +150,17 @@ ggplot(data = df_limp_agg, aes(x = month, y = width, group = site_TA, fill = sit
 #=================================================================================================================================
 
 # Littorine Snails
-plot_var_per_TA_1m("Littorine_snails", "Mean count of littorine snails per field visit", quad1m)
+plot_var_per_TA("Littorine_snails", "Mean count of littorine snails per field visit", quad1m)
 
 # Nucella Snails - not great but ot 100% necessary
-plot_var_per_TA_1m("Nucella_snails", "Mean count of nucella snails per field visit", quad1m)
+plot_var_per_TA("Nucella_snails", "Mean count of nucella snails per field visit", quad1m)
 
 # Limpet Count
-plot_var_per_TA_1m("Limpets", "Mean count of limpets per field visit", quad1m)
+plot_var_per_TA("Limpets", "Mean count of limpets per field visit", quad1m)
 
 # plot 0.25m quadrat
 #=================================================================================================================================
 # plot variable per TA, averaged per site visit
-
 
 # Define a function to create a multi-colored bar graph
 #plot_cover_per_0.25_quadrant <- function(quad0.25m) {
@@ -222,12 +212,12 @@ plot_var_per_TA_Transect("Total_Cover_%", "Total % Cover of Algae and Invertebra
 #------
 install.packages("reshape2")
 plot_cover_components <- function(quad0.25m) {
-  # Calculate percentage of total cover comprised of algae and invertebrates
-  quad0.25m$Algae_percent <- quad0.25m$'Algae_%_cover' / quad0.25m$'Total_Cover_%' * 100
-  quad0.25m$Invertebrates_percent <- quad0.25m$'Sessile_Invertebrates_%_Cover' / quad0.25m$'Total_Cover_%' * 100
+  # Calculate percentage of total cover comprised of algae and invertebrates - need to clean but its at 100
+  quad0.25m$Algae_percent <- quad0.25m$'Algae_%_cover' * 1
+  quad0.25m$Invertebrates_percent <- quad0.25m$'Sessile_Invertebrates_%_Cover' * 1
   
   # Aggregate data by year and site_TA
-  data_agg <- aggregate(cbind(Algae_percent, Invertebrates_percent) ~ Year + Site_TA, data = quad0.25m, FUN = mean, na.action = na.omit)
+  data_agg <- aggregate(cbind(Algae_percent, Invertebrates_percent ) ~ Year + Site_TA, data = quad0.25m, FUN = mean, na.action = na.omit)
   
   # Reshape data for plotting
   data_plot <- reshape2::melt(data_agg, id.vars = c("Year", "Site_TA"))

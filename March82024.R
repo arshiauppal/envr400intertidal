@@ -242,3 +242,4 @@ plot_cover_components <- function(quad0.25m) {
 
 # Call the function to create the multi-colored bar graph
 plot_cover_components(quad0.25m)
+

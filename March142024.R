@@ -19,10 +19,10 @@ tide <- read.csv("data/Tide_Jan012019-2024.csv", check.names = FALSE, na.strings
 # SPES Data
     # add a year column
     # need to make generalized - think we should make transect just dataframe but then it stops working - talk to Christina
-    add_year_column <- function(transect, date_column_name) {
-      transect[[date_column_name]] <- format(as.Date(transect[["Date"]]), "%d/%m/%Y")
-      transect$Year <- format(as.Date(transect[[date_column_name]], "%d/%m/%Y"), "%Y")
-      return(transect)
+    add_year_column <- function(data, date_column_name) {
+      data[[date_column_name]] <- format(as.Date(data[["Date"]]), "%d/%m/%Y")
+      data$Year <- format(as.Date(data[[date_column_name]], "%d/%m/%Y"), "%Y")
+      return(data)
     }
     
     transect <- add_year_column(transect, "Date")

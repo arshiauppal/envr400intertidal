@@ -53,7 +53,7 @@ tide <- read.csv("data/Abiotic/Tide_Jan012019-2024.csv", check.names = FALSE, na
     quad0.25m_SPES <- change_to_logical(quad0.25m_SPES, 14, 44)
     transect_SPES <- change_to_logical(transect_SPES, 12, 14)
 
-# get the season and month
+# get the season and month - CODE NOT WORKING ANYMORE
   get_season <- function(date){
   
   date <- as.Date(date) # make sure the input has date format
@@ -93,7 +93,7 @@ tide <- read.csv("data/Abiotic/Tide_Jan012019-2024.csv", check.names = FALSE, na
   quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 47, 54)
   quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 57, 62)
 
-# get season and month - works for limpet but not transect and quad
+# get season and month - works sometimes
   transect_ENVR_2024$season <- get_season(transect_ENVR_2024$Date_ymd)
   transect_ENVR_2024$month <- month(as.Date(transect_ENVR_2024$Date_ymd))
   
@@ -293,3 +293,14 @@ plot_cover_components <- function(quad0.25m) {
 
 # Call the function to create the multi-colored bar graph
 plot_cover_components(quad0.25m)
+
+
+# ENVR 400 2024 Data Analysis
+#=================================================================================================================================
+mean_counts_SS_2024 <- aggregate(Density_of_Sea_Stars_count~ Site_TA, data = transect_ENVR_2024, FUN = mean)
+
+# Now, create the bar plot using ggplot2 - need to figure out 
+ggplot(mean_counts_SS_2024, aes(x = Site_TA, y = Density_of_Sea_Stars_count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Sites", y = "Mean Count of Sea Stars") +
+  ggtitle("Mean Count of Sea Stars by Site")

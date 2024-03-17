@@ -105,7 +105,7 @@ logical_plot <- function(data, species_column) {
     scale_y_continuous(breaks = unique(data$Site_TA))  # Set breaks for y-axis
 }
 
-
+#na remove
 # Create separate plots for each species using the function
 plot_ochre <- logical_plot(transect, "Ochre")
 plot_leather <- logical_plot(transect, "Leather")

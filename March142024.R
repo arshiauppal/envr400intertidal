@@ -1,4 +1,4 @@
-# March 14, 2024
+# March 14, 2024 - changed 1am March 17th
 require(dplyr)
 require(stringr)
 require(ggplot2)
@@ -6,22 +6,32 @@ require(lubridate)
 
 # read data
 #=================================================================================================================================
+# SPES Data
 transect <- read.csv("data/Transect.csv", check.names = FALSE, na.strings=c("N/A", ""))
 quad1m <- read.csv("data/1m.csv", check.names = FALSE, na.strings=c("N/A", ""))
 quad0.25m <- read.csv("data/0.25m.csv", check.names = FALSE, na.strings=c("N/A", ""))
 limpet <- read.csv("data/Limpet.csv", check.names = FALSE, na.strings=c("N/A", ""))
+
+# ENVR 400 2024 Data
+ENVR_2024 <- read.csv("data/******.csv", check.names = FALSE, na.strings=c("N/A", ""))
+  
+# ENVR 400 2023 Data
+ENVR_2023 <- read.csv("data/******.csv", check.names = FALSE, na.strings=c("N/A", ""))
+
+# Monthly Algae Survey Data
+Algae_Data <- read.csv("data/******.csv", check.names = FALSE, na.strings=c("N/A", ""))
+  
+# Abiotic Data
 weather <- read.csv("data/UBC_Rooftop_obs_2019-2024.csv", check.names = FALSE, na.strings=c("N/A",""))
 tide <- read.csv("data/Tide_Jan012019-2024.csv", check.names = FALSE, na.strings=c("N/A",""))
-
 
 # clean data
 #=================================================================================================================================
 # SPES Data
-    # add a year column
-    # need to make generalized - think we should make transect just dataframe but then it stops working - talk to Christina
+    # function to add a year column - for ease of yearly analysis
     add_year_column <- function(data, date_column_name) {
-      data[[date_column_name]] <- format(as.Date(data[["Date"]]), "%d/%m/%Y")
-      data$Year <- format(as.Date(data[[date_column_name]], "%d/%m/%Y"), "%Y")
+      data[[date_column_name]] <- format(as.Date(data[[date_column_name]]), "%d/%m/%Y") # format original date column to be in day/month/year
+      data$Year <- format(as.Date(data[[date_column_name]], "%d/%m/%Y"), "%Y") # from formatted date column, pulls out year
       return(data)
     }
     
@@ -30,19 +40,17 @@ tide <- read.csv("data/Tide_Jan012019-2024.csv", check.names = FALSE, na.strings
     quad0.25m <- add_year_column(quad0.25m, "Date")
     limpet <- add_year_column(limpet, "Date")
     
-    # change 0 and 1 values to true false/presence absence - getting warning messages - any fix?
-    
+    # change 0 and 1 values to true and false/presence and absence
     change_to_logical <- function(df, start_col_index, end_col_index) {
       df <- df %>%
-        mutate(across(start_col_index:end_col_index, as.logical))
+        mutate(across(start_col_index:end_col_index, as.logical)) # change the columns inbetween the start and end to logical or true/false
       return(df)
     }
     
     quad0.25m <- change_to_logical(quad0.25m, 14, 44)
-    
     transect <- change_to_logical(transect, 12, 14)
     
-    # get the season
+    # get the season and month
     get_season <- function(date){
       
       date <- as.Date(date) # make sure the input has date format
@@ -55,6 +63,7 @@ tide <- read.csv("data/Tide_Jan012019-2024.csv", check.names = FALSE, na.strings
                     ifelse(mon %in% c("Jun", "Jul", "Aug"), "Summer", "Fall")))
       
     }
+    
     transect$season <- get_season(transect$Date)
     transect$month <- month(as.Date(transect$Date))
     
@@ -67,25 +76,34 @@ tide <- read.csv("data/Tide_Jan012019-2024.csv", check.names = FALSE, na.strings
     limpet$season <- get_season(limpet$Date)
     limpet$month <- month(as.Date(limpet$Date))
 
+# ENVR 400 2024 Data
+    # add year column
+    ENVR_2024 <- add_year_column(ENVR_2024, "Date")
+    
+    # change columns to logical - this one is gonna be tricky cause theres breaks in between the logical, maybe run it 3 times - ie. algae, then sessile above, sessile below idk
+    ENVR_2024 <- change_to_logical(ENVR_2024, 14, 44)
+    
+    # get season and month
+    ENVR_2024$season <- get_season(ENVR_2024$Date)
+    ENVR_2024$month <- month(as.Date(ENVR_2024$Date))
+    
 # Abiotic Data
-    # Separate out tide data
-    tide$date <- as.Date(tide$Obs_date)
-    tide$time <- format(strptime(tide$Obs_date, format = "%Y-%m-%d %H:%M"), "%H:%M")
-    # cant get function to work
+    # Separate out tide data date and time
+    tide <- tide %>%
+      mutate(date = as.Date(Obs_date),
+             time = format(strptime(Obs_date, format = "%Y-%m-%d %H:%M"), "%H:%M"))
     tide <- add_year_column(tide, "date")
-    # in the meantime have this
-      tide$year <- format(tide$date, "%Y")
-      tide$month <- format(tide$date, "%m")
-      tide$day <- format(tide$date, "%d")
-    # seasonal tide
+   
+    # seasonal and monthly tide
     tide$season <- get_season(tide$date)
+    tide$month <- month(as.Date(tide$date))
     
     # Format weather data date
     weather$date <- ymd(weather$Dates)
-    weather$year <- format(weather$date, "%Y")
-    weather$month <- format(weather$date, "%m")
-    weather$day <- format(weather$date, "%d")
+    weather <- add_year_column(weather, "date")
+    
     weather$season <- get_season(weather$date)
+    weather$month <- month(as.Date(weather$date))
     
 # plot sea star
 #=================================================================================================================================
@@ -230,7 +248,6 @@ plot_cover_per_0.25_quadrant <- function(varname, plot_varname, data){
   
 }
 
-plot_var_per_TA_Transect("Total_Cover_%", "Total % Cover of Algae and Invertebrates Combined", quad0.25m)
 
 #------
 install.packages("reshape2")

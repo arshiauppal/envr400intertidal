@@ -309,19 +309,28 @@ ggplot(mean_counts_SS_2024, aes(x = Site_TA, y = Density_of_Sea_Stars_count)) +
 
 # Abiotic Analysis
 #=================================================================================================================================
-tide_height_monthly_mean <- aggregate(SLEV(metres) ~ month, data = tide, FUN = mean)
-temperature_monthly_mean <- aggregate(AirTemp [degC] ~ month, data = weather, FUN = mean)
+min_tide_time <- aggregate(date ~ month, data = tide, FUN = function(x) {
+  x[which.min(tide$SLEV_metres)] # Extract the date of the minimum tide height
+})
+# Extract hour from the minimum tide time
+min_tide_time$time_column <- as.character(min_tide_time$time_column)
+min_tide_time$hour <- as.integer(sapply(strsplit(as.character(min_tide_time$time), ":"), `[`, 1))
+
+min_tide_time <- aggregate(hour ~ month, data = tide, FUN = function(x) {
+  x[which.min(tide$SLEV_metres)] # Extract the hour of the minimum tide height
+})
+temperature_monthly_mean <- aggregate(AirTemp_degC ~ month, data = weather, FUN = mean)
 
 # Merge the two datasets
-monthly_data <- merge(tide_height_monthly_mean, temperature_monthly_mean, by = "month")
+monthly_abiotic_data <- merge(min_tide_time, temperature_monthly_mean, by = "month")
 
 # Plotting
 ggplot(monthly_data, aes(x = month)) +
-  geom_bar(aes(y = height), stat = "identity", fill = "skyblue", alpha = 0.7) +
+  geom_bar(aes(y = hour), stat = "identity", fill = "skyblue", alpha = 0.7) +
   geom_line(aes(y = temperature), color = "red") +
-  scale_y_continuous(sec.axis = sec_axis(~.*10, name = "Temperature (°C)")) +
-  labs(x = "Month", y = "Tide Height (m)", 
-       title = "Monthly Mean Tide Height and Temperature (2019-2023)",
+  scale_y_continuous(sec.axis = sec_axis(~., name = "Temperature (°C)")) +
+  labs(x = "Month", y = "Hour of Minimum Tide Height", 
+       title = "Average Time of Minimum Tide Height and Temperature (2019-2023)",
        caption = "Data Source: Your Source") +
   theme_minimal()
 

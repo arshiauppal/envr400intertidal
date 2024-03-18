@@ -93,7 +93,7 @@ tide <- read.csv("data/Abiotic/Tide_Jan012019-2024.csv", check.names = FALSE, na
   quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 47, 54)
   quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 57, 62)
 
-# get season and month - works sometimes
+# get season and month
   transect_ENVR_2024$season <- get_season(transect_ENVR_2024$Date_ymd)
   transect_ENVR_2024$month <- month(as.Date(transect_ENVR_2024$Date_ymd))
   
@@ -304,3 +304,24 @@ ggplot(mean_counts_SS_2024, aes(x = Site_TA, y = Density_of_Sea_Stars_count)) +
   geom_bar(stat = "identity", fill = "skyblue") +
   labs(x = "Sites", y = "Mean Count of Sea Stars") +
   ggtitle("Mean Count of Sea Stars by Site")
+
+#=================================================================================================================================
+
+# Abiotic Analysis
+#=================================================================================================================================
+tide_height_monthly_mean <- aggregate(SLEV(metres) ~ month, data = tide, FUN = mean)
+temperature_monthly_mean <- aggregate(AirTemp [degC] ~ month, data = weather, FUN = mean)
+
+# Merge the two datasets
+monthly_data <- merge(tide_height_monthly_mean, temperature_monthly_mean, by = "month")
+
+# Plotting
+ggplot(monthly_data, aes(x = month)) +
+  geom_bar(aes(y = height), stat = "identity", fill = "skyblue", alpha = 0.7) +
+  geom_line(aes(y = temperature), color = "red") +
+  scale_y_continuous(sec.axis = sec_axis(~.*10, name = "Temperature (°C)")) +
+  labs(x = "Month", y = "Tide Height (m)", 
+       title = "Monthly Mean Tide Height and Temperature (2019-2023)",
+       caption = "Data Source: Your Source") +
+  theme_minimal()
+

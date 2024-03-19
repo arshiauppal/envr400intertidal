@@ -101,6 +101,8 @@ require(lubridate)
     limpet_ENVR_2024 <- add_year_column(limpet_ENVR_2024, "Date_ymd")
   
   # change presence/absence columns to logical - note if any other columns are added have to change range of columns
+    transect_ENVR_2024 <- change_to_logical(transect_ENVR_2024, 14, 16)
+    
     quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 15, 26)
     quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 29, 36)
     quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 39, 44)

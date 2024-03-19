@@ -86,7 +86,7 @@ tide <- read.csv("data/Abiotic/Tide_Jan012019-2024.csv", check.names = FALSE, na
   quad0.25m_ENVR_2024 <- add_year_column(quad0.25m_ENVR_2024, "Date_ymd")
   limpet_ENVR_2024 <- add_year_column(limpet_ENVR_2024, "Date_ymd")
   
-# change columns to logical
+# change presence/absence columns to logical - note if any other columns are added have to change range of columns
   quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 15, 26)
   quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 29, 36)
   quad0.25m_ENVR_2024 <- change_to_logical(quad0.25m_ENVR_2024, 39, 44)
@@ -107,23 +107,27 @@ tide <- read.csv("data/Abiotic/Tide_Jan012019-2024.csv", check.names = FALSE, na
 
 # Abiotic Data
   #=================================================================================================================================
-
 # Separate out tide data date and time
-tide <- tide %>%
-  mutate(date = as.Date(Obs_date),
-         time = format(strptime(Obs_date, format = "%Y-%m-%d %H:%M"), "%H:%M"))
-tide <- add_year_column(tide, "date")
-
+  tide <- tide %>%
+   mutate(date = as.Date(Obs_date),
+          time = format(strptime(Obs_date, format = "%Y-%m-%d %H:%M"), "%H:%M"))
+  tide <- add_year_column(tide, "date")
+  
+# Separate out the hour from the tide time
+  tide$time <- as.POSIXct(tide$time, format = "%H:%M")
+  tide$hour <- format(tide$time, "%H")
+  tide$hour <- as.numeric(tide$hour)
+  
 # seasonal and monthly tide
-tide$season <- get_season(tide$date)
-tide$month <- month(as.Date(tide$date))
+  tide$season <- get_season(tide$date)
+  tide$month <- month(as.Date(tide$date))
 
 # Format weather data date
-weather$date <- ymd(weather$Dates)
-weather <- add_year_column(weather, "date")
+  weather$date <- ymd(weather$Dates)
+  weather <- add_year_column(weather, "date")
 
-weather$season <- get_season(weather$date)
-weather$month <- month(as.Date(weather$date))
+  weather$season <- get_season(weather$date)
+  weather$month <- month(as.Date(weather$date))
   #=================================================================================================================================
 
 # plot sea star
@@ -309,28 +313,90 @@ ggplot(mean_counts_SS_2024, aes(x = Site_TA, y = Density_of_Sea_Stars_count)) +
 
 # Abiotic Analysis
 #=================================================================================================================================
-min_tide_time <- aggregate(date ~ month, data = tide, FUN = function(x) {
-  x[which.min(tide$SLEV_metres)] # Extract the date of the minimum tide height
-})
-# Extract hour from the minimum tide time
-min_tide_time$time_column <- as.character(min_tide_time$time_column)
-min_tide_time$hour <- as.integer(sapply(strsplit(as.character(min_tide_time$time), ":"), `[`, 1))
+# Find average time of minimum tide height per month 
+ # MAKE FUNCTION???
+  # Minimum tide height
+    # Find the minimum tide height for each month for each year
+    monthly_min_tide <- tide %>%
+      group_by(month, Year) %>%
+      summarise(Min_Tide_Height = min(SLEV_metres))
+    # average the minimum height for each month 
+    average_monthly_min_tide <- monthly_min_tide %>%
+      group_by(month) %>%
+      summarise(Avg_Min_Tide_Height = mean(Min_Tide_Height))
+    
+  # Maximum tide height - dont think we need
+    monthly_max_tide <- tide %>%
+      group_by(month, Year) %>%
+      summarise(Max_Tide_Height = max(SLEV_metres))
+    # average the minimum height for each month 
+    average_monthly_max_tide <- monthly_max_tide %>%
+      group_by(month) %>%
+      summarise(Avg_Max_Tide_Height = mean(Max_Tide_Height))
+    
+    # Time of minimum tide height 
+    monthly_min_tides_time <- tide %>%
+      group_by(month, Year) %>%
+      summarise(min_tide_height = min(SLEV_metres),
+                hour_of_min_tide = hour[which.min(SLEV_metres)])
+    average_monthly_min_tide_time <- monthly_min_tides_time %>%
+      group_by(month) %>%
+      summarise(Avg_Min_Tide_Height = mean(min_tide_height),
+                mean_hour_of_min_tide = mean(hour_of_min_tide))
+  
+# find the average temperature 
+  temperature_monthly_mean <- aggregate(AirTemp_degC ~ month, data = weather, FUN = mean)
+  
+  # Min temperature 
+  monthly_min_temperature <- weather %>%
+    group_by(month, Year) %>%
+    summarise(Min_Temp = min(AirTemp_degC))
+  
+  average_monthly_min_temperature <- monthly_min_temperature %>%
+    group_by(month) %>%
+    summarise(Avg_Min_Temp = mean(Min_Temp))
+  
+  # Max temperature
+  monthly_max_temperature <- weather %>%
+    group_by(month, Year) %>%
+    summarise(Max_Temp = max(AirTemp_degC))
+  
+  average_monthly_max_temperature <- monthly_max_temperature %>%
+    group_by(month) %>%
+    summarise(Avg_Max_Temp = mean(Max_Temp))
+  
+  # merge the abotic dfs by month 
+  monthly_temperature_data <- merge(average_monthly_max_temperature, average_monthly_min_temperature, by = "month")
+  monthly_abiotic_data <- merge(monthly_temperature_data, average_monthly_min_tide_time, by = "month")
+  
 
-min_tide_time <- aggregate(hour ~ month, data = tide, FUN = function(x) {
-  x[which.min(tide$SLEV_metres)] # Extract the hour of the minimum tide height
-})
-temperature_monthly_mean <- aggregate(AirTemp_degC ~ month, data = weather, FUN = mean)
+# Plotting - minimum tide height - need to figure out temperature scale
+  monthly_abiotic_data$month <- factor(monthly_abiotic_data$month, levels = 1:12,
+                                       labels = c("January", "February", "March", "April", "May", "June",
+                                                  "July", "August", "September", "October", "November", "December"))
+  
+ggplot(monthly_abiotic_data, aes(x = month)) +
+  geom_bar(aes(y = Avg_Min_Tide_Height), stat = "identity", fill = "skyblue", alpha = 0.7) +
+  geom_line(aes(y = Avg_Max_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "red") +
+  geom_line(aes(y = Avg_Min_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "blue") +
+  scale_y_continuous(name = "Average height of low tide (m)", 
+                     limits = c(0, 1.5),
+                     sec.axis = sec_axis(~ . * (. + 4) / (max(monthly_abiotic_data$Avg_Max_Temp) + 4) * 35 - 4, name = "Temperature (°C)")) +
+  labs(x = "Month", y = "Average height of low tide (m)", 
+       title = "Average height of low tide and average maximum and minimum Temperature (2019-2023)",
+       caption = "Data Source: Your Source") +
+  theme_minimal()
 
-# Merge the two datasets
-monthly_abiotic_data <- merge(min_tide_time, temperature_monthly_mean, by = "month")
-
-# Plotting
-ggplot(monthly_data, aes(x = month)) +
-  geom_bar(aes(y = hour), stat = "identity", fill = "skyblue", alpha = 0.7) +
-  geom_line(aes(y = temperature), color = "red") +
-  scale_y_continuous(sec.axis = sec_axis(~., name = "Temperature (°C)")) +
-  labs(x = "Month", y = "Hour of Minimum Tide Height", 
-       title = "Average Time of Minimum Tide Height and Temperature (2019-2023)",
+# plotting - time of minimum tide height - need to figure out temperature scale 
+ggplot(monthly_abiotic_data, aes(x = month)) +
+  geom_bar(aes(y = mean_hour_of_min_tide), stat = "identity", fill = "skyblue", alpha = 0.7) +
+  geom_line(aes(y = Avg_Max_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "red") +
+  geom_line(aes(y = Avg_Min_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "blue") +
+  scale_y_continuous(name = "Average time of low tide (hour)", 
+                     limits = c(0, 23),
+                     sec.axis = sec_axis(~ . * (. + 4) / (max(monthly_abiotic_data$Avg_Max_Temp) + 4) * 35 - 4, name = "Temperature (°C)")) +
+  labs(x = "Month", y = "Average height of low tide (m)", 
+       title = "Average height of low tide and average maximum and minimum Temperature (2019-2023)",
        caption = "Data Source: Your Source") +
   theme_minimal()
 

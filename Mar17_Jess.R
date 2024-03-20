@@ -1,4 +1,4 @@
-# March 17, 2024
+# March 19, 2024
 require(dplyr)
 require(stringr)
 require(ggplot2)
@@ -21,7 +21,7 @@ require(lubridate)
     #ENVR_2023 <- read.csv("data/******.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
   # Monthly Algae Survey Data
-    #Algae_Data <- read.csv("data/******.csv", check.names = FALSE, na.strings=c("N/A", ""))
+    algae_data <- read.csv("data/Seaweed_Data_Clean.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
   # Abiotic Data
     weather <- read.csv("data/Abiotic/UBC_Rooftop_obs_2019-2024.csv", check.names = FALSE, na.strings=c("N/A",""))
@@ -57,6 +57,16 @@ require(lubridate)
             ifelse(mon %in% c("Mar", "Apr", "May"), "Spring",
                     ifelse(mon %in% c("Jun", "Jul", "Aug"), "Summer", "Fall")))
     }
+  
+  # divide the transect into low, medium and high
+    intertidal_height <- function(data_frame, column_name) {
+      # Define breaks and labels
+      breaks <- c(0, 10, 20, 30)
+      labels <- c("low", "medium", "high")
+      data_frame$intertidal_height <- cut(data_frame[[column_name]], breaks = breaks, labels = labels, include.lowest = TRUE)
+      return(data_frame)
+    }
+    
   #=================================================================================================================================
   
 # SPES Data
@@ -84,13 +94,10 @@ require(lubridate)
     limpet_SPES$season <- get_season(limpet_SPES$Date)
     limpet_SPES$month <- month(as.Date(limpet_SPES$Date))
   
-  # select specific limpet data
-    select_limpet_SPES <- data.frame(site_TA = limpet_SPES$Site_TA,
-                                     year = limpet_SPES$Year,
-                                     length = limpet_SPES[,"Mean_Length_mm"],
-                                     width = limpet_SPES[,"Mean_Width_mm"],
-                                     month = limpet_SPES$month)
-    select_limpet_SPES$site_TA <- as.character(select_limpet_SPES$site_TA)
+  # get intertidal height
+    quad0.25m_SPES <- intertidal_height(quad0.25m_SPES, "Transect_Point_m")
+    quad1m_SPES <- intertidal_height(quad1m_SPES, "Transect_Point_m")
+    
   #=================================================================================================================================
 
 # ENVR 400 2024 Data
@@ -118,9 +125,17 @@ require(lubridate)
   
     limpet_ENVR_2024$season <- get_season(limpet_ENVR_2024$Date)
     limpet_ENVR_2024$month <- month(as.Date(limpet_ENVR_2024$Date))
+    
+  # get intertidal height
+    quad0.25m_ENVR_2024 <- intertidal_height(quad0.25m_ENVR_2024, "Transect_Point_M")
  
   #=================================================================================================================================
 
+# Algae Data - need to think about algae and how to deal with
+  #=================================================================================================================================
+    algae_data$season <- get_season(algae_data$Date)
+  #=================================================================================================================================
+    
 # Abiotic Data
   #=================================================================================================================================
   # Separate out tide data date and time
@@ -202,6 +217,13 @@ require(lubridate)
       
 # Limpet Data
   #=================================================================================================================================
+    # select specific limpet data
+    select_limpet_SPES <- data.frame(site_TA = limpet_SPES$Site_TA,
+                                      year = limpet_SPES$Year,
+                                      length = limpet_SPES[,"Mean_Length_mm"],
+                                      width = limpet_SPES[,"Mean_Width_mm"],
+                                      month = limpet_SPES$month)
+    select_limpet_SPES$site_TA <- as.character(select_limpet_SPES$site_TA)
   # aggregate by year and site (mean per visit)
     # Length
       limp_agg_length_SPES <- aggregate(length ~ year + site_TA, data=select_limpet_SPES, FUN=mean)
@@ -232,11 +254,37 @@ require(lubridate)
 
   # Limpet Count
     plot_var_per_TA("Limpets", "Mean count of limpets per field visit", quad1m_SPES)
+    
+  # Changes in intertidal height composition - NEED TO CLEAN UP CODE AND THEN FIGURE OUT SCALE
+    # selecting and aggregating the data
+      select_quad1m_SPES <- data.frame(site_TA = quad1m_SPES$Site_TA,
+                                     year = quad1m_SPES$Year,
+                                     season = quad1m_SPES$season,
+                                     month = quad1m_SPES$month,
+                                     intertidal_height = quad1m_SPES$intertidal_height,
+                                     lit_snails = quad1m_SPES$Littorine_snails,
+                                     limpets = quad1m_SPES$Limpets)
+      select_quad1m_SPES$intertidal_height <- as.character(select_quad1m_SPES$intertidal_height)
+    
+      df_quad1m_SPES_agg_snail <- aggregate(lit_snails ~ intertidal_height, data=select_quad1m_SPES, FUN = function(x) round(mean(x)))
+      df_quad1m_SPES_agg_limpet <- aggregate(limpets ~ intertidal_height, data=select_quad1m_SPES, FUN = function(x) round(mean(x)))
+ 
+      df_quad1m_SPES_agg <- left_join(df_quad1m_SPES_agg_snail, df_quad1m_SPES_agg_limpet, by = "intertidal_height")
+    
+    tidy_quad1m_data <- tidyr::pivot_longer(df_quad1m_SPES_agg, cols = c(lit_snails, limpets), names_to = "Count_Type", values_to = "Count")
+    
+    ggplot(tidy_quad1m_data, aes(x = Count_Type, y = intertidal_height, fill = Count)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = Count), vjust = 1) +
+      scale_fill_gradient(low = "lightblue", high = "darkblue") +
+      labs(x = "Count", y = "Tide Height", title = "Tide Height vs Count of Snails and limpets") +
+      theme_minimal() +
+      scale_y_discrete(limits = c("low", "medium", "high"))
   #=================================================================================================================================
     
 
 # 0.25m quadrat data
-#=================================================================================================================================
+  #=================================================================================================================================
 # plot variable per TA, averaged per site visit
 
 # Define a function to create a multi-colored bar graph
@@ -285,7 +333,7 @@ plot_cover_per_0.25_quadrant <- function(varname, plot_varname, data){
 }
 
 
-#------
+  #------
 install.packages("reshape2")
 plot_cover_components <- function(quad0.25m) {
   # Calculate percentage of total cover comprised of algae and invertebrates - need to clean but its at 100
@@ -308,7 +356,9 @@ plot_cover_components <- function(quad0.25m) {
 
 # Call the function to create the multi-colored bar graph
 plot_cover_components(quad0.25m)
-#=================================================================================================================================
+  #=================================================================================================================================
+
+#
 
 # ENVR 400 2024 Data Analysis
 #=================================================================================================================================
@@ -320,6 +370,8 @@ ggplot(mean_counts_SS_2024, aes(x = Site_TA, y = Density_of_Sea_Stars_count)) +
   geom_bar(stat = "identity", fill = "skyblue") +
   labs(x = "Sites", y = "Mean Count of Sea Stars") +
   ggtitle("Mean Count of Sea Stars by Site")
+
+
 
 #=================================================================================================================================
 
@@ -399,4 +451,30 @@ ggplot(monthly_abiotic_data, aes(x = month)) +
        title = "Average height of low tide and average maximum and minimum Temperature (2019-2023)",
        caption = "Data Source: Your Source") +
   theme_minimal()
+#=================================================================================================================================
 
+# Algae Data and ENVR 2024 Data
+#=================================================================================================================================
+  # select data of interest from each dataframe 
+  TA_6_ENVR_2024 <- subset(quad0.25m_ENVR_2024, Site_TA == 6)
+  background_algae_ENVR_2024 <- data.frame(site_TA = TA_6_ENVR_2024$Site_TA,
+                                 year = TA_6_ENVR_2024$Year,
+                                 season = TA_6_ENVR_2024$season,
+                                 month = TA_6_ENVR_2024$month,
+                                 transect_point = TA_6_ENVR_2024$Transect_Point_M,
+                                 algae_count = TA_6_ENVR_2024$Algae_Count_Above,
+                                 algae_ID = TA_6_ENVR_2024$Algae_ID)
+  # cant get it to create a data frame with the presence absence
+  algae_ID_ENVR_2024 <- data.frame(site_TA = TA_6_ENVR_2024$Site_TA,
+                                 BAR = TA_6_ENVR_2024$Algae_BAR,
+                                 GAC = TA_6_ENVR_2024$Algae_GAC,
+                                 GAM = TA_6_ENVR_2024$Algae_GAM,
+                                 RAS = TA_6_ENVR_2024$Algae_RAS,
+                                 GAU = TA_6_ENVR_2024$Algae_GAU,
+                                 RAF = TA_6_ENVR_2024$Algae_RAF,
+                                 BASC = TA_6_ENVR_2024$Algae_BASC,
+                                 BAE = TA_6_ENVR_2024$Algae_BAE,
+                                 RAI = TA_6_ENVR_2024$Algae_RAI,
+                                 BAW = TA_6_ENVR_2024$Algae_BAW,
+                                 RATT = TA_6_ENVR_2024$Algae_RATT,
+                                 RAP = TA_6_ENVR_2024$Algae_RAPP)

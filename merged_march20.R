@@ -444,8 +444,47 @@ require(reshape2)
 
 # 0.25m Quadrat
   #=================================================================================================================================
-  # Bar graph of percent cover
+  # Bar graph of total and relative percent cover
   percent_cover_400(quad0.25m_ENVR_2024)
+  
+  # bar graph of relative percent cover of algae and count of algae species - dont love it tbh LMAO
+  algae_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR_2024$Site_TA,
+                                     algae_percent_cover = quad0.25m_ENVR_2024$Percent_Cover_Algae,
+                                     algae_count = quad0.25m_ENVR_2024$Algae_Count_Above)
+  quad_0.25m_ENVR_agg_algae_percent <- aggregate(algae_percent_cover ~ site_TA, data=algae_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
+  quad_0.25m_ENVR_agg_algae_count <- aggregate(algae_count ~ site_TA, data=algae_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
+  
+  quad_0.25m_ENVR_algae_merge <- merge(quad_0.25m_ENVR_agg_algae_percent, quad_0.25m_ENVR_agg_algae_count, by = "site_TA")
+  
+  quad_0.25m_ENVR_algae_plot <- ggplot(quad_0.25m_ENVR_algae_merge, aes(x = site_TA)) +
+    geom_bar(aes(y = algae_percent_cover), stat = "identity", fill = "blue", width = 0.5) +
+    geom_line(aes(y = algae_count*max(quad_0.25m_ENVR_algae_merge$algae_percent_cover)/max(quad_0.25m_ENVR_algae_merge$algae_count)), color = "red", group = 1) +
+    scale_y_continuous(name = "Percent Cover",
+                       sec.axis = sec_axis(~./max(quad_0.25m_ENVR_algae_merge$algae_percent_cover)*max(quad_0.25m_ENVR_algae_merge$algae_count), name = "Count of Algae", labels = scales::comma)) +
+    labs(x = "Sites") +
+    theme_minimal()
+  print(quad_0.25m_ENVR_algae_plot)
+  
+  # bar graph of relative percent cover of invertebrates and count of mobile and sessile
+  # *** NEED TO FIGURE OUT SCALE*****
+  invert_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR_2024$Site_TA,
+                                     invert_percent_cover = quad0.25m_ENVR_2024$Percent_Cover_Invertebrates,
+                                     sessile_count = quad0.25m_ENVR_2024$Sessile_Invertebrates_Count_Above + quad0.25m_ENVR_2024$Sessile_Invertebrates_Count_Below,
+                                     mobile_count = quad0.25m_ENVR_2024$Mobile_Invertebrates_Count_Above + quad0.25m_ENVR_2024$Mobile_Invertebrates_Count_Below)
+  
+  quad_0.25m_ENVR_agg_invert_percent <- aggregate(invert_percent_cover ~ site_TA, data=invert_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
+  quad_0.25m_ENVR_agg_sessile_count <- aggregate(sessile_count ~ site_TA, data=invert_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
+  quad_0.25m_ENVR_agg_mobile_count <- aggregate(mobile_count ~ site_TA, data=invert_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
+ 
+  invert_quad0.25m_ENVR_plot <- ggplot(quad_0.25m_ENVR_invert_merge, aes(x = site_TA)) +
+    geom_bar(aes(y = invert_percent_cover), stat = "identity", fill = "blue", width = 0.5) +
+    geom_line(aes(y = sessile_count), color = "red", linetype = "solid", group = 1) +
+    geom_line(aes(y = mobile_count), color = "green", linetype = "dashed", group = 1) +
+    scale_y_continuous(name = "Invert Percent Cover", limits = c(0, 60), sec.axis = sec_axis(~ . / 4, name = "Count", breaks = seq(0, 4, by = 1))) +
+    labs(x = "Sites") +
+    theme_minimal()
+  
+  print(invert_quad0.25m_ENVR_plot)
   
   # cover of algae vs invertebrates across the transect - winter
   select_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR_2024$Site_TA,
@@ -474,14 +513,44 @@ require(reshape2)
     labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Alage and Invertebrates") +
     theme_minimal() +
     scale_y_discrete(limits = c("low", "medium", "high"))
+  
+  
+  
+  # Create the plot with dual y-axes
+  dual_y_plot <- ggplot(algae_data, aes(x = Observation)) +
+    geom_bar(aes(y = Percent_Cover), stat = "identity", fill = "blue", width = 0.5) +
+    geom_line(aes(y = Count_Algae*max(algae_data$Percent_Cover)/max(algae_data$Count_Algae)), color = "red") +
+    scale_y_continuous(name = "Percent Cover",
+                       sec.axis = sec_axis(~./max(algae_data$Percent_Cover)*max(algae_data$Count_Algae), name = "Count of Algae", labels = scales::comma)) +
+    labs(x = "Observation") +
+    theme_minimal()
+  
+  # Print the plot
+  print(dual_y_plot)
+  
+
   #=================================================================================================================================
 
 # Combined SPES and ENVR 400  
 #=================================================================================================================================
+  # select TA-1, 4 and 6 from SPES data
+  subset_TAs <- function(dataframe, column_name, values) {
+    subset(dataframe, Site_TA %in% c(1, 4, 6))
+  }
+  
+  transect_SPES_TA <- subset_TAs(transect_SPES)
+  quad1m_SPES_TA <- subset_TAs(quad1m_SPES)
+  quad0.25m_SPES_TA <- subset_TAs(quad0.25m_SPES)
+  limpet_SPES_TA <- subset_TAs(limpet_SPES)
+  
+  
+  
   df_limp_agg <- aggregate(width ~ month + site_TA, data=select_limpet_SPES, FUN=mean)
   ggplot(data = df_limp_agg, aes(x = month, y = width, group = site_TA, fill = site_TA)) +
     geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
     ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
+  
+#=================================================================================================================================
   
 # Abiotic Analysis
 #=================================================================================================================================

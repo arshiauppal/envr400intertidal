@@ -1,8 +1,9 @@
-# March 19, 2024
+# March 20, 2024
 require(dplyr)
 require(stringr)
 require(ggplot2)
 require(lubridate)
+require(reshape2)
 
 # read data
 #=================================================================================================================================
@@ -21,7 +22,7 @@ require(lubridate)
     #ENVR_2023 <- read.csv("data/******.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
   # Monthly Algae Survey Data
-    algae_data <- read.csv("data/Seaweed_Data_Clean.csv", check.names = FALSE, na.strings=c("N/A", ""))
+    #algae_data <- read.csv("data/Seaweed_Data_Clean.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
   # Abiotic Data
     weather <- read.csv("data/Abiotic/UBC_Rooftop_obs_2019-2024.csv", check.names = FALSE, na.strings=c("N/A",""))
@@ -150,7 +151,7 @@ require(lubridate)
 
 # Algae Data - need to think about algae and how to deal with
   #=================================================================================================================================
-    algae_data$season <- get_season(algae_data$Date)
+    #algae_data$season <- get_season(algae_data$Date)
   #=================================================================================================================================
     
 # Abiotic Data
@@ -182,8 +183,8 @@ require(lubridate)
 #=================================================================================================================================
 # Functions 
   #=================================================================================================================================
-  # plot variable per TA, averaged per site visit
-    plot_var_per_TA <- function(varname, plot_varname, data){
+  # plot variable per TA, averaged per site visit over all years
+    plot_var_per_TA_SPES <- function(varname, plot_varname, data){
   
     # create data frame with relevant columns
     df_var <- data.frame(site_TA = data$Site_TA,
@@ -201,7 +202,7 @@ require(lubridate)
   }
 
   # Identity of Sea Star - excludes all NA values, need to figure out how to have different ones depending on what is avaliable for each site
-    logical_plot <- function(data, species_column) {
+    presence_absence_SPES <- function(data, species_column) {
     ggplot(data, aes_string(x = "Year", y = "Site_TA", fill = species_column), na.rm = TRUE) +
       geom_tile(colour ='black') +
       scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red")) +  # Adjust colors as needed
@@ -212,23 +213,43 @@ require(lubridate)
         panel.grid.minor = element_blank(),  # Remove minor gridlines
         axis.text.y = element_text(angle = 0, hjust = 0.5)  # Adjust y-axis text alignment
       ) +
-      scale_y_continuous(breaks = unique(data$Site_TA))  # Set breaks for y-axis
+      scale_y_discrete(breaks = unique(data$Site_TA))  # Set breaks for y-axis
   }
+  
+  # plot percent cover bar graphs
+    percent_cover_SPES <- function(quad0.25m_SPES) {
+      # Calculate percentage of total cover comprised of algae and invertebrates - need to clean but its at 100
+      quad0.25m_SPES$Algae_percent <- quad0.25m_SPES$'Algae_%_cover' * 1
+      quad0.25m_SPES$Invertebrates_percent <- quad0.25m_SPES$'Sessile_Invertebrates_%_Cover' * 1
+      
+      # Aggregate data by year and site_TA
+      data_agg <- aggregate(cbind(Algae_percent, Invertebrates_percent ) ~ Year + Site_TA, data = quad0.25m_SPES, FUN = mean, na.action = na.omit)
+      
+      # Reshape data for plotting
+      data_plot <- reshape2::melt(data_agg, id.vars = c("Year", "Site_TA"))
+      
+      # Create the multi-colored bar graph
+      ggplot(data = data_plot, aes(x = Year, y = value, fill = variable)) +
+        geom_bar(stat = "identity", position = "stack") +
+        labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
+        facet_wrap(~ Site_TA) +
+        theme_minimal()
+    }
   
   #=================================================================================================================================
   
 # Sea Star (transect) data
   #=================================================================================================================================
   # Density of sea stars per TA (2019-2023)
-    SS_density_TA <- plot_var_per_TA("Density_of_Sea_Stars_Count", "Mean count of sea stars", transect_SPES)
+    SS_density_TA <- plot_var_per_TA_SPES("Density_of_Sea_Stars_Count", "Mean count of sea stars", transect_SPES)
     SS_density_TA
     
   # Presence absence of sea stars 
-    plot_ochre <- logical_plot(transect_SPES, "Ochre")
+    plot_ochre <- presence_absence_SPES(transect_SPES, "Ochre")
       plot_ochre
-    plot_leather <- logical_plot(transect_SPES, "Leather")
+    plot_leather <- presence_absence_SPES(transect_SPES, "Leather")
       plot_leather
-    plot_molted <- logical_plot(transect_SPES, "Molted")
+    plot_molted <- presence_absence_SPES(transect_SPES, "Molted")
       plot_molted 
   #=================================================================================================================================
       
@@ -254,23 +275,15 @@ require(lubridate)
         geom_bar(stat = "identity", position = "dodge") +
         ylab("Mean limpet width (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
 
-    # aggregate by month and site (mean per visit) -  Not liking the seasonality - incorporate once we get our data sorted
-      df_limp_agg <- aggregate(width ~ month + site_TA, data=select_limpet_SPES, FUN=mean)
-      ggplot(data = df_limp_agg, aes(x = month, y = width, group = site_TA, fill = site_TA)) +
-        geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
-        ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
   #=================================================================================================================================
       
 # 1m quadrat data
   #=================================================================================================================================
   # Littorine Snails
-    plot_var_per_TA("Littorine_snails", "Mean count of littorine snails per field visit", quad1m_SPES)
-
-  # Nucella Snails - not great, not 100% needed
-    plot_var_per_TA("Nucella_snails", "Mean count of nucella snails per field visit", quad1m_SPES)
+    plot_var_per_TA_SPES("Littorine_snails", "Mean count of littorine snails per field visit", quad1m_SPES)
 
   # Limpet Count
-    plot_var_per_TA("Limpets", "Mean count of limpets per field visit", quad1m_SPES)
+    plot_var_per_TA_SPES("Limpets", "Mean count of limpets per field visit", quad1m_SPES)
     
   # Changes in intertidal height composition - ask Christina about making seperate scales or if its just worth making multiple of the same plot and combining together in powerpoint
     # selecting and aggregating the data
@@ -287,9 +300,9 @@ require(lubridate)
  
       quad1m_SPES_agg <- left_join(quad1m_SPES_agg_snail, quad1m_SPES_agg_limpet, by = "intertidal_height")
       
-      tidy_quad1m_data <- tidyr::pivot_longer(df_quad1m_SPES_agg, cols = c(lit_snails, limpets), names_to = "Count_Type", values_to = "Count")
+      tidy_quad1m_data <- tidyr::pivot_longer(quad1m_SPES_agg, cols = c(littorine_snails, limpets), names_to = "Count_Type", values_to = "Count")
       
-    ggplot(tidy_quad1m_SPES_agg, aes(x = Count_Type, y = intertidal_height, fill = Count)) +
+    ggplot(tidy_quad1m_data, aes(x = Count_Type, y = intertidal_height, fill = Count)) +
       geom_tile(color = "white") +
       geom_text(aes(label = Count), vjust = 1) +
       scale_fill_gradient(low = "lightblue", high = "darkblue") +
@@ -299,56 +312,13 @@ require(lubridate)
   
   #=================================================================================================================================
     
-
 # 0.25m quadrat data
   #=================================================================================================================================
-# Assuming your data frame is named 'data' with columns: Site_TA, Total_Cover_%, Algae_%_cover, Sessile_Invertebrates_%_cover
-plot_cover_per_0.25_quadrant(quad0.25m)
+  # Percent cover total and relative - not working?
+    percent_cover_SPES(quad0.25m_SPES)
 
-
-plot_cover_per_0.25_quadrant <- function(varname, plot_varname, data){
-  
-  # create data frame with relevant columns
-  df_var <- data.frame(site_TA = data$Site_TA,
-                       year = data$Year,
-                       var = data[,varname])
-  df_var$site_TA <- as.character(df_var$site_TA) 
-  
-  # aggregate to the mean per visit (or check what makes sense for you: e.g. average monthly count, etc.)
-  df_var <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
-  
-  ggplot(data = df_var, aes(x = year, y = var, group = site_TA, fill = site_TA)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
-  
-}
-
-install.packages("reshape2")
-plot_cover_components <- function(quad0.25m) {
-  # Calculate percentage of total cover comprised of algae and invertebrates - need to clean but its at 100
-  quad0.25m$Algae_percent <- quad0.25m$'Algae_%_cover' * 1
-  quad0.25m$Invertebrates_percent <- quad0.25m$'Sessile_Invertebrates_%_Cover' * 1
-  
-  # Aggregate data by year and site_TA
-  data_agg <- aggregate(cbind(Algae_percent, Invertebrates_percent ) ~ Year + Site_TA, data = quad0.25m, FUN = mean, na.action = na.omit)
-  
-  # Reshape data for plotting
-  data_plot <- reshape2::melt(data_agg, id.vars = c("Year", "Site_TA"))
-  
-  # Create the multi-colored bar graph
-  ggplot(data = data_plot, aes(x = Year, y = value, fill = variable)) +
-    geom_bar(stat = "identity", position = "stack") +
-    labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
-    facet_wrap(~ Site_TA) +
-    theme_minimal()
-}
-
-# Call the function to create the multi-colored bar graph
-plot_cover_components(quad0.25m)
-
-
-# cover of algae vs invertebrates across the transect - summer
-select_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
+  # cover of algae vs invertebrates across the transect - summer
+  select_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                     year = quad0.25m_SPES$Year,
                                     season = quad0.25m_SPES$season,
                                     month = quad0.25m_SPES$month,
@@ -357,26 +327,24 @@ select_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                     algae_percent_cover = quad0.25m_SPES$`Algae_%_cover`,
                                     invertebrates_percent_cover = quad0.25m_SPES$`Invertebrates_%_Cover`)
 
-quad_0.25m_SPES_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-quad_0.25m_SPES_agg_algae_percent <- aggregate(algae_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-quad_0.25m_SPES_agg_intertebrates <- aggregate(invertebrates_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+  quad_0.25m_SPES_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+  quad_0.25m_SPES_agg_algae_percent <- aggregate(algae_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+  quad_0.25m_SPES_agg_intertebrates <- aggregate(invertebrates_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
 
-quad_0.25m_SPES_agg <- quad_0.25m_SPES_agg_total %>%
-  left_join(quad_0.25m_SPES_agg_algae_percent, by = "intertidal_height") %>%
-  left_join(quad_0.25m_SPES_agg_intertebrates, by = "intertidal_height")
+  quad_0.25m_SPES_agg <- quad_0.25m_SPES_agg_total %>%
+    left_join(quad_0.25m_SPES_agg_algae_percent, by = "intertidal_height") %>%
+    left_join(quad_0.25m_SPES_agg_intertebrates, by = "intertidal_height")
 
-tidy_quad0.25_SPES_data <- tidyr::pivot_longer(quad_0.25m_SPES_agg, cols = c(total_percent_cover, algae_percent_cover, invertebrates_percent_cover), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
+  tidy_quad0.25_SPES_data <- tidyr::pivot_longer(quad_0.25m_SPES_agg, cols = c(total_percent_cover, algae_percent_cover, invertebrates_percent_cover), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
 
-ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
-  geom_tile(color = "white") +
-  geom_text(aes(label = Percent_Cover), vjust = 1) +
-  scale_fill_gradient(low = "lightblue", high = "darkblue") +
-  labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Alage and Invertebrates") +
-  theme_minimal() +
-  scale_y_discrete(limits = c("low", "medium", "high"))
+  ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Percent_Cover), vjust = 1) +
+    scale_fill_gradient(low = "lightblue", high = "darkblue") +
+    labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Alage and Invertebrates") +
+    theme_minimal() +
+    scale_y_discrete(limits = c("low", "medium", "high"))
   #=================================================================================================================================
-
-#
 
 # ENVR 400 2024 Data Analysis
 #=================================================================================================================================
@@ -397,7 +365,7 @@ ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_heigh
   }
 
   # identity of sea stars
-  logical_plot_400 <- function(data, species_column) {
+  presence_absence_400 <- function(data, species_column) {
     ggplot(data, aes_string(x = "Site_TA", y = species_column, fill = species_column), na.rm = TRUE) +
       geom_tile(colour ='black') +
       scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red")) +  # Adjust colors as needed
@@ -409,12 +377,12 @@ ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_heigh
         axis.text.x = element_text(angle = 0, hjust = 0.5)  # Adjust x-axis text alignment
       ) +
       scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10) 
-      ) +
-      scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability
+      ) 
+      #scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability
   }
   
   # percent cover function
-  plot_cover_components <- function(quad0.25m_ENVR_2024) {
+  percent_cover_400 <- function(quad0.25m_ENVR_2024) {
     # Aggregate data by Site_TA
     data_agg <- aggregate(cbind(Algae_percent = Percent_Cover_Algae, Invertebrates_percent = Percent_Cover_Invertebrates) ~ Site_TA, data = quad0.25m_ENVR_2024, FUN = mean, na.action = na.omit)
     
@@ -440,21 +408,19 @@ ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_heigh
   oyster_density_TA_400
   
   # Presence absence of sea stars 
-  
-  plot_ochre_400 <- logical_plot(transect_ENVR_2024, "Ochre_EO")
+  plot_ochre_400 <- presence_absence_400(transect_ENVR_2024, "Ochre_EO")
   plot_ochre_400
   
-  plot_leather_400 <- logical_plot(transect_ENVR_2024, "Leather_EL")
+  plot_leather_400 <- presence_absence_400(transect_ENVR_2024, "Leather_EL")
   plot_leather_400
   
-  plot_molted_400 <- logical_plot(transect_ENVR_2024, "Mottled_EM")
+  plot_molted_400 <- presence_absence_400(transect_ENVR_2024, "Mottled_EM")
   plot_molted_400
   #=================================================================================================================================
 
 # Limpet data
   #=================================================================================================================================
-  # aggregate by year and site (mean per visit)
-  # Length - how to add site TA to x axis 
+  # Mean Length - how to add site TA to x axis 
   limp_agg_length_400 <- aggregate(Mean_Length_mm ~ Site_TA, data = limpet_ENVR_2024, FUN = mean)
   ggplot(data = limp_agg_length_400, aes(x = Site_TA, y = Mean_Length_mm, fill = Site_TA)) +
     geom_bar(stat = "identity", position = "dodge") +
@@ -464,8 +430,7 @@ ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_heigh
       axis.text.x = element_text(angle = 45, hjust = 1)  # Adjust x-axis text alignment
     ) 
   
-  
-  # Width
+  # Mean Width
   limp_agg_width_400 <- aggregate(Mean_Width_mm ~ Site_TA, data = limpet_ENVR_2024, FUN = mean)
   ggplot(data = limp_agg_width_400, aes(x = Site_TA, y = Mean_Width_mm, fill = Site_TA)) +
     geom_bar(stat = "identity", position = "dodge") +
@@ -474,20 +439,13 @@ ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_heigh
     theme(
       axis.text.x = element_text(angle = 45, hjust = 1)  # Adjust x-axis text alignment
     ) 
-  
-  # aggregate by month and site (mean per visit) -  Not liking the seasonality - incorporate once we get our data sorted
-  #MONTHS being weird 
-  df_limp_agg_400 <- aggregate(Mean_Width_mm ~ month + Site_TA, data= limpet_ENVR_2024, FUN=mean)
-  ggplot(data = df_limp_agg_400, aes(x = month, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
-    geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
-    ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
 
   #=================================================================================================================================
 
 # 0.25m Quadrat
   #=================================================================================================================================
   # Bar graph of percent cover
-  plot_cover_components(quad0.25m_ENVR_2024)
+  percent_cover_400(quad0.25m_ENVR_2024)
   
   # cover of algae vs invertebrates across the transect - winter
   select_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR_2024$Site_TA,
@@ -517,9 +475,14 @@ ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_heigh
     theme_minimal() +
     scale_y_discrete(limits = c("low", "medium", "high"))
   #=================================================================================================================================
-  
-#=================================================================================================================================
 
+# Combined SPES and ENVR 400  
+#=================================================================================================================================
+  df_limp_agg <- aggregate(width ~ month + site_TA, data=select_limpet_SPES, FUN=mean)
+  ggplot(data = df_limp_agg, aes(x = month, y = width, group = site_TA, fill = site_TA)) +
+    geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
+    ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
+  
 # Abiotic Analysis
 #=================================================================================================================================
 # Find average time of minimum tide height per month 

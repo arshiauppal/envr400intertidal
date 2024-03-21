@@ -453,6 +453,34 @@ plot_cover_components <- function(quad0.25m_ENVR_2024) {
 # Call the function to create the multi-colored bar graph
 plot_cover_components(quad0.25m_ENVR_2024)
 
+#Analysis of 400 & SPES
+
+filtered_data <- subset(limpet_SPES, Site_TA %in% c(1, 4, 6))
+
+# Aggregate data by Site_TA
+aggregated_data_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + month + Site_TA, data = filtered_data, FUN = mean, na.action = na.omit)
+
+aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + month + Site_TA, data = limpet_ENVR_2024, FUN = mean, na.action = na.omit)
+
+limpet_merge <- rbind(aggregated_data_SPES, aggregated_data_400)
+
+
+limp_agg_length_combined <- aggregate(Mean_Length_mm ~ Year + Site_TA, data=limpet_merge, FUN=mean)
+ggplot(data = limp_agg_length_combined, aes(x = Year, y = Mean_Length_mm, group = Site_TA, fill = Site_TA)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  ylab("Mean limpet length (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
+
+# Width
+limp_agg_width_combined <- aggregate(Mean_Width_mm ~ Year + Site_TA, data=limpet_merge, FUN=mean)
+ggplot(data = limp_agg_width_combined, aes(x = Year, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  ylab("Mean limpet Width (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
+
+df_limp_agg_400 <- aggregate(Mean_Width_mm ~ month + Site_TA, data= limpet_merge, FUN=mean)
+ggplot(data = df_limp_agg_400, aes(x = month, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
+  geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
+  ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
+
 #=================================================================================================================================
 
 # Abiotic Analysis

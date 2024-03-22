@@ -180,7 +180,7 @@ require(reshape2)
   #=================================================================================================================================
 
 # Overall functions
-    # ploting count of species
+    # plotting count of species - can do for both SPES data (aggregated by year and TA) and ENVR data (aggregated by TA)
     plot_count_per_TA <- function(varname, plot_varname, data, aggregate_by_year_site = TRUE){
       
       # create data frame with relevant columns
@@ -361,7 +361,62 @@ require(reshape2)
   # total and relative percent cover
     percent_cover_SPES(quad0.25m_SPES)   
   
-    # cover of algae vs invertebrates across the transect - summer
+  # percent cover and count of algae
+    algae_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
+                                       year = quad0.25m_SPES$Year,
+                                       algae_percent_cover = quad0.25m_SPES$'Algae_%_cover',
+                                       algae_count = quad0.25m_SPES$Algae_Count_)
+    quad_0.25m_SPES_agg_algae_percent <- aggregate(algae_percent_cover ~ site_TA + year, data=algae_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    quad_0.25m_SPES_agg_algae_count <- aggregate(algae_count ~ site_TA + year, data=algae_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    
+    quad_0.25m_SPES_algae_merge <- left_join(quad_0.25m_SPES_agg_algae_percent, quad_0.25m_SPES_agg_algae_count, by = c("site_TA", "year"))
+    
+    # cannot get the line to show up
+    quad_0.25_SPES_algae_plot <- ggplot(data = quad_0.25m_SPES_algae_merge, aes(x = year, y = algae_percent_cover)) +
+      geom_bar(stat = "identity", position = "stack") +
+      geom_line(data = quad_0.25m_SPES_algae_merge, aes(x = year, y = algae_count), color = "blue") +  # Add line for algae count
+      labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
+      scale_y_continuous(sec.axis = sec_axis(~., name = "Algae Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
+      facet_wrap(~ site_TA) +
+      theme_minimal()
+    print(quad_0.25_SPES_algae_plot)
+    
+    # kinda crazy but kinda like it?
+    wild_quad_0.25_SPES_algae_plot <- ggplot(quad_0.25m_SPES_algae_merge, aes(x = year)) +
+      geom_bar(aes(y = algae_percent_cover), stat = "identity", fill = "blue") +
+      geom_line(aes(y = algae_count * 4), size = 1, color = "red") +  # Scale algae count to match y-axis range
+      scale_y_continuous(name = "Algae Percent Cover", breaks = seq(0, 100, by = 20), expand = c(0, 0),
+                         sec.axis = sec_axis(~./4, name = "Count of Algae", breaks = seq(0, 4, by = 1))) +
+      facet_wrap(~ site_TA, ncol = 1) +  # Separate plots for each year
+      labs(title = "Algae Cover and Count by Year", color = "Algae Count") +
+      theme_minimal()
+    print(wild_quad_0.25_SPES_algae_plot)
+  
+  # percent cover of invertebrates and count of sessile and mobile - scale for count still messed   
+    invert_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
+                                        year = quad0.25m_SPES$Year,
+                                        invert_percent_cover = quad0.25m_SPES$`Invertebrates_%_Cover`,
+                                        sessile_count = quad0.25m_SPES$Sessile_Invertebrates_Count,
+                                        mobile_count = quad0.25m_SPES$Mobile_Invertebrates_Count)
+    
+    quad_0.25m_SPES_agg_invert_percent <- aggregate(invert_percent_cover ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    quad_0.25m_SPES_agg_sessile_count <- aggregate(sessile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    quad_0.25m_SPES_agg_mobile_count <- aggregate(mobile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    
+    quad_0.25m_SPES_invert_merge <- left_join(quad_0.25m_SPES_agg_invert_percent, quad_0.25m_SPES_agg_sessile_count, by = c("site_TA", "year"))
+    quad_0.25m_SPES_invert_merge <- left_join(quad_0.25m_SPES_invert_merge, quad_0.25m_SPES_agg_mobile_count, by = c("site_TA", "year"))
+    
+    quad_0.25_SPES_invert_plot <- ggplot(data = quad_0.25m_SPES_invert_merge, aes(x = year, y = invert_percent_cover)) +
+      geom_bar(stat = "identity", position = "stack") +
+      geom_line(aes(y = sessile_count), color = "red", linetype = "solid", group = 1) +
+      geom_line(aes(y = mobile_count), color = "green", linetype = "dashed", group = 1) +
+      labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
+      scale_y_continuous(sec.axis = sec_axis(~., name = "Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
+      facet_wrap(~ site_TA) +
+      theme_minimal()
+    print(quad_0.25_SPES_invert_plot)
+    
+  # cover of algae vs invertebrates across the transect - summer
     select_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                     year = quad0.25m_SPES$Year,
                                     season = quad0.25m_SPES$season,
@@ -371,23 +426,23 @@ require(reshape2)
                                     algae_percent_cover = quad0.25m_SPES$`Algae_%_cover`,
                                     invertebrates_percent_cover = quad0.25m_SPES$`Invertebrates_%_Cover`)
 
-  quad_0.25m_SPES_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-  quad_0.25m_SPES_agg_algae_percent <- aggregate(algae_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-  quad_0.25m_SPES_agg_intertebrates <- aggregate(invertebrates_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    quad_0.25m_SPES_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    quad_0.25m_SPES_agg_algae_percent <- aggregate(algae_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    quad_0.25m_SPES_agg_intertebrates <- aggregate(invertebrates_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
 
-  quad_0.25m_SPES_agg <- quad_0.25m_SPES_agg_total %>%
-    left_join(quad_0.25m_SPES_agg_algae_percent, by = "intertidal_height") %>%
-    left_join(quad_0.25m_SPES_agg_intertebrates, by = "intertidal_height")
+    quad_0.25m_SPES_agg <- quad_0.25m_SPES_agg_total %>%
+      left_join(quad_0.25m_SPES_agg_algae_percent, by = "intertidal_height") %>%
+      left_join(quad_0.25m_SPES_agg_intertebrates, by = "intertidal_height")
 
-  tidy_quad0.25_SPES_data <- tidyr::pivot_longer(quad_0.25m_SPES_agg, cols = c(total_percent_cover, algae_percent_cover, invertebrates_percent_cover), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
+    tidy_quad0.25_SPES_data <- tidyr::pivot_longer(quad_0.25m_SPES_agg, cols = c(total_percent_cover, algae_percent_cover, invertebrates_percent_cover), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
 
-  ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = Percent_Cover), vjust = 1) +
-    scale_fill_gradient(low = "lightblue", high = "darkblue") +
-    labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Alage and Invertebrates") +
-    theme_minimal() +
-    scale_y_discrete(limits = c("low", "medium", "high"))
+    ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = Percent_Cover), vjust = 1) +
+      scale_fill_gradient(low = "lightblue", high = "darkblue") +
+      labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Alage and Invertebrates") +
+      theme_minimal() +
+      scale_y_discrete(limits = c("low", "medium", "high"))
   #=================================================================================================================================
 
 # ENVR 400 2024 Data Analysis
@@ -648,28 +703,3 @@ ggplot(monthly_abiotic_data, aes(x = month)) +
   theme_minimal()
 #=================================================================================================================================
 
-# Algae Data and ENVR 2024 Data
-#=================================================================================================================================
-  # select data of interest from each dataframe 
-  TA_6_ENVR_2024 <- subset(quad0.25m_ENVR_2024, Site_TA == 6)
-  background_algae_ENVR_2024 <- data.frame(site_TA = TA_6_ENVR_2024$Site_TA,
-                                 year = TA_6_ENVR_2024$Year,
-                                 season = TA_6_ENVR_2024$season,
-                                 month = TA_6_ENVR_2024$month,
-                                 transect_point = TA_6_ENVR_2024$Transect_Point_M,
-                                 algae_count = TA_6_ENVR_2024$Algae_Count_Above,
-                                 algae_ID = TA_6_ENVR_2024$Algae_ID)
-  # cant get it to create a data frame with the presence absence
-  algae_ID_ENVR_2024 <- data.frame(site_TA = TA_6_ENVR_2024$Site_TA,
-                                 BAR = TA_6_ENVR_2024$Algae_BAR,
-                                 GAC = TA_6_ENVR_2024$Algae_GAC,
-                                 GAM = TA_6_ENVR_2024$Algae_GAM,
-                                 RAS = TA_6_ENVR_2024$Algae_RAS,
-                                 GAU = TA_6_ENVR_2024$Algae_GAU,
-                                 RAF = TA_6_ENVR_2024$Algae_RAF,
-                                 BASC = TA_6_ENVR_2024$Algae_BASC,
-                                 BAE = TA_6_ENVR_2024$Algae_BAE,
-                                 RAI = TA_6_ENVR_2024$Algae_RAI,
-                                 BAW = TA_6_ENVR_2024$Algae_BAW,
-                                 RATT = TA_6_ENVR_2024$Algae_RATT,
-                                 RAP = TA_6_ENVR_2024$Algae_RAPP)

@@ -505,7 +505,32 @@ require(reshape2)
 
 # Limpet data
   #=================================================================================================================================
+  select_limpet_ENVR <- data.frame(site_TA = limpet_ENVR_2024$Site_TA,
+                                   year = limpet_ENVR_2024$Year,
+                                   length = limpet_ENVR_2024[,"Mean_Length_mm"],
+                                   width = limpet_ENVR_2024[,"Mean_Width_mm"],
+                                   month = limpet_ENVR_2024$month)
+  select_limpet_ENVR$site_TA <- as.character(select_limpet_ENVR$site_TA)
+  
   # Mean Length - how to add site TA to x axis 
+  limp_agg_length_ENVR <- aggregate(length ~ site_TA, data=select_limpet_ENVR, FUN=mean)
+  names(limp_agg_length_ENVR)[2] <- "mean_length"
+  
+  limp_agg_length_ENVR_sd <- aggregate(length ~ site_TA, data = select_limpet_ENVR, FUN = function(x) sd(x) / sqrt(length(x)))
+  names(limp_agg_length_ENVR_sd)[2] <- "sd_length"
+  
+  # not done, not working either
+  limp_agg_legth_ENVR_all <- left_join(limp_agg_length_ENVR, limp_agg_length_ENVR_sd, by=site_TA)
+  
+  ggplot(data = limp_agg_legth_SPES_all, aes(x = year, y = mean_length, group = site_TA, fill = site_TA)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_errorbar(aes(ymin = mean_length - sd_length, ymax = mean_length + sd_length),
+                  position = position_dodge(width = 0.9), width = 0.25) +
+    ylab("Mean limpet length (mm)") +
+    xlab("Site TA") +
+    labs(fill = "Site TA") +
+    theme_minimal()
+  
   limp_agg_length_400 <- aggregate(Mean_Length_mm ~ Site_TA, data = limpet_ENVR_2024, FUN = mean)
   ggplot(data = limp_agg_length_400, aes(x = Site_TA, y = Mean_Length_mm, fill = Site_TA)) +
     geom_bar(stat = "identity", position = "dodge") +

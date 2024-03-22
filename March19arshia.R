@@ -357,7 +357,7 @@ logical_plot_400 <- function(data, species_column) {
     ) +
     scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10) 
   ) +
-  scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability
+ # scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability
 }
 
 
@@ -375,7 +375,7 @@ oyster_density_TA_400
 
 # Presence absence of sea stars 
 
-plot_ochre_400 <- logical_plot(transect_ENVR_2024, "Ochre_EO")
+plot_ochre_400 <- logical_plot_400(transect_ENVR_2024, "Ochre_EO")
 plot_ochre_400
 
 plot_leather_400 <- logical_plot(transect_ENVR_2024, "Leather_EL")
@@ -458,9 +458,9 @@ plot_cover_components(quad0.25m_ENVR_2024)
 filtered_data <- subset(limpet_SPES, Site_TA %in% c(1, 4, 6))
 
 # Aggregate data by Site_TA
-aggregated_data_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + month + Site_TA, data = filtered_data, FUN = mean, na.action = na.omit)
+aggregated_data_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = filtered_data, FUN = mean, na.action = na.omit)
 
-aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + month + Site_TA, data = limpet_ENVR_2024, FUN = mean, na.action = na.omit)
+aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = limpet_ENVR_2024, FUN = mean, na.action = na.omit)
 
 limpet_merge <- rbind(aggregated_data_SPES, aggregated_data_400)
 
@@ -476,10 +476,15 @@ ggplot(data = limp_agg_width_combined, aes(x = Year, y = Mean_Width_mm, group = 
   geom_bar(stat = "identity", position = "dodge") +
   ylab("Mean limpet Width (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
 
-df_limp_agg_400 <- aggregate(Mean_Width_mm ~ month + Site_TA, data= limpet_merge, FUN=mean)
-ggplot(data = df_limp_agg_400, aes(x = month, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
+df_limp_agg_400 <- aggregate(Mean_Width_mm ~ season + Site_TA, data= limpet_merge, FUN=mean)
+ggplot(data = df_limp_agg_400, aes(x = season, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
   geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
-  ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
+  ylab("Mean limpet width (mm)") + xlab("season") + labs(fill = "Site TA")
+
+df_limp_agg_400 <- aggregate(Mean_Length_mm ~ season + Site_TA, data= limpet_merge, FUN=mean)
+ggplot(data = df_limp_agg_400, aes(x = season, y = Mean_Length_mm, group = Site_TA, fill = Site_TA)) +
+  geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
+  ylab("Mean limpet Length (mm)") + xlab("season") + labs(fill = "Site TA")
 
 #=================================================================================================================================
 

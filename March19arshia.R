@@ -357,8 +357,7 @@ logical_plot_400 <- function(data, species_column) {
     ) +
     scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10) 
   ) +
- # scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability
-}
+ # scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability}
 
 
 #=================================================================================================================================
@@ -485,6 +484,40 @@ df_limp_agg_400 <- aggregate(Mean_Length_mm ~ season + Site_TA, data= limpet_mer
 ggplot(data = df_limp_agg_400, aes(x = season, y = Mean_Length_mm, group = Site_TA, fill = Site_TA)) +
   geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
   ylab("Mean limpet Length (mm)") + xlab("season") + labs(fill = "Site TA")
+
+#Percent cover combined
+filtered_data_percent <- subset(quad0.25m_SPES, Site_TA %in% c(1, 4, 6))
+
+# Aggregate data by Site_TA
+aggregated_data_SPES <- aggregate(cbind('Algae_%_cover','Invertebrates_%_Cover') ~ Year + season + Site_TA, data = filtered_data_percent, FUN = mean, na.action = na.omit)
+
+aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = limpet_ENVR_2024, FUN = mean, na.action = na.omit)
+
+limpet_merge <- rbind(aggregated_data_SPES, aggregated_data_400)
+
+plot_cover_per_0.25_quadrant <- function(varname, plot_varname, data){
+  
+  plot_cover_components <- function(quad0.25m) {
+    # Calculate percentage of total cover comprised of algae and invertebrates - need to clean but its at 100
+    quad0.25m$Algae_percent <- quad0.25m$'Algae_%_cover' * 1
+    quad0.25m$Invertebrates_percent <- quad0.25m$'Sessile_Invertebrates_%_Cover' * 1
+    
+    # Aggregate data by year and site_TA
+    data_agg <- aggregate(cbind(Algae_percent, Invertebrates_percent ) ~ Year + Site_TA, data = quad0.25m, FUN = mean, na.action = na.omit)
+    
+    # Reshape data for plotting
+    data_plot <- reshape2::melt(data_agg, id.vars = c("Year", "Site_TA"))
+    
+    # Create the multi-colored bar graph
+    ggplot(data = data_plot, aes(x = Year, y = value, fill = variable)) +
+      geom_bar(stat = "identity", position = "stack") +
+      labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
+      facet_wrap(~ Site_TA) +
+      theme_minimal()
+  }
+  
+  # Call the function to create the multi-colored bar graph
+  plot_cover_components(quad0.25m)
 
 #=================================================================================================================================
 

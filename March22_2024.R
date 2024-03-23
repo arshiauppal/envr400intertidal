@@ -184,10 +184,9 @@ require(reshape2)
   #=================================================================================================================================
     # Want to make a function where we can choose if we want to aggregate it by year as well (for spes data) but cant make it work.
     # plotting count of species - can do for both SPES data (aggregated by year and TA) and ENVR data (aggregated by TA)
-     # plot_count_per_TA_all <- function(varname, plot_varname, data, aggregate_by_year_site = TRUE){
-      
+     # plot_count_per_TA_all <- function(varname, plot_varname, data, aggregate_by_year_site = TRUE)
       # create data frame with relevant columns
-      df_var <- data.frame(site_TA = data$Site_TA,
+       #{df_var <- data.frame(site_TA = data$Site_TA,
                            year = data$Year,
                            var = data[,varname])
       df_var$site_TA <- as.character(df_var$site_TA) 
@@ -263,26 +262,6 @@ require(reshape2)
       scale_y_discrete(breaks = unique(data$Site_TA))  # Set breaks for y-axis
   }
     
-  # plot percent cover bar graphs
-    percent_cover_SPES <- function(quad0.25m_SPES) {
-      # Calculate percentage of total cover comprised of algae and invertebrates - need to clean but its at 100
-      quad0.25m_SPES$Algae_percent <- quad0.25m_SPES$'Algae_%_cover' * 1
-      quad0.25m_SPES$Invertebrates_percent <- quad0.25m_SPES$'Invertebrates_%_Cover' * 1
-      
-      # Aggregate data by year and site_TA
-      data_agg <- aggregate(cbind(Algae_percent, Invertebrates_percent ) ~ Year + Site_TA, data = quad0.25m_SPES, FUN = mean, na.action = na.omit)
-      
-      # Reshape data for plotting
-      data_plot <- reshape2::melt(data_agg, id.vars = c("Year", "Site_TA"))
-      
-      # Create the multi-colored bar graph
-      ggplot(data = data_plot, aes(x = Year, y = value, fill = variable)) +
-        geom_bar(stat = "identity", position = "stack") +
-        labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
-        facet_wrap(~ Site_TA) +
-        theme_minimal()
-    }
-  
   # limpet plots
     limpet_plots_SPES <- function(data, agg_variable) {
       agg_mean <- aggregate(get(agg_variable) ~ year + site_TA, data = data, FUN = mean)
@@ -373,51 +352,106 @@ require(reshape2)
     
 # 0.25m quadrat data - working on
   #=================================================================================================================================
-  # total and relative percent cover - Arshia working on
-    percent_cover_SPES(quad0.25m_SPES)   
+  # Mean total and relative percent cover of algae and invertebrates for each site and year - need to fix aesthetics
+    percent_cover_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
+                                     year = quad0.25m_SPES$Year,
+                                     total_cover = quad0.25m_SPES$Total_Cover,
+                                     algae_cover = quad0.25m_SPES$Adjusted_Algae_Cover,
+                                     invert_cover = quad0.25m_SPES$Adjusted_Invert_Cover)
+    percent_cover_SPES <- percent_cover_SPES[complete.cases(percent_cover_SPES$total_cover) &
+                                               complete.cases(percent_cover_SPES$algae_cover) &
+                                               complete.cases(percent_cover_SPES$invert_cover), ]
+    
+    percent_cover_SPES$site_TA <- as.character(percent_cover_SPES$site_TA)  
+    
+    # Aggregate data by year and site_TA
+    total_cover <- aggregate(total_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
+      names(total_cover)[3] <- "total_cover"
+    algae_relative <- aggregate(algae_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
+      names(algae_relative)[3] <- "algae_relative"
+    invert_relative <- aggregate(invert_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
+      names(invert_relative)[3] <- "invert_relative"
+    cover_sd <- aggregate(invert_cover ~ year + site_TA, data = percent_cover_SPES, FUN = function(x) sd(x))
+      names(cover_sd)[3] <- "sd_cover"
+    
+    percent_cover_all <- merge(algae_relative, invert_relative, by = c("year", "site_TA"))
+    percent_cover_all <- merge(percent_cover_all, total_cover, by = c("year", "site_TA"))
+    percent_cover_all <- merge(percent_cover_all, cover_sd, by = c("year", "site_TA"))
+    
+    ggplot(percent_cover_all, aes(x = as.factor(year), y = total_cover)) +
+      geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
+      geom_bar(aes(y = invert_relative, fill = "Invertebrates"), position = "stack", stat = "identity") +
+      geom_errorbar(aes(ymin = invert_relative - sd_cover/2, ymax = invert_relative + sd_cover/2,
+                        group = site_TA),  # Group by site_TA
+                    position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
+      facet_wrap(~site_TA) +
+      labs(x = "Year", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
+      scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
+      theme_minimal() 
   
   # percent cover and count of algae - cant get second axis to look right
     algae_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                        year = quad0.25m_SPES$Year,
                                        algae_percent_cover = quad0.25m_SPES$Algae_Cover,
                                        algae_count = quad0.25m_SPES$Algae_Count)
-    quad_0.25m_SPES_agg_algae_percent <- aggregate(algae_percent_cover ~ site_TA + year, data=algae_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-    quad_0.25m_SPES_agg_algae_count <- aggregate(algae_count ~ site_TA + year, data=algae_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    algae_percent <- aggregate(algae_percent_cover ~ site_TA + year, data=algae_quad0.25m_SPES, FUN=mean)
+      names(algae_percent)[3] <- "algae_percent"
+     algae_percent_sd <- aggregate(algae_percent_cover ~ year + site_TA, data = algae_quad0.25m_SPES, FUN = function(x) sd(x))
+      names(algae_percent_sd)[3] <- "sd_cover"
+    algae_count <- aggregate(algae_count ~ site_TA + year, data=algae_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+      names(algae_count)[3] <- "algae_count"
     
-    quad_0.25m_SPES_algae_merge <- left_join(quad_0.25m_SPES_agg_algae_percent, quad_0.25m_SPES_agg_algae_count, by = c("site_TA", "year"))
+    algae_cover_count <- merge(algae_percent, algae_count, by = c("year", "site_TA"))
+    algae_cover_count <- merge(algae_cover_count, algae_percent_sd, by = c("year", "site_TA"))
     
-    # cannot get the line to show up
-    quad_0.25_SPES_algae_plot <- ggplot(data = quad_0.25m_SPES_algae_merge, aes(x = year, y = algae_percent_cover)) +
-      geom_bar(stat = "identity", position = "stack") +
-      geom_line(data = quad_0.25m_SPES_algae_merge, aes(x = year, y = algae_count), color = "blue") +  # Add line for algae count
-      labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
-      scale_y_continuous(sec.axis = sec_axis(~., name = "Algae Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
-      facet_wrap(~ site_TA) +
-      theme_minimal()
-    print(quad_0.25_SPES_algae_plot)
+    p <- ggplot(algae_cover_count, aes(x = factor(year))) +
+      geom_bar(aes(y = algae_percent, fill = factor(year)), stat = "identity", position = "dodge") +
+      geom_errorbar(aes(ymin = pmax(0, algae_percent - sd_cover), ymax = pmin(100, algae_percent + sd_cover)), width = 0.25, position = position_dodge(width = 0.9)) +
+      facet_wrap(~ site_TA, scales = "free") +  # Facet by site_TA
+      scale_fill_manual(values = c("red", "blue", "green", "orange", "purple")) +  # Providing enough colors for different years
+      labs(x = "Year", y = "Algae Percent Cover", fill = "Year") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+    
+    # Adding secondary y-axis for algae count
+    p <- p + geom_line(data = algae_cover_count, aes(y = algae_count), color = "black", size = 1, alpha = 0.5) +
+      scale_y_continuous(name = "Algae Percent Cover", sec.axis = sec_axis(~./0.01, name = "Algae Count", breaks = seq(0, 4, by = 1)))
+    
+    # Display the plot
+    print(p)
+    
   
-  # percent cover of invertebrates and count of sessile and mobile - scale for count still messed   
-    invert_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
+  # percent cover of invertebrates and count of sessile and mobile - scale for count still messed, colouring is fucked too   
+    invert_quad0.25m_SPES<- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                         year = quad0.25m_SPES$Year,
                                         invert_percent_cover = quad0.25m_SPES$Invertebrates_Cover,
                                         sessile_count = quad0.25m_SPES$Sessile_Invertebrates_Count,
                                         mobile_count = quad0.25m_SPES$Mobile_Invertebrates_Count)
     
-    quad_0.25m_SPES_agg_invert_percent <- aggregate(invert_percent_cover ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-    quad_0.25m_SPES_agg_sessile_count <- aggregate(sessile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-    quad_0.25m_SPES_agg_mobile_count <- aggregate(mobile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+    invert_percent <- aggregate(invert_percent_cover ~ site_TA + year, data=invert_quad0.25m_SPES, FUN=mean)
+      names(invert_percent)[3] <- "invert_percent"
+    invert_percent_sd <- aggregate(invert_percent_cover ~ year + site_TA, data = invert_quad0.25m_SPES, FUN = function(x) sd(x))
+      names(invert_percent_sd)[3] <- "sd_cover"
+    sessile_count <- aggregate(sessile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+      names(sessile_count)[3] <- "sessile_count"
+    mobile_count <- aggregate(mobile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
+      names(mobile_count)[3] <- "mobile_count"
     
-    quad_0.25m_SPES_invert_merge <- left_join(quad_0.25m_SPES_agg_invert_percent, quad_0.25m_SPES_agg_sessile_count, by = c("site_TA", "year"))
-    quad_0.25m_SPES_invert_merge <- left_join(quad_0.25m_SPES_invert_merge, quad_0.25m_SPES_agg_mobile_count, by = c("site_TA", "year"))
+    invert_cover_count <- merge(invert_percent, sessile_count, by = c("year", "site_TA"))
+    invert_cover_count <- merge(invert_cover_count, mobile_count, by = c("year", "site_TA"))  
+    invert_cover_count <- merge(invert_cover_count, invert_percent_sd, by = c("year", "site_TA"))  
     
-    quad_0.25_SPES_invert_plot <- ggplot(data = quad_0.25m_SPES_invert_merge, aes(x = year, y = invert_percent_cover)) +
-      geom_bar(stat = "identity", position = "stack") +
+    quad_0.25_SPES_invert_plot <- ggplot(data = invert_cover_count, aes(x = year)) +
+      geom_bar(aes(y = invert_percent, fill = factor(year)), stat = "identity", position = "stack") +
+      geom_errorbar(aes(ymin = pmax(0, invert_percent - sd_cover), ymax = pmin(100, invert_percent + sd_cover)), width = 0.25, position = position_dodge(width = 0.9)) +
       geom_line(aes(y = sessile_count), color = "red", linetype = "solid", group = 1) +
       geom_line(aes(y = mobile_count), color = "green", linetype = "dashed", group = 1) +
-      labs(x = "Year", y = "Percentage of Total Cover", fill = "Cover Component") +
-      scale_y_continuous(sec.axis = sec_axis(~., name = "Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
+      labs(x = "Year", y = "Percentage of Total Cover", fill = "Year") +
+      scale_fill_manual(values = c("red", "blue", "green", "orange", "purple")) +  # Providing enough colors for different years
+      scale_y_continuous(name = "Percentage of Total Cover", sec.axis = sec_axis(~./100, name = "Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
       facet_wrap(~ site_TA) +
       theme_minimal()
+    
     print(quad_0.25_SPES_invert_plot)
     
   # cover of algae vs invertebrates across the transect - summer
@@ -702,6 +736,29 @@ require(reshape2)
       geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
       ylab("Mean limpet Length (mm)") + xlab("season") + labs(fill = "Site TA")
   
+    #Percent cover 
+    
+    filtered_data_cover <- subset(quad0.25m_SPES, Site_TA %in% c(1, 4, 6))
+    
+    aggregated_data_SPES_cover <- aggregate(cbind(Adjusted_Algae_Cover, Adjusted_Invert_Cover) ~ Year + season + Site_TA, data =filtered_data_cover, FUN = mean, na.action = na.omit)
+    
+    aggregated_data_400_cover <- aggregate(cbind(Adjusted_Algae_Cover, Adjusted_Invert_Cover) ~ Year + season + Site_TA, data = quad0.25m_SPES, FUN = mean, na.action = na.omit)
+    
+    quad0.25_merge <- rbind(aggregated_data_SPES_cover, aggregated_data_400_cover)
+    
+    percent_cover_400 <- function(quad0.25_merge) {
+      data_plot <- reshape2::melt(quad0.25_merge, id.vars = c("Year", "season", "Site_TA"))
+      
+      ggplot(data = data_plot, aes(x = season, y = value, fill = variable)) +
+        geom_bar(stat = "identity", position = "stack") +
+        labs(x = "Season", y = "Percentage of Total Cover", fill = "Cover Component") +
+        facet_wrap(~Site_TA) +  # Add this line to facet by Site_TA
+        theme_minimal()
+    }
+    
+    # Call the function with your dataset
+    percent_cover_400(quad0.25_merge)
+    
 #=================================================================================================================================
   
 # Abiotic Analysis - need help with scale

@@ -1,4 +1,4 @@
-# March 20, 2024
+# March 22, 2024
 require(dplyr)
 require(stringr)
 require(ggplot2)
@@ -13,10 +13,10 @@ require(reshape2)
     quad0.25m_SPES <- read.csv("data/SPES/0.25m_SPES.csv", check.names = FALSE, na.strings=c("N/A", ""))
     limpet_SPES <- read.csv("data/SPES/Limpet_SPES.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
-  # ENVR 400 2024 Data
-    transect_ENVR_2024 <- read.csv("data/ENVR_2024/transect_ENVR_2024.csv", check.names = FALSE, na.strings=c("N/A", ""))
-    quad0.25m_ENVR_2024 <- read.csv("data/ENVR_2024/0.25m_ENVR_2024.csv", check.names = FALSE, na.strings=c("N/A", ""))
-    limpet_ENVR_2024 <- read.csv("data/ENVR_2024/Limpet_ENVR_2024.csv", check.names = FALSE, na.strings=c("N/A", ""))
+  # ENVR 400 Data
+    transect_ENVR <- read.csv("data/ENVR/transect_ENVR.csv", check.names = FALSE, na.strings=c("N/A", ""))
+    quad0.25m_ENVR <- read.csv("data/ENVR/0.25m_ENVR.csv", check.names = FALSE, na.strings=c("N/A", ""))
+    limpet_ENVR <- read.csv("data/ENVR/Limpet_ENVR.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
   # Abiotic Data
     weather <- read.csv("data/Abiotic/UBC_Rooftop_obs_2019-2024.csv", check.names = FALSE, na.strings=c("N/A",""))
@@ -119,39 +119,39 @@ require(reshape2)
 # ENVR 400 2024 Data
   #=================================================================================================================================
   # add year column - figure out how to change the column name to remove ymd now - aesthetic worry later
-    transect_ENVR_2024 <- add_year_column(transect_ENVR_2024, "Date_ymd")
-    quad0.25m_ENVR_2024 <- add_year_column(quad0.25m_ENVR_2024, "Date")
-    limpet_ENVR_2024 <- add_year_column(limpet_ENVR_2024, "Date_ymd")
+    transect_ENVR <- add_year_column(transect_ENVR, "Date_ymd")
+    quad0.25m_ENVR <- add_year_column(quad0.25m_ENVR, "Date")
+    limpet_ENVR <- add_year_column(limpet_ENVR, "Date_ymd")
   
   # change presence/absence columns to logical - note if any other columns are added have to change range of columns
-    transect_ENVR_2024 <- convert_to_logical(transect_ENVR_2024, 14, 16)
+    transect_ENVR <- convert_to_logical(transect_ENVR, 14, 16)
     
-    quad0.25m_ENVR_2024 <- convert_to_logical(quad0.25m_ENVR_2024, 15, 26)
-    quad0.25m_ENVR_2024 <- convert_to_logical(quad0.25m_ENVR_2024, 29, 36)
-    quad0.25m_ENVR_2024 <- convert_to_logical(quad0.25m_ENVR_2024, 39, 44)
-    quad0.25m_ENVR_2024 <- convert_to_logical(quad0.25m_ENVR_2024, 47, 54)
-    quad0.25m_ENVR_2024 <- convert_to_logical(quad0.25m_ENVR_2024, 57, 62)
+    quad0.25m_ENVR <- convert_to_logical(quad0.25m_ENVR, 15, 26)
+    quad0.25m_ENVR <- convert_to_logical(quad0.25m_ENVR, 29, 36)
+    quad0.25m_ENVR <- convert_to_logical(quad0.25m_ENVR, 39, 44)
+    quad0.25m_ENVR <- convert_to_logical(quad0.25m_ENVR, 47, 54)
+    quad0.25m_ENVR <- convert_to_logical(quad0.25m_ENVR, 57, 62)
     
   # change site_TA to character
-    transect_ENVR_2024 <- convert_to_character(transect_ENVR_2024, "Site_TA")
-    quad0.25m_ENVR_2024 <- convert_to_character(quad0.25m_ENVR_2024, "Site_TA")
-    limpet_ENVR_2024 <- convert_to_character(limpet_ENVR_2024, "Site_TA")
+    transect_ENVR <- convert_to_character(transect_ENVR, "Site_TA")
+    quad0.25m_ENVR <- convert_to_character(quad0.25m_ENVR, "Site_TA")
+    limpet_ENVR <- convert_to_character(limpet_ENVR, "Site_TA")
     
   # get season and month
-    transect_ENVR_2024$season <- get_season(transect_ENVR_2024$Date_ymd)
-    transect_ENVR_2024$month <- month(as.Date(transect_ENVR_2024$Date_ymd))
+    transect_ENVR$season <- get_season(transect_ENVR$Date_ymd)
+    transect_ENVR$month <- month(as.Date(transect_ENVR$Date_ymd))
   
-    quad0.25m_ENVR_2024$season <- get_season(quad0.25m_ENVR_2024$Date)
-    quad0.25m_ENVR_2024$month <- month(as.Date(quad0.25m_ENVR_2024$Date))
+    quad0.25m_ENVR$season <- get_season(quad0.25m_ENVR$Date)
+    quad0.25m_ENVR$month <- month(as.Date(quad0.25m_ENVR$Date))
   
-    limpet_ENVR_2024$season <- get_season(limpet_ENVR_2024$Date)
-    limpet_ENVR_2024$month <- month(as.Date(limpet_ENVR_2024$Date))
+    limpet_ENVR$season <- get_season(limpet_ENVR$Date)
+    limpet_ENVR$month <- month(as.Date(limpet_ENVR$Date))
     
   # get intertidal height
-    quad0.25m_ENVR_2024 <- intertidal_height(quad0.25m_ENVR_2024, "Transect_Point_M")
+    quad0.25m_ENVR <- intertidal_height(quad0.25m_ENVR, "Transect_Point_M")
     
   # proportional percent cover
-    quad0.25m_ENVR_2024 <- adjusted_percent_cover(quad0.25m_ENVR_2024, "Algae_Cover", "Invertebrates_Cover", "Total_Cover")
+    quad0.25m_ENVR <- adjusted_percent_cover(quad0.25m_ENVR, "Algae_Cover", "Invertebrates_Cover", "Total_Cover")
     
   #=================================================================================================================================
 
@@ -473,9 +473,9 @@ require(reshape2)
   }
   
   # percent cover function
-  percent_cover_400 <- function(quad0.25m_ENVR_2024) {
+  percent_cover_400 <- function(quad0.25m_ENVR) {
     # Aggregate data by Site_TA
-    data_agg <- aggregate(cbind(Algae_percent = Percent_Cover_Algae, Invertebrates_percent = Percent_Cover_Invertebrates) ~ Site_TA, data = quad0.25m_ENVR_2024, FUN = mean, na.action = na.omit)
+    data_agg <- aggregate(cbind(Algae_percent = Percent_Cover_Algae, Invertebrates_percent = Percent_Cover_Invertebrates) ~ Site_TA, data = quad0.25m_ENVR, FUN = mean, na.action = na.omit)
     
     # Reshape data for plotting
     data_plot <- reshape2::melt(data_agg, id.vars = "Site_TA")
@@ -491,31 +491,31 @@ require(reshape2)
 # Transect
   #=================================================================================================================================
   # Density of sea stars per TA 
-  SS_density_TA_400 <- plot_count_per_TA("Density_of_Sea_Stars_count", "Count of sea stars", transect_ENVR_2024, aggregate_by_year_site = FALSE)
+  SS_density_TA_400 <- plot_count_per_TA("Density_of_Sea_Stars_count", "Count of sea stars", transect_ENVR, aggregate_by_year_site = FALSE)
   SS_density_TA_400
   
   # Density of Oysters per TA
-  oyster_density_TA_400 <- plot_count_per_TA("Density_of_Oysters_count", "Count of Oysters", transect_ENVR_2024, aggregate_by_year_site = FALSE)
+  oyster_density_TA_400 <- plot_count_per_TA("Density_of_Oysters_count", "Count of Oysters", transect_ENVR, aggregate_by_year_site = FALSE)
   oyster_density_TA_400
   
   # Presence absence of sea stars 
-  plot_ochre_400 <- presence_absence_400(transect_ENVR_2024, "Ochre_EO")
+  plot_ochre_400 <- presence_absence_400(transect_ENVR, "Ochre_EO")
   plot_ochre_400
   
-  plot_leather_400 <- presence_absence_400(transect_ENVR_2024, "Leather_EL")
+  plot_leather_400 <- presence_absence_400(transect_ENVR, "Leather_EL")
   plot_leather_400
   
-  plot_molted_400 <- presence_absence_400(transect_ENVR_2024, "Mottled_EM")
+  plot_molted_400 <- presence_absence_400(transect_ENVR, "Mottled_EM")
   plot_molted_400
   #=================================================================================================================================
 
 # Limpet data
   #=================================================================================================================================
-  select_limpet_ENVR <- data.frame(site_TA = limpet_ENVR_2024$Site_TA,
-                                   year = limpet_ENVR_2024$Year,
-                                   length = limpet_ENVR_2024[,"Mean_Length_mm"],
-                                   width = limpet_ENVR_2024[,"Mean_Width_mm"],
-                                   month = limpet_ENVR_2024$month)
+  select_limpet_ENVR <- data.frame(site_TA = limpet_ENVR$Site_TA,
+                                   year = limpet_ENVR$Year,
+                                   length = limpet_ENVR[,"Mean_Length_mm"],
+                                   width = limpet_ENVR[,"Mean_Width_mm"],
+                                   month = limpet_ENVR$month)
   select_limpet_ENVR$site_TA <- as.character(select_limpet_ENVR$site_TA)
   
   # Mean Length - how to add site TA to x axis 
@@ -537,7 +537,7 @@ require(reshape2)
     labs(fill = "Site TA") +
     theme_minimal()
   
-  limp_agg_length_400 <- aggregate(Mean_Length_mm ~ Site_TA, data = limpet_ENVR_2024, FUN = mean)
+  limp_agg_length_400 <- aggregate(Mean_Length_mm ~ Site_TA, data = limpet_ENVR, FUN = mean)
   ggplot(data = limp_agg_length_400, aes(x = Site_TA, y = Mean_Length_mm, fill = Site_TA)) +
     geom_bar(stat = "identity", position = "dodge") +
     ylab("Mean limpet length (mm)") + xlab("Sampling Site") + labs(fill = "Site TA") +
@@ -547,7 +547,7 @@ require(reshape2)
     ) 
   
   # Mean Width
-  limp_agg_width_400 <- aggregate(Mean_Width_mm ~ Site_TA, data = limpet_ENVR_2024, FUN = mean)
+  limp_agg_width_400 <- aggregate(Mean_Width_mm ~ Site_TA, data = limpet_ENVR, FUN = mean)
   ggplot(data = limp_agg_width_400, aes(x = Site_TA, y = Mean_Width_mm, fill = Site_TA)) +
     geom_bar(stat = "identity", position = "dodge") +
     ylab("Mean limpet width (mm)") + xlab("Sampling Site") + labs(fill = "Site TA") +
@@ -561,12 +561,12 @@ require(reshape2)
 # 0.25m Quadrat
   #=================================================================================================================================
   # Bar graph of total and relative percent cover
-  percent_cover_400(quad0.25m_ENVR_2024)
+  percent_cover_400(quad0.25m_ENVR)
   
   # bar graph of relative percent cover of algae and count of algae species - dont love it tbh LMAO
-  algae_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR_2024$Site_TA,
-                                     algae_percent_cover = quad0.25m_ENVR_2024$Percent_Cover_Algae,
-                                     algae_count = quad0.25m_ENVR_2024$Algae_Count_Above)
+  algae_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                                     algae_percent_cover = quad0.25m_ENVR$Percent_Cover_Algae,
+                                     algae_count = quad0.25m_ENVR$Algae_Count_Above)
   quad_0.25m_ENVR_agg_algae_percent <- aggregate(algae_percent_cover ~ site_TA, data=algae_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
   quad_0.25m_ENVR_agg_algae_count <- aggregate(algae_count ~ site_TA, data=algae_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
   
@@ -583,10 +583,10 @@ require(reshape2)
   
   # bar graph of relative percent cover of invertebrates and count of mobile and sessile
   # *** NEED TO FIGURE OUT SCALE*****
-  invert_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR_2024$Site_TA,
-                                     invert_percent_cover = quad0.25m_ENVR_2024$Percent_Cover_Invertebrates,
-                                     sessile_count = quad0.25m_ENVR_2024$Sessile_Invertebrates_Count_Above + quad0.25m_ENVR_2024$Sessile_Invertebrates_Count_Below,
-                                     mobile_count = quad0.25m_ENVR_2024$Mobile_Invertebrates_Count_Above + quad0.25m_ENVR_2024$Mobile_Invertebrates_Count_Below)
+  invert_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                                     invert_percent_cover = quad0.25m_ENVR$Percent_Cover_Invertebrates,
+                                     sessile_count = quad0.25m_ENVR$Sessile_Invertebrates_Count_Above + quad0.25m_ENVR$Sessile_Invertebrates_Count_Below,
+                                     mobile_count = quad0.25m_ENVR$Mobile_Invertebrates_Count_Above + quad0.25m_ENVR$Mobile_Invertebrates_Count_Below)
   
   quad_0.25m_ENVR_agg_invert_percent <- aggregate(invert_percent_cover ~ site_TA, data=invert_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
   quad_0.25m_ENVR_agg_sessile_count <- aggregate(sessile_count ~ site_TA, data=invert_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
@@ -606,14 +606,14 @@ require(reshape2)
   print(invert_quad0.25m_ENVR_plot)
   
   # cover of algae vs invertebrates across the transect - winter
-  select_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR_2024$Site_TA,
-                                 year = quad0.25m_ENVR_2024$Year,
-                                 season = quad0.25m_ENVR_2024$season,
-                                 month = quad0.25m_ENVR_2024$month,
-                                 intertidal_height = quad0.25m_ENVR_2024$intertidal_height,
-                                 total_percent_cover = quad0.25m_ENVR_2024$'Total_Cover_%',
-                                 algae_percent_cover = quad0.25m_ENVR_2024$Percent_Cover_Algae,
-                                 invertebrates_percent_cover = quad0.25m_ENVR_2024$Percent_Cover_Invertebrates)
+  select_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                                 year = quad0.25m_ENVR$Year,
+                                 season = quad0.25m_ENVR$season,
+                                 month = quad0.25m_ENVR$month,
+                                 intertidal_height = quad0.25m_ENVR$intertidal_height,
+                                 total_percent_cover = quad0.25m_ENVR$'Total_Cover_%',
+                                 algae_percent_cover = quad0.25m_ENVR$Percent_Cover_Algae,
+                                 invertebrates_percent_cover = quad0.25m_ENVR$Percent_Cover_Invertebrates)
 
   quad_0.25m_ENVR_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data=select_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
   quad_0.25m_ENVR_agg_algae_percent <- aggregate(algae_percent_cover ~ intertidal_height, data=select_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
@@ -649,7 +649,7 @@ require(reshape2)
   
     
     # Call the function to create the multi-colored bar graph
-    plot_cover_components(quad0.25m_ENVR_2024)
+    plot_cover_components(quad0.25m_ENVR)
     
     #Analysis of 400 & SPES
     
@@ -658,7 +658,7 @@ require(reshape2)
     # Aggregate data by Site_TA
     aggregated_data_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = filtered_data, FUN = mean, na.action = na.omit)
     
-    aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = limpet_ENVR_2024, FUN = mean, na.action = na.omit)
+    aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = limpet_ENVR, FUN = mean, na.action = na.omit)
     
     limpet_merge <- rbind(aggregated_data_SPES, aggregated_data_400)
     

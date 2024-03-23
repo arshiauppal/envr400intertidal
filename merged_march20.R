@@ -18,12 +18,6 @@ require(reshape2)
     quad0.25m_ENVR_2024 <- read.csv("data/ENVR_2024/0.25m_ENVR_2024.csv", check.names = FALSE, na.strings=c("N/A", ""))
     limpet_ENVR_2024 <- read.csv("data/ENVR_2024/Limpet_ENVR_2024.csv", check.names = FALSE, na.strings=c("N/A", ""))
 
-  # ENVR 400 2023 Data - their data is crazy idk if its worth it lmao
-    #ENVR_2023 <- read.csv("data/******.csv", check.names = FALSE, na.strings=c("N/A", ""))
-
-  # Monthly Algae Survey Data
-    #algae_data <- read.csv("data/Seaweed_Data_Clean.csv", check.names = FALSE, na.strings=c("N/A", ""))
-
   # Abiotic Data
     weather <- read.csv("data/Abiotic/UBC_Rooftop_obs_2019-2024.csv", check.names = FALSE, na.strings=c("N/A",""))
     tide <- read.csv("data/Abiotic/Tide_Jan012019-2024.csv", check.names = FALSE, na.strings=c("N/A",""))
@@ -74,6 +68,12 @@ require(reshape2)
       return(data_frame)
     }
     
+  # proportional percent cover
+    adjusted_percent_cover <- function(dataframe, algae_cover_col, invertebrates_cover_col, total_cover_col) {
+      dataframe$Adjusted_Algae_Cover <- dataframe[[algae_cover_col]] / (dataframe[[algae_cover_col]] + dataframe[[invertebrates_cover_col]]) * dataframe[[total_cover_col]]
+      dataframe$Adjusted_Invert_Cover <- dataframe[[invertebrates_cover_col]] / (dataframe[[algae_cover_col]] + dataframe[[invertebrates_cover_col]]) * dataframe[[total_cover_col]]
+      return(dataframe)
+    }
   #=================================================================================================================================
   
 # SPES Data
@@ -111,13 +111,16 @@ require(reshape2)
     quad0.25m_SPES <- intertidal_height(quad0.25m_SPES, "Transect_Point_m")
     quad1m_SPES <- intertidal_height(quad1m_SPES, "Transect_Point_m")
     
+  # proportional percent cover
+    quad0.25m_SPES <- adjusted_percent_cover(quad0.25m_SPES, "Algae_Cover", "Invertebrates_Cover", "Total_Cover")
+    
   #=================================================================================================================================
 
 # ENVR 400 2024 Data
   #=================================================================================================================================
   # add year column - figure out how to change the column name to remove ymd now - aesthetic worry later
     transect_ENVR_2024 <- add_year_column(transect_ENVR_2024, "Date_ymd")
-    quad0.25m_ENVR_2024 <- add_year_column(quad0.25m_ENVR_2024, "Date_ymd")
+    quad0.25m_ENVR_2024 <- add_year_column(quad0.25m_ENVR_2024, "Date")
     limpet_ENVR_2024 <- add_year_column(limpet_ENVR_2024, "Date_ymd")
   
   # change presence/absence columns to logical - note if any other columns are added have to change range of columns
@@ -146,7 +149,10 @@ require(reshape2)
     
   # get intertidal height
     quad0.25m_ENVR_2024 <- intertidal_height(quad0.25m_ENVR_2024, "Transect_Point_M")
- 
+    
+  # proportional percent cover
+    quad0.25m_ENVR_2024 <- adjusted_percent_cover(quad0.25m_ENVR_2024, "Algae_Cover", "Invertebrates_Cover", "Total_Cover")
+    
   #=================================================================================================================================
 
 # Algae Data - need to think about algae and how to deal with
@@ -641,12 +647,42 @@ require(reshape2)
     quad0.25m_SPES_TA <- subset_TAs(quad0.25m_SPES)
     limpet_SPES_TA <- subset_TAs(limpet_SPES)
   
-  
-  
-  df_limp_agg <- aggregate(width ~ month + site_TA, data=select_limpet_SPES, FUN=mean)
-  ggplot(data = df_limp_agg, aes(x = month, y = width, group = site_TA, fill = site_TA)) +
-    geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
-    ylab("Mean limpet length (mm)") + xlab("Time (months)") + labs(fill = "Site TA")
+    
+    # Call the function to create the multi-colored bar graph
+    plot_cover_components(quad0.25m_ENVR_2024)
+    
+    #Analysis of 400 & SPES
+    
+    filtered_data <- subset(limpet_SPES, Site_TA %in% c(1, 4, 6))
+    
+    # Aggregate data by Site_TA
+    aggregated_data_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = filtered_data, FUN = mean, na.action = na.omit)
+    
+    aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = limpet_ENVR_2024, FUN = mean, na.action = na.omit)
+    
+    limpet_merge <- rbind(aggregated_data_SPES, aggregated_data_400)
+    
+    
+    limp_agg_length_combined <- aggregate(Mean_Length_mm ~ Year + Site_TA, data=limpet_merge, FUN=mean)
+    ggplot(data = limp_agg_length_combined, aes(x = Year, y = Mean_Length_mm, group = Site_TA, fill = Site_TA)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      ylab("Mean limpet length (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
+    
+    # Width
+    limp_agg_width_combined <- aggregate(Mean_Width_mm ~ Year + Site_TA, data=limpet_merge, FUN=mean)
+    ggplot(data = limp_agg_width_combined, aes(x = Year, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      ylab("Mean limpet Width (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
+    
+    df_limp_agg_400 <- aggregate(Mean_Width_mm ~ season + Site_TA, data= limpet_merge, FUN=mean)
+    ggplot(data = df_limp_agg_400, aes(x = season, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
+      geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
+      ylab("Mean limpet width (mm)") + xlab("season") + labs(fill = "Site TA")
+    
+    df_limp_agg_400 <- aggregate(Mean_Length_mm ~ season + Site_TA, data= limpet_merge, FUN=mean)
+    ggplot(data = df_limp_agg_400, aes(x = season, y = Mean_Length_mm, group = Site_TA, fill = Site_TA)) +
+      geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
+      ylab("Mean limpet Length (mm)") + xlab("season") + labs(fill = "Site TA")
   
 #=================================================================================================================================
   

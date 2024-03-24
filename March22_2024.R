@@ -184,40 +184,6 @@ require(reshape2)
 
 # Overall functions
   #=================================================================================================================================
-    # Want to make a function where we can choose if we want to aggregate it by year as well (for spes data) but cant make it work.
-    # plotting count of species - can do for both SPES data (aggregated by year and TA) and ENVR data (aggregated by TA)
-     # plot_count_per_TA_all <- function(varname, plot_varname, data, aggregate_by_year_site = TRUE)
-      # create data frame with relevant columns
-       #{df_var <- data.frame(site_TA = data$Site_TA,
-                           year = data$Year,
-                           var = data[,varname])
-      df_var$site_TA <- as.character(df_var$site_TA) 
-      
-      # Aggregate by year and site if requested
-      if (aggregate_by_year_site) {
-        df_var_mean <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
-        names(df_var_mean)[3] <- "mean_count"
-        df_var_sd <- aggregate(var ~ year + site_TA, data = df_var, FUN = function(x) sd(x))
-        names(df_var_sd)[3] <- "sd_count"
-        
-        df_var_all <- merge(df_var_mean, df_var_sd, by = c("year", "site_TA"))
-      } else {  # Otherwise, aggregate only by site
-        df_var_mean <- aggregate(var ~ site_TA, data = df_var, FUN = mean)
-        names(df_var_mean)[2] <- "mean_count"
-        df_var_sd <- aggregate(var ~ site_TA, data = df_var, FUN = function(x) sd(x))
-        names(df_var_sd)[2] <- "sd_count"
-        
-        df_var_all <- merge(df_var_mean, df_var_sd, by = "site_TA")
-      }
-      
-      # Plot
-      ggplot(data = df_var_all, aes(x = ifelse(aggregate_by_year_site, year, site_TA), y = mean_count, group = site_TA, fill = site_TA)) +
-        geom_bar(stat = "identity", position = "dodge") +
-        geom_errorbar(aes(ymin = mean_count - sd_count, ymax = mean_count + sd_count), 
-                      position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(plot_varname) + 
-        xlab(ifelse(aggregate_by_year_site, "Time (years)", "Site TA")) + 
-        labs(fill = "Site TA")
   # plot percent cover along the transect line - need to fix aesthetics
       cover_intertidal_height <- function(data) {
         selected_data <- data.frame(
@@ -348,12 +314,17 @@ require(reshape2)
     SS_density_TA <- plot_count_per_TA_SPES("Density_of_Sea_Stars_Count", "Mean count of sea stars", transect_SPES)
       SS_density_TA
     
+    # stats
+      filtered_SS <- subset(transect_SPES, Year %in% c(2019, 2023))
+      t_test_SS_Year <- t.test(Density_of_Sea_Stars_Count ~ Year, data = filtered_SS, paired = TRUE)
+        print(t_test_SS_Year)
+        
   # Presence absence of sea stars 
     plot_ochre <- presence_absence_SPES(transect_SPES, "Ochre")
       plot_ochre
     plot_leather <- presence_absence_SPES(transect_SPES, "Leather")
       plot_leather
-    plot_mottled <- presence_absence_SPES(transect_SPES, "Molted")
+    plot_mottled <- presence_absence_SPES(transect_SPES, "Mottled")
       plot_mottled 
   #=================================================================================================================================
       
@@ -518,7 +489,7 @@ require(reshape2)
       
   }
     
-  # identity of sea stars - had to change christinas 
+  # identity of sea stars
   presence_absence_ENVR <- function(data, species_column) {
       df <- data.frame(Site_TA = data$Site_TA,
                        Species = data[[species_column]])
@@ -573,7 +544,7 @@ require(reshape2)
     SS_density_TA_400 <- plot_count_per_TA_400(transect_ENVR, "Density_of_Sea_Stars_count", "Count of sea stars")
       SS_density_TA_400
   
-  # Density of Oysters per TA
+  # Density of Oysters per TA - NOT WORKING
     oyster_density_TA_400 <- plot_count_per_TA_400("Density_of_Oysters_count", "Count of Oysters", transect_ENVR)
       oyster_density_TA_400
   
@@ -708,6 +679,51 @@ require(reshape2)
 
 # Transect data - NEED TO PLOT SEA STAR
   #=================================================================================================================================
+    names(transect_ENVR)[names(transect_ENVR) == "Density_of_Sea_Stars_count"] <- "Density_of_Sea_Stars_Count"
+    
+    ss_agg_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, data = transect_SPES_TA, FUN = mean, na.rm = TRUE)
+    
+    # Calculate standard deviation of sea stars count by season and Site_TA for SPES data
+    ss_agg_sd_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, 
+                                data = transect_SPES_TA, 
+                                FUN = function(x) sd(x, na.rm = TRUE))
+    
+    # Rename standard deviation column for consistency
+    names(ss_agg_sd_SPES)[names(ss_agg_sd_SPES) == "Density_of_Sea_Stars_Count"] <- "sd_ss"
+    
+    # Aggregate mean sea stars count by season and Site_TA for ENVR data
+    ss_agg_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, data = transect_ENVR, FUN = mean, na.rm = TRUE)
+    
+    # Calculate standard deviation of sea stars count by season and Site_TA for ENVR data
+    ss_agg_sd_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, 
+                                data = transect_ENVR, 
+                                FUN = function(x) sd(x, na.rm = TRUE))
+    
+    # Rename standard deviation column for consistency
+    names(ss_agg_sd_ENVR)[names(ss_agg_sd_ENVR) == "Density_of_Sea_Stars_Count"] <- "sd_ss"
+    
+    # Combine aggregated data and standard deviation data for both datasets
+    ss_agg_combined <- rbind(ss_agg_SPES, ss_agg_ENVR)
+    ss_agg_sd_combined <- rbind(ss_agg_sd_SPES, ss_agg_sd_ENVR)
+    
+    ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA"))
+    
+    # plotting limpet function - need to fix aesthetics
+    plot_ss <- function(data, y_variable) {
+      # Generate the plot
+      ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
+        geom_bar(stat = "identity", position = "dodge") +
+        geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_ss, 0), 
+                          ymax = !!sym(y_variable) + sd_ss),
+                      position = position_dodge(width = 0.9), 
+                      width = 0.25) +
+        labs(x = "Site_TA", y = y_variable, title = paste("Plot of", y_variable, "by Site and Season")) +
+        scale_fill_discrete(name = "Season") +
+        theme_minimal()
+    }
+    
+    # length
+    plot_ss(ss_merge, "Density_of_Sea_Stars_Count")
   #=================================================================================================================================
     
 # Limpet data

@@ -119,9 +119,9 @@ require(reshape2)
 # ENVR 400 2024 Data
   #=================================================================================================================================
   # add year column - figure out how to change the column name to remove ymd now - aesthetic worry later
-    transect_ENVR <- add_year_column(transect_ENVR, "Date")
+    transect_ENVR <- add_year_column(transect_ENVR, "Date") 
     quad0.25m_ENVR <- add_year_column(quad0.25m_ENVR, "Date")
-    limpet_ENVR <- add_year_column(limpet_ENVR, "Date")
+    limpet_ENVR <- add_year_column(limpet_ENVR, "Date") 
   
   # change presence/absence columns to logical - note if any other columns are added have to change range of columns
     transect_ENVR <- convert_to_logical(transect_ENVR, 14, 16)
@@ -218,7 +218,7 @@ require(reshape2)
         labs(fill = "Site TA")
     }
     
-# Historical SPES Data plotting
+# SPES Data
 #=================================================================================================================================
 # Functions 
   #=================================================================================================================================
@@ -362,17 +362,16 @@ require(reshape2)
                                                complete.cases(percent_cover_SPES$algae_cover) &
                                                complete.cases(percent_cover_SPES$invert_cover), ]
     
-    percent_cover_SPES$site_TA <- as.character(percent_cover_SPES$site_TA)  
+    percent_cover_SPES$site_TA <- as.character(percent_cover_SPES$site_TA) 
     
-    # Aggregate data by year and site_TA
     total_cover <- aggregate(total_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
-      names(total_cover)[3] <- "total_cover"
+    names(total_cover)[3] <- "total_cover"
     algae_relative <- aggregate(algae_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
-      names(algae_relative)[3] <- "algae_relative"
+    names(algae_relative)[3] <- "algae_relative"
     invert_relative <- aggregate(invert_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
-      names(invert_relative)[3] <- "invert_relative"
+    names(invert_relative)[3] <- "invert_relative"
     cover_sd <- aggregate(invert_cover ~ year + site_TA, data = percent_cover_SPES, FUN = function(x) sd(x))
-      names(cover_sd)[3] <- "sd_cover"
+    names(cover_sd)[3] <- "sd_cover"
     
     percent_cover_all <- merge(algae_relative, invert_relative, by = c("year", "site_TA"))
     percent_cover_all <- merge(percent_cover_all, total_cover, by = c("year", "site_TA"))
@@ -388,7 +387,7 @@ require(reshape2)
       labs(x = "Year", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
       scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
       theme_minimal() 
-  
+    
   # percent cover and count of algae - cant get second axis to look right
     algae_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                        year = quad0.25m_SPES$Year,
@@ -527,22 +526,7 @@ require(reshape2)
       ) 
       #scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability
   }
-  
-  # percent cover function 
-  percent_cover_400 <- function(quad0.25m_ENVR) {
-    # Aggregate data by Site_TA
-    data_agg <- aggregate(cbind(Algae_percent = Percent_Cover_Algae, Invertebrates_percent = Percent_Cover_Invertebrates) ~ Site_TA, data = quad0.25m_ENVR, FUN = mean, na.action = na.omit)
-    
-    # Reshape data for plotting
-    data_plot <- reshape2::melt(data_agg, id.vars = "Site_TA")
-    
-    # Create the multi-colored bar graph
-    ggplot(data = data_plot, aes(x = Site_TA, y = value, fill = variable)) +
-      geom_bar(stat = "identity", position = "stack") +
-      labs(x = "Site_TA", y = "Percentage of Total Cover", fill = "Cover Component") +
-      theme_minimal()
-  }
-  
+
   # limpet plots
   limpet_plots_ENVR <- function(data, agg_variable) {
     agg_mean <- aggregate(get(agg_variable) ~ site_TA, data = data, FUN = mean)
@@ -595,14 +579,48 @@ require(reshape2)
                                    month = limpet_ENVR$month)
   select_limpet_ENVR$site_TA <- as.character(select_limpet_ENVR$site_TA)
   
-  limpet_plots_ENVR(select_limpet_ENVR, "length")
-  limpet_plots_ENVR(select_limpet_ENVR, "width")
+  # limpet length
+    limpet_plots_ENVR(select_limpet_ENVR, "length")
+  # limpet width
+    limpet_plots_ENVR(select_limpet_ENVR, "width")
   #=================================================================================================================================
 
 # 0.25m Quadrat - lots of working
   #=================================================================================================================================
-  # Bar graph of total and relative percent cover - Arshia working on
-  percent_cover_400(quad0.25m_ENVR)
+  # Mean total and relative percent cover of algae and invertebrates for each site and year - need to fix aesthetics
+    percent_cover_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                                     year = quad0.25m_ENVR$Year,
+                                     season = quad0.25mENVR$season
+                                     total_cover = quad0.25m_ENVR$Total_Cover,
+                                     algae_cover = quad0.25m_ENVR$Adjusted_Algae_Cover,
+                                     invert_cover = quad0.25m_ENVR$Adjusted_Invert_Cover)
+    percent_cover_ENVR <- percent_cover_ENVR[complete.cases(percent_cover_ENVR$total_cover) &
+                                               complete.cases(percent_cover_ENVR$algae_cover) &
+                                               complete.cases(percent_cover_ENVR$invert_cover), ]
+    
+  # Aggregate data by year and site_TA
+  total_cover <- aggregate(total_cover ~ site_TA, data= percent_cover_ENVR, FUN=mean)
+    names(total_cover)[2] <- "total_cover"
+  algae_relative <- aggregate(algae_cover ~ site_TA, data= percent_cover_ENVR, FUN=mean)
+    names(algae_relative)[2] <- "algae_relative"
+  invert_relative <- aggregate(invert_cover ~ site_TA, data= percent_cover_ENVR, FUN=mean)
+    names(invert_relative)[2] <- "invert_relative"
+  cover_sd <- aggregate(invert_cover ~ site_TA, data = percent_cover_ENVR, FUN = function(x) sd(x))
+    names(cover_sd)[2] <- "sd_cover"
+  
+  percent_cover_all <- merge(algae_relative, invert_relative, by = "site_TA")
+  percent_cover_all <- merge(percent_cover_all, total_cover, by = "site_TA")
+  percent_cover_all <- merge(percent_cover_all, cover_sd, by = "site_TA")
+  
+  ggplot(percent_cover_all, aes(x = site_TA, y = total_cover)) +
+    geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
+    geom_bar(aes(y = invert_relative, fill = "Invertebrates"), position = "stack", stat = "identity") +
+    geom_errorbar(aes(ymin = invert_relative - sd_cover/2, ymax = invert_relative + sd_cover/2,
+                      group = site_TA),  # Group by site_TA
+                  position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
+    labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
+    scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
+    theme_minimal()
   
   # bar graph of relative percent cover of algae and count of algae species *ADJUST AESTHETICS
   algae_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
@@ -691,74 +709,115 @@ require(reshape2)
 
 # Combined SPES and ENVR 400  
 #=================================================================================================================================
-  # select TA-1, 4 and 6 from SPES data - Arshia working on
+  # select TA-1, 4 and 6 from SPES data
   subset_TAs <- function(dataframe, column_name, values) {
-    subset(dataframe, Site_TA %in% c(1, 4, 6))
+    subset(dataframe, Site_TA %in% c(1, 4, 6) & Year == 2023)
   }
     transect_SPES_TA <- subset_TAs(transect_SPES)
     quad1m_SPES_TA <- subset_TAs(quad1m_SPES)
     quad0.25m_SPES_TA <- subset_TAs(quad0.25m_SPES)
     limpet_SPES_TA <- subset_TAs(limpet_SPES)
   
-    
-    # Call the function to create the multi-colored bar graph
-    plot_cover_components(quad0.25m_ENVR)
-    
-    #Analysis of 400 & SPES
-    filtered_data <- subset(limpet_SPES, Site_TA %in% c(1, 4, 6))
-    
+# Limpet data
+  #=================================================================================================================================
     # Aggregate data by Site_TA
-    aggregated_data_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = filtered_data, FUN = mean, na.action = na.omit)
+    limp_agg_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, data = limpet_SPES_TA, FUN = mean, na.action = na.omit)
+    limp_agg_sd_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, 
+                             data = limpet_SPES_TA, 
+                             FUN = function(x) sd(x, na.rm = TRUE),
+                             na.action = na.omit)
+      names(limp_agg_sd_SPES)[names(limp_agg_sd_SPES) == "Mean_Length_mm"] <- "sd_length"
+      names(limp_agg_sd_SPES)[names(limp_agg_sd_SPES) == "Mean_Width_mm"] <- "sd_width"
+
+    limp_agg_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, data = limpet_ENVR, FUN = mean, na.action = na.omit)
+    limp_agg_sd_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, 
+                                  data = limpet_ENVR, 
+                                  FUN = function(x) sd(x, na.rm = TRUE),
+                                  na.action = na.omit)
+      names(limp_agg_sd_ENVR)[names(limp_agg_sd_ENVR) == "Mean_Length_mm"] <- "sd_length"
+      names(limp_agg_sd_ENVR)[names(limp_agg_sd_ENVR) == "Mean_Width_mm"] <- "sd_width"
     
-    aggregated_data_400 <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ Year + season + Site_TA, data = limpet_ENVR, FUN = mean, na.action = na.omit)
-    
-    limpet_merge <- rbind(aggregated_data_SPES, aggregated_data_400)
-    
-    
-    limp_agg_length_combined <- aggregate(Mean_Length_mm ~ Year + Site_TA, data=limpet_merge, FUN=mean)
-    ggplot(data = limp_agg_length_combined, aes(x = Year, y = Mean_Length_mm, group = Site_TA, fill = Site_TA)) +
-      geom_bar(stat = "identity", position = "dodge") +
-      ylab("Mean limpet length (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
-    
-    # Width
-    limp_agg_width_combined <- aggregate(Mean_Width_mm ~ Year + Site_TA, data=limpet_merge, FUN=mean)
-    ggplot(data = limp_agg_width_combined, aes(x = Year, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
-      geom_bar(stat = "identity", position = "dodge") +
-      ylab("Mean limpet Width (mm)") + xlab("Time (years)") + labs(fill = "Site TA")
-    
-    df_limp_agg_400 <- aggregate(Mean_Width_mm ~ season + Site_TA, data= limpet_merge, FUN=mean)
-    ggplot(data = df_limp_agg_400, aes(x = season, y = Mean_Width_mm, group = Site_TA, fill = Site_TA)) +
-      geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
-      ylab("Mean limpet width (mm)") + xlab("season") + labs(fill = "Site TA")
-    
-    df_limp_agg_400 <- aggregate(Mean_Length_mm ~ season + Site_TA, data= limpet_merge, FUN=mean)
-    ggplot(data = df_limp_agg_400, aes(x = season, y = Mean_Length_mm, group = Site_TA, fill = Site_TA)) +
-      geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
-      ylab("Mean limpet Length (mm)") + xlab("season") + labs(fill = "Site TA")
-  
-    #Percent cover 
-    
-    filtered_data_cover <- subset(quad0.25m_SPES, Site_TA %in% c(1, 4, 6))
-    
-    aggregated_data_SPES_cover <- aggregate(cbind(Adjusted_Algae_Cover, Adjusted_Invert_Cover) ~ Year + season + Site_TA, data =filtered_data_cover, FUN = mean, na.action = na.omit)
-    
-    aggregated_data_400_cover <- aggregate(cbind(Adjusted_Algae_Cover, Adjusted_Invert_Cover) ~ Year + season + Site_TA, data = quad0.25m_SPES, FUN = mean, na.action = na.omit)
-    
-    quad0.25_merge <- rbind(aggregated_data_SPES_cover, aggregated_data_400_cover)
-    
-    percent_cover_400 <- function(quad0.25_merge) {
-      data_plot <- reshape2::melt(quad0.25_merge, id.vars = c("Year", "season", "Site_TA"))
+    limp_agg_combined <- rbind(limp_agg_SPES, limp_agg_ENVR)
+    limp_agg_sd_combined <- rbind(limp_agg_sd_SPES, limp_agg_sd_ENVR)
       
-      ggplot(data = data_plot, aes(x = season, y = value, fill = variable)) +
-        geom_bar(stat = "identity", position = "stack") +
-        labs(x = "Season", y = "Percentage of Total Cover", fill = "Cover Component") +
-        facet_wrap(~Site_TA) +  # Add this line to facet by Site_TA
+    limpet_merge <- merge(limp_agg_combined, limp_agg_sd_combined, by = c("season", "Site_TA"))
+
+    # plotting limpet function - need to fix aesthetics
+    plot_limpet <- function(data, y_variable) {
+      # Generate the plot
+      ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
+        geom_bar(stat = "identity", position = "dodge") +
+        geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_length, 0), 
+                          ymax = !!sym(y_variable) + sd_length),
+                      position = position_dodge(width = 0.9), 
+                      width = 0.25) +
+        labs(x = "Site_TA", y = y_variable, title = paste("Plot of", y_variable, "by Site and Season")) +
+        scale_fill_discrete(name = "Season") +
         theme_minimal()
     }
-    
-    # Call the function with your dataset
-    percent_cover_400(quad0.25_merge)
-    
+      # length
+      plot_limpet(limpet_merge, "Mean_Length_mm")
+      # width
+      plot_limpet(limpet_merge, "Mean_Width_mm")
+  #=================================================================================================================================
+
+# 0.25m data
+  #=================================================================================================================================
+  #Percent cover 
+    # SPES
+      cover_SPES <- data.frame(site_TA = quad0.25m_SPES_TA$Site_TA,
+                                       year = quad0.25m_SPES_TA$Year,
+                                       season = quad0.25m_SPES_TA$season,
+                                       total_cover = quad0.25m_SPES_TA$Total_Cover,
+                                       algae_cover = quad0.25m_SPES_TA$Adjusted_Algae_Cover,
+                                       invert_cover = quad0.25m_SPES_TA$Adjusted_Invert_Cover)
+      cover_SPES <- cover_SPES[complete.cases(cover_SPES$total_cover) &
+                                                 complete.cases(cover_SPES$algae_cover) &
+                                                 complete.cases(cover_SPES$invert_cover), ]
+      
+      cover_agg_SPES <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_SPES, FUN = mean, na.action = na.omit)
+      cover_agg_sd_SPES <- aggregate(invert_cover ~ season + site_TA, 
+                                    data = cover_SPES, 
+                                    FUN = function(x) sd(x, na.rm = TRUE),
+                                    na.action = na.omit)
+        names(cover_agg_sd_SPES)[names(cover_agg_sd_SPES) == "invert_cover"] <- "sd"
+
+    # ENVR
+      cover_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                               year = quad0.25m_ENVR$Year,
+                               season = quad0.25m_ENVR$season,
+                               total_cover = quad0.25m_ENVR$Total_Cover,
+                               algae_cover = quad0.25m_ENVR$Adjusted_Algae_Cover,
+                               invert_cover = quad0.25m_ENVR$Adjusted_Invert_Cover)
+      cover_ENVR <- cover_ENVR[complete.cases(cover_ENVR$total_cover) &
+                                 complete.cases(cover_ENVR$algae_cover) &
+                                 complete.cases(cover_ENVR$invert_cover), ]
+      
+      cover_agg_ENVR <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_ENVR, FUN = mean, na.action = na.omit)
+      cover_agg_sd_ENVR <- aggregate(invert_cover ~ season + site_TA, 
+                                     data = cover_ENVR, 
+                                     FUN = function(x) sd(x, na.rm = TRUE),
+                                     na.action = na.omit)
+        names(cover_agg_sd_ENVR)[names(cover_agg_sd_ENVR) == "invert_cover"] <- "sd"
+
+    # Combined
+      cover_agg_combined <- rbind(cover_agg_SPES, cover_agg_ENVR)
+      cover_agg_sd_combined <- rbind(cover_agg_sd_SPES, cover_agg_sd_ENVR)
+      
+      cover_merge <- merge(cover_agg_combined, cover_agg_sd_combined, by = c("season", "site_TA"))
+      
+    # plot - arshia can you look i give up 
+      ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover)) +
+        geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
+        geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
+        geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
+                          group = site_TA),  # Group by site_TA
+                      position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
+        facet_wrap(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
+        labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
+        scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
+        theme_minimal()
+      
 #=================================================================================================================================
   
 # Abiotic Analysis - need help with scale

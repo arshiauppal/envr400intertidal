@@ -1,11 +1,10 @@
-# March 22, 2024
+# March 24, 2024
 require(dplyr)
+require(tidyr)
 require(stringr)
 require(ggplot2)
 require(lubridate)
 require(reshape2)
-
-# added in christina data, update envr data only did to SPES
 
 # read data
 #=================================================================================================================================
@@ -219,8 +218,34 @@ require(reshape2)
         ylab(plot_varname) + 
         xlab(ifelse(aggregate_by_year_site, "Time (years)", "Site TA")) + 
         labs(fill = "Site TA")
-    }
-    
+  # plot percent cover along the transect line - need to fix aesthetics
+      cover_intertidal_height <- function(data) {
+        selected_data <- data.frame(
+          intertidal_height = data$intertidal_height,
+          total_percent_cover = data$Total_Cover,
+          algae_percent_cover = data$`Algae_Cover`,
+          invertebrates_percent_cover = data$`Invertebrates_Cover`
+        )
+        
+        quad_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
+        quad_agg_algae <- aggregate(algae_percent_cover ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
+        quad_agg_intertebrates <- aggregate(invertebrates_percent_cover ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
+        
+        quad_agg <- quad_agg_total %>%
+          left_join(quad_agg_algae, by = "intertidal_height") %>%
+          left_join(quad_agg_intertebrates, by = "intertidal_height")
+        
+        tidy_quad_data <- pivot_longer(quad_agg, cols = c(total_percent_cover, algae_percent_cover, invertebrates_percent_cover), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
+        
+        ggplot(tidy_quad_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
+          geom_tile(color = "white") +
+          geom_text(aes(label = Percent_Cover), vjust = 1) +
+          scale_fill_gradient(low = "lightblue", high = "darkblue") +
+          labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Algae and Invertebrates") +
+          theme_minimal() +
+          scale_y_discrete(limits = c("low", "medium", "high"))
+      }
+      
 # SPES Data
 #=================================================================================================================================
 # Functions 
@@ -316,7 +341,7 @@ require(reshape2)
     
   #=================================================================================================================================
   
-# Sea Star (transect) data - presence absence works!
+# Transect Data
   #=================================================================================================================================
   # Density of sea stars per TA (2019-2023)
     # error bars look insane
@@ -355,6 +380,7 @@ require(reshape2)
   # Changes in intertidal height composition
       lit_snail_height <- plot_count_intertidal_height(quad1m_SPES, 'Littorine_snails', scale_fill = c("lightblue", "darkblue"))
         lit_snail_height
+        
       limpet_height <- plot_count_intertidal_height(quad1m_SPES, 'Limpets', scale_fill = c("yellow", "red"))
         limpet_height  
         
@@ -393,7 +419,7 @@ require(reshape2)
       labs(x = "Year", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
       scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
       theme_minimal() 
-    
+  
   # percent cover and count of algae - cant get second axis to look right
     algae_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                        year = quad0.25m_SPES$Year,
@@ -460,32 +486,8 @@ require(reshape2)
     
     
   # cover of algae vs invertebrates across the transect - summer
-    select_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
-                                    year = quad0.25m_SPES$Year,
-                                    season = quad0.25m_SPES$season,
-                                    month = quad0.25m_SPES$month,
-                                    intertidal_height = quad0.25m_SPES$intertidal_height,
-                                    total_percent_cover = quad0.25m_SPES$Total_Cover,
-                                    algae_percent_cover = quad0.25m_SPES$`Algae_Cover`,
-                                    invertebrates_percent_cover = quad0.25m_SPES$`Invertebrates_Cover`)
-
-    quad_0.25m_SPES_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-    quad_0.25m_SPES_agg_algae_percent <- aggregate(algae_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-    quad_0.25m_SPES_agg_intertebrates <- aggregate(invertebrates_percent_cover ~ intertidal_height, data=select_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-
-    quad_0.25m_SPES_agg <- quad_0.25m_SPES_agg_total %>%
-      left_join(quad_0.25m_SPES_agg_algae_percent, by = "intertidal_height") %>%
-      left_join(quad_0.25m_SPES_agg_intertebrates, by = "intertidal_height")
-
-    tidy_quad0.25_SPES_data <- tidyr::pivot_longer(quad_0.25m_SPES_agg, cols = c(total_percent_cover, algae_percent_cover, invertebrates_percent_cover), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
-
-    ggplot(tidy_quad0.25_SPES_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
-      geom_tile(color = "white") +
-      geom_text(aes(label = Percent_Cover), vjust = 1) +
-      scale_fill_gradient(low = "lightblue", high = "darkblue") +
-      labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Alage and Invertebrates") +
-      theme_minimal() +
-      scale_y_discrete(limits = c("low", "medium", "high"))
+    cover_intertidal_height(quad0.25m_SPES)
+    
   #=================================================================================================================================
 
 # ENVR 400 2024 Data Analysis
@@ -688,32 +690,7 @@ require(reshape2)
   print(invert_quad0.25m_ENVR_plot)
   
   # cover of algae vs invertebrates across the transect - winter
-  select_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
-                                 year = quad0.25m_ENVR$Year,
-                                 season = quad0.25m_ENVR$season,
-                                 month = quad0.25m_ENVR$month,
-                                 intertidal_height = quad0.25m_ENVR$intertidal_height,
-                                 total_percent_cover = quad0.25m_ENVR$Total_Cover,
-                                 algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
-                                 invertebrates_percent_cover = quad0.25m_ENVR$Invertebrates_Cover)
-
-  quad_0.25m_ENVR_agg_total <- aggregate(total_percent_cover ~ intertidal_height, data=select_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
-  quad_0.25m_ENVR_agg_algae_percent <- aggregate(algae_percent_cover ~ intertidal_height, data=select_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
-  quad_0.25m_ENVR_agg_intertebrates <- aggregate(invertebrates_percent_cover ~ intertidal_height, data=select_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
-
-  quad_0.25m_ENVR_agg <- quad_0.25m_ENVR_agg_total %>%
-    left_join(quad_0.25m_ENVR_agg_algae_percent, by = "intertidal_height") %>%
-    left_join(quad_0.25m_ENVR_agg_intertebrates, by = "intertidal_height")
-
-  tidy_quad0.25_ENVR_data <- tidyr::pivot_longer(quad_0.25m_ENVR_agg, cols = c(total_percent_cover, algae_percent_cover, invertebrates_percent_cover), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
-
-  ggplot(tidy_quad0.25_ENVR_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = Percent_Cover), vjust = 1) +
-    scale_fill_gradient(low = "lightblue", high = "darkblue") +
-    labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Alage and Invertebrates") +
-    theme_minimal() +
-    scale_y_discrete(limits = c("low", "medium", "high"))
+  cover_intertidal_height(quad0.25m_ENVR)
   
   #=================================================================================================================================
 
@@ -723,6 +700,7 @@ require(reshape2)
   subset_TAs <- function(dataframe, column_name, values) {
     subset(dataframe, Site_TA %in% c(1, 4, 6) & Year == 2023)
   }
+  
     transect_SPES_TA <- subset_TAs(transect_SPES)
     quad1m_SPES_TA <- subset_TAs(quad1m_SPES)
     quad0.25m_SPES_TA <- subset_TAs(quad0.25m_SPES)
@@ -827,11 +805,31 @@ require(reshape2)
         geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
                           group = site_TA),  # Group by site_TA
                       position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
-        facet_wrap(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
+        facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
         labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
         scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
         theme_minimal()
       
+      ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover)) +
+        geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
+        geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
+        geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
+                          group = site_TA),  # Group by site_TA
+                      position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
+        facet_grid(season ~ ., scales = "free_x", space = "free_x") +  # Facet by season with different bar graphs for each site
+        labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
+        scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
+        theme_minimal()
+      
+      ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover, fill = season)) +
+        geom_bar(position = "stack", stat = "identity") +
+        geom_bar(aes(y = invert_cover), position = "stack", stat = "identity") +
+        geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
+                          group = interaction(site_TA, season)),
+                      position = position_dodge(width = 0.9), width = 0.5) +
+        labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
+        scale_fill_discrete(name = "Season") +
+        theme_minimal()
   #=================================================================================================================================
   
 # Abiotic Analysis - scale looks better but need to fix aesthetics
@@ -846,22 +844,28 @@ require(reshape2)
       summarise(low_tide_time = mean(hour_of_min_tide))
   
   # Min temperature 
-    monthly_min_temperature <- weather %>%
-      group_by(month, Year) %>%
-      summarise(Min_Temp = min(AirTemp_degC))
-  
-    average_monthly_min_temperature <- monthly_min_temperature %>%
-      group_by(month) %>%
-      summarise(Avg_Min_Temp = mean(Min_Temp))
-  
-  # Max temperature
-    monthly_max_temperature <- weather %>%
-      group_by(month, Year) %>%
-      summarise(Max_Temp = max(AirTemp_degC))
-  
-    average_monthly_max_temperature <- monthly_max_temperature %>%
-      group_by(month) %>%
-      summarise(Avg_Max_Temp = mean(Max_Temp))
+    summarize_monthly_temperature <- function(weather, summary_type = "max") {
+      if(summary_type == "max") {
+        summarized_data <- weather %>%
+          group_by(month, Year) %>%
+          summarise(Max_Temp = max(AirTemp_degC)) %>%
+          group_by(month) %>%
+          summarise(Avg_Max_Temp = mean(Max_Temp))
+      } else if(summary_type == "min") {
+        summarized_data <- weather %>%
+          group_by(month, Year) %>%
+          summarise(Min_Temp = min(AirTemp_degC)) %>%
+          group_by(month) %>%
+          summarise(Avg_Min_Temp = mean(Min_Temp))
+      } else {
+        stop("Invalid summary type. Please choose 'max' or 'min'.")
+      }
+      
+      return(summarized_data)
+    }
+    
+    monthly_min_temperature <- summarize_monthly_temperature(weather, summary_type = "min")
+    monthly_max_temperature <- summarize_monthly_temperature(weather, summary_type = "max")
   
   # merge the abotic dfs by month 
     monthly_temperature_data <- merge(average_monthly_max_temperature, average_monthly_min_temperature, by = "month")

@@ -281,6 +281,25 @@ require(reshape2)
         labs(fill = "Site TA") +
         theme_minimal()
     }
+  
+  # plot count along intertidal height
+    plot_count_intertidal_height <- function(data, count_variable, scale_fill = c("lightblue", "darkblue")) {
+      # Aggregate the data for the specified count variable
+      agg_data <- aggregate(data[[count_variable]], by = list(data$intertidal_height), FUN = function(x) round(mean(x, na.rm = TRUE)))
+      # Rename columns
+      names(agg_data) <- c("intertidal_height", "Count")
+      # Reshape the data
+      tidy_data <- tidyr::pivot_longer(agg_data, cols = c(Count), names_to = "Count_Type", values_to = "Count")
+      # Generate the plot
+      ggplot(tidy_data, aes(x = Count_Type, y = intertidal_height, fill = Count)) +
+        geom_tile(color = "white") +
+        geom_text(aes(label = Count), vjust = 1) +
+        scale_fill_gradient(low = scale_fill[1], high = scale_fill[2]) +
+        labs(x = "Count", y = "Tide Height", title = paste("Intertidal Height vs Count of", count_variable)) +
+        theme_minimal() +
+        scale_y_discrete(limits = c("low", "medium", "high"))
+    }
+    
   #=================================================================================================================================
   
 # Sea Star (transect) data - presence absence issue
@@ -288,7 +307,7 @@ require(reshape2)
   # Density of sea stars per TA (2019-2023)
     # error bars look insane
     SS_density_TA <- plot_count_per_TA_SPES("Density_of_Sea_Stars_Count", "Mean count of sea stars", transect_SPES)
-    SS_density_TA
+      SS_density_TA
     
   # Presence absence of sea stars 
     plot_ochre <- presence_absence_SPES(transect_SPES, "Ochre")
@@ -299,23 +318,24 @@ require(reshape2)
       plot_mottled 
   #=================================================================================================================================
       
-# Limpet Data - fine need to make into function
+# Limpet Data
   #=================================================================================================================================
-    # select specific limpet data
+  # select specific limpet data - dont really need tbh
     select_limpet_SPES <- data.frame(site_TA = limpet_SPES$Site_TA,
                                       year = limpet_SPES$Year,
                                       length = limpet_SPES[,"Mean_Length_mm"],
                                       width = limpet_SPES[,"Mean_Width_mm"],
                                       month = limpet_SPES$month)
-    select_limpet_SPES$site_TA <- as.character(select_limpet_SPES$site_TA)
     
-    # plot limpet data
-    limpet_plots_SPES(select_limpet_SPES, "length")
-    limpet_plots_SPES(select_limpet_SPES, "width")
+  # plot limpet data
+    limpet_length_SPES <- limpet_plots_SPES(select_limpet_SPES, "length")
+      limpet_length_SPES
+    limpet_width_SPES <- limpet_plots_SPES(select_limpet_SPES, "width")
+      limpet_width_SPES
     
   #=================================================================================================================================
       
-# 1m quadrat data - intertidal height (individual)
+# 1m quadrat data
   #=================================================================================================================================
   # Littorine Snails
     plot_count_per_TA_SPES("Littorine_snails", "Mean count of littorine snails per field visit", quad1m_SPES)
@@ -323,31 +343,12 @@ require(reshape2)
   # Limpet Count
     plot_count_per_TA_SPES("Limpets", "Mean count of limpets per field visit", quad1m_SPES)
     
-  # Changes in intertidal height composition - do seperate for each species
-    # selecting and aggregating the data
-      select_quad1m_SPES <- data.frame(site_TA = quad1m_SPES$Site_TA,
-                                     year = quad1m_SPES$Year,
-                                     season = quad1m_SPES$season,
-                                     month = quad1m_SPES$month,
-                                     intertidal_height = quad1m_SPES$intertidal_height,
-                                     littorine_snails = quad1m_SPES$Littorine_snails,
-                                     limpets = quad1m_SPES$Limpets)
-
-      quad1m_SPES_agg_snail <- aggregate(littorine_snails ~ intertidal_height, data=select_quad1m_SPES, FUN = function(x) round(mean(x)))
-      quad1m_SPES_agg_limpet <- aggregate(limpets ~ intertidal_height, data=select_quad1m_SPES, FUN = function(x) round(mean(x)))
- 
-      quad1m_SPES_agg <- left_join(quad1m_SPES_agg_snail, quad1m_SPES_agg_limpet, by = "intertidal_height")
-      
-      tidy_quad1m_data <- tidyr::pivot_longer(quad1m_SPES_agg, cols = c(littorine_snails, limpets), names_to = "Count_Type", values_to = "Count")
-      
-    ggplot(tidy_quad1m_data, aes(x = Count_Type, y = intertidal_height, fill = Count)) +
-      geom_tile(color = "white") +
-      geom_text(aes(label = Count), vjust = 1) +
-      scale_fill_gradient(low = "lightblue", high = "darkblue") +
-      labs(x = "Count", y = "Tide Height", title = "Intertidal Height vs Count of Snails and limpets") +
-      theme_minimal() +
-      scale_y_discrete(limits = c("low", "medium", "high"))
-  
+  # Changes in intertidal height composition
+      lit_snail_height <- plot_count_intertidal_height(quad1m_SPES, 'Littorine_snails', scale_fill = c("lightblue", "darkblue"))
+        lit_snail_height
+      limpet_height <- plot_count_intertidal_height(quad1m_SPES, 'Limpets', scale_fill = c("yellow", "red"))
+        limpet_height  
+        
   #=================================================================================================================================
     
 # 0.25m quadrat data - working on
@@ -487,7 +488,7 @@ require(reshape2)
 # Functions
   #=================================================================================================================================
   # count per TA
-  plot_count_per_TA_400 <- function(varname, plot_varname, data){
+  plot_count_per_TA_400 <- function(data, varname, plot_varname){
       
       # create data frame with relevant columns
       df_var <- data.frame(site_TA = data$Site_TA,
@@ -552,22 +553,22 @@ require(reshape2)
 # Transect - presence absence not working
   #=================================================================================================================================
   # Density of sea stars per TA 
-  SS_density_TA_400 <- plot_count_per_TA_400("Density_of_Sea_Stars_count", "Count of sea stars", transect_ENVR)
-  SS_density_TA_400
+    SS_density_TA_400 <- plot_count_per_TA_400(transect_ENVR, "Density_of_Sea_Stars_count", "Count of sea stars")
+      SS_density_TA_400
   
   # Density of Oysters per TA
-  oyster_density_TA_400 <- plot_count_per_TA_400("Density_of_Oysters_count", "Count of Oysters", transect_ENVR)
-  oyster_density_TA_400
+    oyster_density_TA_400 <- plot_count_per_TA_400("Density_of_Oysters_count", "Count of Oysters", transect_ENVR)
+      oyster_density_TA_400
   
   # Presence absence of sea stars 
-  plot_ochre_400 <- presence_absence_400(transect_ENVR, "Ochre_EO")
-  plot_ochre_400
+    plot_ochre_400 <- presence_absence_400(transect_ENVR, "Ochre_EO")
+      plot_ochre_400
   
-  plot_leather_400 <- presence_absence_400(transect_ENVR, "Leather_EL")
-  plot_leather_400
+    plot_leather_400 <- presence_absence_400(transect_ENVR, "Leather_EL")
+      plot_leather_400
   
-  plot_molted_400 <- presence_absence_400(transect_ENVR, "Mottled_EM")
-  plot_molted_400
+    plot_molted_400 <- presence_absence_400(transect_ENVR, "Mottled_EM")
+      plot_molted_400
   #=================================================================================================================================
 
 # Limpet data
@@ -577,12 +578,14 @@ require(reshape2)
                                    length = limpet_ENVR[,"Mean_Length_mm"],
                                    width = limpet_ENVR[,"Mean_Width_mm"],
                                    month = limpet_ENVR$month)
-  select_limpet_ENVR$site_TA <- as.character(select_limpet_ENVR$site_TA)
   
   # limpet length
-    limpet_plots_ENVR(select_limpet_ENVR, "length")
+    limpet_length_ENVR <- limpet_plots_ENVR(select_limpet_ENVR, "length")
+      limpet_length_ENVR
   # limpet width
-    limpet_plots_ENVR(select_limpet_ENVR, "width")
+    limpet_width_ENVR <- limpet_plots_ENVR(select_limpet_ENVR, "width")
+      limpet_width_ENVR
+      
   #=================================================================================================================================
 
 # 0.25m Quadrat - lots of working
@@ -590,23 +593,20 @@ require(reshape2)
   # Mean total and relative percent cover of algae and invertebrates for each site and year - need to fix aesthetics
     percent_cover_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
                                      year = quad0.25m_ENVR$Year,
-                                     season = quad0.25mENVR$season
+                                     season = quad0.25m_ENVR$season,
                                      total_cover = quad0.25m_ENVR$Total_Cover,
                                      algae_cover = quad0.25m_ENVR$Adjusted_Algae_Cover,
                                      invert_cover = quad0.25m_ENVR$Adjusted_Invert_Cover)
-    percent_cover_ENVR <- percent_cover_ENVR[complete.cases(percent_cover_ENVR$total_cover) &
+      percent_cover_ENVR <- percent_cover_ENVR[complete.cases(percent_cover_ENVR$total_cover) &
                                                complete.cases(percent_cover_ENVR$algae_cover) &
                                                complete.cases(percent_cover_ENVR$invert_cover), ]
     
   # Aggregate data by year and site_TA
   total_cover <- aggregate(total_cover ~ site_TA, data= percent_cover_ENVR, FUN=mean)
-    names(total_cover)[2] <- "total_cover"
   algae_relative <- aggregate(algae_cover ~ site_TA, data= percent_cover_ENVR, FUN=mean)
-    names(algae_relative)[2] <- "algae_relative"
   invert_relative <- aggregate(invert_cover ~ site_TA, data= percent_cover_ENVR, FUN=mean)
-    names(invert_relative)[2] <- "invert_relative"
   cover_sd <- aggregate(invert_cover ~ site_TA, data = percent_cover_ENVR, FUN = function(x) sd(x))
-    names(cover_sd)[2] <- "sd_cover"
+    names(cover_sd)[names(cover_sd) == "invert_cover"] <- "sd"
   
   percent_cover_all <- merge(algae_relative, invert_relative, by = "site_TA")
   percent_cover_all <- merge(percent_cover_all, total_cover, by = "site_TA")

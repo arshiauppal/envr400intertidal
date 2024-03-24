@@ -5,6 +5,8 @@ require(ggplot2)
 require(lubridate)
 require(reshape2)
 
+# added in christina data, update envr data only did to SPES
+
 # read data
 #=================================================================================================================================
   # SPES Data
@@ -74,6 +76,7 @@ require(reshape2)
       dataframe$Adjusted_Invert_Cover <- dataframe[[invertebrates_cover_col]] / (dataframe[[algae_cover_col]] + dataframe[[invertebrates_cover_col]]) * dataframe[[total_cover_col]]
       return(dataframe)
     }
+    
   #=================================================================================================================================
   
 # SPES Data
@@ -249,30 +252,41 @@ require(reshape2)
     
   # identity of Sea Star - excludes all NA values, need to figure out how to have different ones depending on what is avaliable for each site
     presence_absence_SPES <- function(data, species_column) {
-    ggplot(data, aes_string(x = "Year", y = "Site_TA", fill = species_column), na.rm = TRUE) +
-      geom_tile(colour ='black') +
-      scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red")) +  # Adjust colors as needed
-      labs(x = "Year", y = "Sampling Site", fill = paste0(species_column, " Presence")) +
-      theme_minimal() +
-      theme(
-        panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
-        panel.grid.minor = element_blank(),  # Remove minor gridlines
-        axis.text.y = element_text(angle = 0, hjust = 0.5)  # Adjust y-axis text alignment
-      ) +
-      scale_y_discrete(breaks = unique(data$Site_TA))  # Set breaks for y-axis
-  }
+      df <- data.frame(Year = data$Year,
+          Site_TA = data$Site_TA,
+          Species = data[,species_column])
+      df <- df[complete.cases(df),]
+
+      df <- aggregate(Species ~ Year + Site_TA, data=df, FUN=sum)
+      
+      df$Species <- as.logical(df$Species)
+
+      df_grid <- merge(expand.grid(Site_TA=1:6, Year = 2019:2023), df, all.x = TRUE)
+      
+      ggplot(df_grid, aes(x = as.character(Year), y = as.character(Site_TA), fill = Species)) +
+        geom_tile(colour ='black') +
+        scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"), na.value = "gray",
+                          drop=FALSE) +  # Adjust colors as needed
+        labs(x = "Year", y = "Sampling Site", fill = paste0(species_column, " Presence")) +
+        theme_minimal() +
+        theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
+          panel.grid.minor = element_blank(),  # Remove minor gridlines
+          axis.text.y = element_text(angle = 0, hjust = 0.5)  # Adjust y-axis text alignment
+          ) +
+        scale_y_discrete(breaks = unique(data$Site_TA))  # Set breaks for y-axis
+    }
     
   # limpet plots
     limpet_plots_SPES <- function(data, agg_variable) {
-      agg_mean <- aggregate(get(agg_variable) ~ year + site_TA, data = data, FUN = mean)
+      agg_mean <- aggregate(get(agg_variable) ~ Year + Site_TA, data = data, FUN = mean)
       names(agg_mean)[3] <- paste("mean_", agg_variable, sep = "")
       
-      agg_sd <- aggregate(get(agg_variable) ~ year + site_TA, data = data, FUN = function(x) sd(x))
+      agg_sd <- aggregate(get(agg_variable) ~ Year + Site_TA, data = data, FUN = function(x) sd(x))
       names(agg_sd)[3] <- paste("sd_", agg_variable, sep = "")
       
-      agg_all <- left_join(agg_mean, agg_sd, by = c("year", "site_TA"))
+      agg_all <- left_join(agg_mean, agg_sd, by = c("Year", "Site_TA"))
       
-      ggplot(data = agg_all, aes(x = year, y = get(paste("mean_", agg_variable, sep = "")), group = site_TA, fill = site_TA)) +
+      ggplot(data = agg_all, aes(x = Year, y = get(paste("mean_", agg_variable, sep = "")), group = Site_TA, fill = Site_TA)) +
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                       position = position_dodge(width = 0.9), width = 0.25) +
@@ -302,7 +316,7 @@ require(reshape2)
     
   #=================================================================================================================================
   
-# Sea Star (transect) data - presence absence issue
+# Sea Star (transect) data - presence absence works!
   #=================================================================================================================================
   # Density of sea stars per TA (2019-2023)
     # error bars look insane
@@ -318,19 +332,14 @@ require(reshape2)
       plot_mottled 
   #=================================================================================================================================
       
-# Limpet Data
+# Limpet Data - fix aesthetics
   #=================================================================================================================================
-  # select specific limpet data - dont really need tbh
-    select_limpet_SPES <- data.frame(site_TA = limpet_SPES$Site_TA,
-                                      year = limpet_SPES$Year,
-                                      length = limpet_SPES[,"Mean_Length_mm"],
-                                      width = limpet_SPES[,"Mean_Width_mm"],
-                                      month = limpet_SPES$month)
-    
-  # plot limpet data
-    limpet_length_SPES <- limpet_plots_SPES(select_limpet_SPES, "length")
+  # plot limpet length
+    limpet_length_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Length_mm")
       limpet_length_SPES
-    limpet_width_SPES <- limpet_plots_SPES(select_limpet_SPES, "width")
+      
+  # plot limpet width
+    limpet_width_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Width_mm")
       limpet_width_SPES
     
   #=================================================================================================================================
@@ -362,21 +371,17 @@ require(reshape2)
     percent_cover_SPES <- percent_cover_SPES[complete.cases(percent_cover_SPES$total_cover) &
                                                complete.cases(percent_cover_SPES$algae_cover) &
                                                complete.cases(percent_cover_SPES$invert_cover), ]
-    
-    percent_cover_SPES$site_TA <- as.character(percent_cover_SPES$site_TA) 
-    
+   
+    # aggregate data 
     total_cover <- aggregate(total_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
-    names(total_cover)[3] <- "total_cover"
     algae_relative <- aggregate(algae_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
-    names(algae_relative)[3] <- "algae_relative"
     invert_relative <- aggregate(invert_cover ~ year + site_TA, data= percent_cover_SPES, FUN=mean)
-    names(invert_relative)[3] <- "invert_relative"
     cover_sd <- aggregate(invert_cover ~ year + site_TA, data = percent_cover_SPES, FUN = function(x) sd(x))
-    names(cover_sd)[3] <- "sd_cover"
+      names(cover_sd)[3] <- "sd_cover"
     
     percent_cover_all <- merge(algae_relative, invert_relative, by = c("year", "site_TA"))
-    percent_cover_all <- merge(percent_cover_all, total_cover, by = c("year", "site_TA"))
-    percent_cover_all <- merge(percent_cover_all, cover_sd, by = c("year", "site_TA"))
+      percent_cover_all <- merge(percent_cover_all, total_cover, by = c("year", "site_TA"))
+      percent_cover_all <- merge(percent_cover_all, cover_sd, by = c("year", "site_TA"))
     
     ggplot(percent_cover_all, aes(x = as.factor(year), y = total_cover)) +
       geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
@@ -421,7 +426,7 @@ require(reshape2)
     print(p)
     
   
-  # percent cover of invertebrates and count of sessile and mobile - scale for count still messed, colouring is fucked too   
+  # percent cover of invertebrates and count of sessile and mobile - scale works!
     invert_quad0.25m_SPES<- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                         year = quad0.25m_SPES$Year,
                                         invert_percent_cover = quad0.25m_SPES$Invertebrates_Cover,
@@ -429,30 +434,30 @@ require(reshape2)
                                         mobile_count = quad0.25m_SPES$Mobile_Invertebrates_Count)
     
     invert_percent <- aggregate(invert_percent_cover ~ site_TA + year, data=invert_quad0.25m_SPES, FUN=mean)
-      names(invert_percent)[3] <- "invert_percent"
     invert_percent_sd <- aggregate(invert_percent_cover ~ year + site_TA, data = invert_quad0.25m_SPES, FUN = function(x) sd(x))
       names(invert_percent_sd)[3] <- "sd_cover"
     sessile_count <- aggregate(sessile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-      names(sessile_count)[3] <- "sessile_count"
     mobile_count <- aggregate(mobile_count ~ site_TA + year, data=invert_quad0.25m_SPES, FUN = function(x) round(mean(x)))
-      names(mobile_count)[3] <- "mobile_count"
+
     
     invert_cover_count <- merge(invert_percent, sessile_count, by = c("year", "site_TA"))
     invert_cover_count <- merge(invert_cover_count, mobile_count, by = c("year", "site_TA"))  
     invert_cover_count <- merge(invert_cover_count, invert_percent_sd, by = c("year", "site_TA"))  
     
-    quad_0.25_SPES_invert_plot <- ggplot(data = invert_cover_count, aes(x = year)) +
-      geom_bar(aes(y = invert_percent, fill = factor(year)), stat = "identity", position = "stack") +
-      geom_errorbar(aes(ymin = pmax(0, invert_percent - sd_cover), ymax = pmin(100, invert_percent + sd_cover)), width = 0.25, position = position_dodge(width = 0.9)) +
-      geom_line(aes(y = sessile_count), color = "red", linetype = "solid", group = 1) +
-      geom_line(aes(y = mobile_count), color = "green", linetype = "dashed", group = 1) +
-      labs(x = "Year", y = "Percentage of Total Cover", fill = "Year") +
-      scale_fill_manual(values = c("red", "blue", "green", "orange", "purple")) +  # Providing enough colors for different years
-      scale_y_continuous(name = "Percentage of Total Cover", sec.axis = sec_axis(~./100, name = "Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
+    adj <- 25
+    
+    quad_0.25_SPES_invert_plot <- ggplot(data = invert_cover_count, aes(x = year, y = invert_percent)) +
+      geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack") +
+      geom_line(aes(y = sessile_count*adj), color = "red", linetype = "solid", group = 1) +
+      geom_line(aes(y = mobile_count*adj), color = "green", linetype = "dashed", group = 1) +
+      labs(x = "Year", y = "Percentage of Total Cover", fill = "Year", color = "Cover Component") +
+      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
       facet_wrap(~ site_TA) +
+      scale_fill_manual(values = c("blue", "green", "red", "orange", "purple", "brown")) +  # Manually setting colors for years
       theme_minimal()
     
     print(quad_0.25_SPES_invert_plot)
+    
     
   # cover of algae vs invertebrates across the transect - summer
     select_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
@@ -530,15 +535,15 @@ require(reshape2)
 
   # limpet plots
   limpet_plots_ENVR <- function(data, agg_variable) {
-    agg_mean <- aggregate(get(agg_variable) ~ site_TA, data = data, FUN = mean)
+    agg_mean <- aggregate(get(agg_variable) ~ Site_TA, data = data, FUN = mean)
     names(agg_mean)[2] <- paste("mean_", agg_variable, sep = "")
     
-    agg_sd <- aggregate(get(agg_variable) ~ site_TA, data = data, FUN = function(x) sd(x))
+    agg_sd <- aggregate(get(agg_variable) ~ Site_TA, data = data, FUN = function(x) sd(x))
     names(agg_sd)[2] <- paste("sd_", agg_variable, sep = "")
     
-    agg_all <- left_join(agg_mean, agg_sd, by = "site_TA")
+    agg_all <- left_join(agg_mean, agg_sd, by = "Site_TA")
     
-    ggplot(data = agg_all, aes(x = site_TA, y = get(paste("mean_", agg_variable, sep = "")), fill = site_TA)) +
+    ggplot(data = agg_all, aes(x = Site_TA, y = get(paste("mean_", agg_variable, sep = "")), fill = Site_TA)) +
       geom_bar(stat = "identity", position = "dodge") +
       geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                     position = position_dodge(width = 0.9), width = 0.25) +
@@ -550,7 +555,7 @@ require(reshape2)
   
   #=================================================================================================================================
 
-# Transect - presence absence not working
+# Transect - presence absence, need to adapt christinas code
   #=================================================================================================================================
   # Density of sea stars per TA 
     SS_density_TA_400 <- plot_count_per_TA_400(transect_ENVR, "Density_of_Sea_Stars_count", "Count of sea stars")
@@ -561,29 +566,24 @@ require(reshape2)
       oyster_density_TA_400
   
   # Presence absence of sea stars 
-    plot_ochre_400 <- presence_absence_400(transect_ENVR, "Ochre_EO")
+    plot_ochre_400 <- presence_absence_SPES(transect_ENVR, "Ochre_EO")
       plot_ochre_400
   
-    plot_leather_400 <- presence_absence_400(transect_ENVR, "Leather_EL")
+    plot_leather_400 <- presence_absence_SPES(transect_ENVR, "Leather_EL")
       plot_leather_400
   
-    plot_molted_400 <- presence_absence_400(transect_ENVR, "Mottled_EM")
+    plot_molted_400 <- presence_absence_SPES(transect_ENVR, "Mottled_EM")
       plot_molted_400
   #=================================================================================================================================
 
-# Limpet data
+# Limpet data - fix aesthetics
   #=================================================================================================================================
-  select_limpet_ENVR <- data.frame(site_TA = limpet_ENVR$Site_TA,
-                                   year = limpet_ENVR$Year,
-                                   length = limpet_ENVR[,"Mean_Length_mm"],
-                                   width = limpet_ENVR[,"Mean_Width_mm"],
-                                   month = limpet_ENVR$month)
-  
   # limpet length
-    limpet_length_ENVR <- limpet_plots_ENVR(select_limpet_ENVR, "length")
+    limpet_length_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Length_mm")
       limpet_length_ENVR
+      
   # limpet width
-    limpet_width_ENVR <- limpet_plots_ENVR(select_limpet_ENVR, "width")
+    limpet_width_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Width_mm")
       limpet_width_ENVR
       
   #=================================================================================================================================
@@ -818,7 +818,7 @@ require(reshape2)
         scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
         theme_minimal()
       
-#=================================================================================================================================
+  #=================================================================================================================================
   
 # Abiotic Analysis - need help with scale
 #=================================================================================================================================

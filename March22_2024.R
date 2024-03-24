@@ -250,7 +250,7 @@ require(reshape2)
       
     }
     
-  # identity of Sea Star - excludes all NA values, need to figure out how to have different ones depending on what is avaliable for each site
+  # presence absence of sea star species
     presence_absence_SPES <- function(data, species_column) {
       df <- data.frame(Year = data$Year,
           Site_TA = data$Site_TA,
@@ -344,7 +344,7 @@ require(reshape2)
     
   #=================================================================================================================================
       
-# 1m quadrat data
+# 1m quadrat data - fix aesthetics
   #=================================================================================================================================
   # Littorine Snails
     plot_count_per_TA_SPES("Littorine_snails", "Mean count of littorine snails per field visit", quad1m_SPES)
@@ -516,23 +516,33 @@ require(reshape2)
       
   }
     
-  # identity of sea stars
-  presence_absence_400 <- function(data, species_column) {
-    ggplot(data, aes_string(x = "Site_TA", y = species_column, fill = species_column), na.rm = TRUE) +
-      geom_tile(colour ='black') +
-      scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red")) +  # Adjust colors as needed
-      labs(x = "Sampling Site", y = paste0(species_column, " Presence"), fill = paste0(species_column, " Presence")) +
-      theme_minimal() +
-      theme(
-        panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
-        panel.grid.minor = element_blank(),  # Remove minor gridlines
-        axis.text.x = element_text(angle = 0, hjust = 0.5)  # Adjust x-axis text alignment
-      ) +
-      scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10) 
-      ) 
-      #scale_y_continuous(breaks = unique(data$Site_TA)) # Wrap x-axis labels for better readability
-  }
-
+  # identity of sea stars - had to change christinas 
+  presence_absence_ENVR <- function(data, species_column) {
+      df <- data.frame(Site_TA = data$Site_TA,
+                       Species = data[[species_column]])
+      
+      df_1 <- subset(df, Site_TA == 1)
+      
+      df <- aggregate(Species ~ Site_TA, data=df, FUN=sum)
+      df_1 <- aggregate(Species ~ Site_TA, data=df_1, FUN=sum, na.action = na.pass)
+      
+      df_merge <- rbind(df, df_1)
+      
+      df_merge$Species <- as.logical(df_merge$Species)
+      
+      ggplot(df_merge, aes(x = as.character(Site_TA), y = "", fill = Species)) +
+        geom_tile(colour ='black') +
+        scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"), na.value = "gray",
+                          drop=FALSE) +  # Adjust colors as needed
+        labs(x = "Sampling Site", y = paste0(species_column, " Presence")) +
+        theme_minimal() +
+        theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
+              panel.grid.minor = element_blank(),  # Remove minor gridlines
+              axis.text.y = element_text(angle = 0, hjust = 0.5)  # Adjust y-axis text alignment
+        ) +
+        scale_y_discrete(breaks = unique(df_merge$Site_TA))  # Set breaks for y-axis
+    }
+  
   # limpet plots
   limpet_plots_ENVR <- function(data, agg_variable) {
     agg_mean <- aggregate(get(agg_variable) ~ Site_TA, data = data, FUN = mean)
@@ -555,7 +565,7 @@ require(reshape2)
   
   #=================================================================================================================================
 
-# Transect - presence absence, need to adapt christinas code
+# Transect - need to fix aesthetics
   #=================================================================================================================================
   # Density of sea stars per TA 
     SS_density_TA_400 <- plot_count_per_TA_400(transect_ENVR, "Density_of_Sea_Stars_count", "Count of sea stars")
@@ -566,13 +576,13 @@ require(reshape2)
       oyster_density_TA_400
   
   # Presence absence of sea stars 
-    plot_ochre_400 <- presence_absence_SPES(transect_ENVR, "Ochre_EO")
+    plot_ochre_400 <- presence_absence_ENVR(transect_ENVR, "Ochre_EO")
       plot_ochre_400
   
-    plot_leather_400 <- presence_absence_SPES(transect_ENVR, "Leather_EL")
+    plot_leather_400 <- presence_absence_ENVR(transect_ENVR, "Leather_EL")
       plot_leather_400
   
-    plot_molted_400 <- presence_absence_SPES(transect_ENVR, "Mottled_EM")
+    plot_molted_400 <- presence_absence_ENVR(transect_ENVR, "Mottled_EM")
       plot_molted_400
   #=================================================================================================================================
 
@@ -717,7 +727,11 @@ require(reshape2)
     quad1m_SPES_TA <- subset_TAs(quad1m_SPES)
     quad0.25m_SPES_TA <- subset_TAs(quad0.25m_SPES)
     limpet_SPES_TA <- subset_TAs(limpet_SPES)
-  
+
+# Transect data - NEED TO PLOT SEA STAR
+  #=================================================================================================================================
+  #=================================================================================================================================
+    
 # Limpet data
   #=================================================================================================================================
     # Aggregate data by Site_TA
@@ -761,7 +775,7 @@ require(reshape2)
       plot_limpet(limpet_merge, "Mean_Width_mm")
   #=================================================================================================================================
 
-# 0.25m data
+# 0.25m data - need to fix percent cover graphs and make individual graphs
   #=================================================================================================================================
   #Percent cover 
     # SPES
@@ -820,81 +834,55 @@ require(reshape2)
       
   #=================================================================================================================================
   
-# Abiotic Analysis - need help with scale
+# Abiotic Analysis - scale looks better but need to fix aesthetics
 #=================================================================================================================================
-# Find average time of minimum tide height per month 
- # MAKE FUNCTION???
-  # Minimum tide height
-    # Find the minimum tide height for each month for each year
-    monthly_min_tide <- tide %>%
+# Find average time of lowest low tide  per month 
+  # Time of lowest low tide height 
+    monthly_low_tide_time <- tide %>%
       group_by(month, Year) %>%
-      summarise(Min_Tide_Height = min(SLEV_metres))
-    # average the minimum height for each month 
-    average_monthly_min_tide <- monthly_min_tide %>%
+      summarise(hour_of_min_tide = hour[which.min(SLEV_metres)])
+    average_low_tide_time <- monthly_low_tide_time %>%
       group_by(month) %>%
-      summarise(Avg_Min_Tide_Height = mean(Min_Tide_Height))
-    
-    # Time of minimum tide height 
-    monthly_min_tides_time <- tide %>%
-      group_by(month, Year) %>%
-      summarise(min_tide_height = min(SLEV_metres),
-                hour_of_min_tide = hour[which.min(SLEV_metres)])
-    average_monthly_min_tide_time <- monthly_min_tides_time %>%
-      group_by(month) %>%
-      summarise(Avg_Min_Tide_Height = mean(min_tide_height),
-                mean_hour_of_min_tide = mean(hour_of_min_tide))
+      summarise(low_tide_time = mean(hour_of_min_tide))
   
   # Min temperature 
-  monthly_min_temperature <- weather %>%
-    group_by(month, Year) %>%
-    summarise(Min_Temp = min(AirTemp_degC))
+    monthly_min_temperature <- weather %>%
+      group_by(month, Year) %>%
+      summarise(Min_Temp = min(AirTemp_degC))
   
-  average_monthly_min_temperature <- monthly_min_temperature %>%
-    group_by(month) %>%
-    summarise(Avg_Min_Temp = mean(Min_Temp))
+    average_monthly_min_temperature <- monthly_min_temperature %>%
+      group_by(month) %>%
+      summarise(Avg_Min_Temp = mean(Min_Temp))
   
   # Max temperature
-  monthly_max_temperature <- weather %>%
-    group_by(month, Year) %>%
-    summarise(Max_Temp = max(AirTemp_degC))
+    monthly_max_temperature <- weather %>%
+      group_by(month, Year) %>%
+      summarise(Max_Temp = max(AirTemp_degC))
   
-  average_monthly_max_temperature <- monthly_max_temperature %>%
-    group_by(month) %>%
-    summarise(Avg_Max_Temp = mean(Max_Temp))
+    average_monthly_max_temperature <- monthly_max_temperature %>%
+      group_by(month) %>%
+      summarise(Avg_Max_Temp = mean(Max_Temp))
   
   # merge the abotic dfs by month 
-  monthly_temperature_data <- merge(average_monthly_max_temperature, average_monthly_min_temperature, by = "month")
-  monthly_abiotic_data <- merge(monthly_temperature_data, average_monthly_min_tide_time, by = "month")
-  
+    monthly_temperature_data <- merge(average_monthly_max_temperature, average_monthly_min_temperature, by = "month")
+    monthly_abiotic_data <- merge(monthly_temperature_data, average_low_tide_time, by = "month")
 
-# Plotting - minimum tide height - need to figure out temperature scale
-  monthly_abiotic_data$month <- factor(monthly_abiotic_data$month, levels = 1:12,
-                                       labels = c("January", "February", "March", "April", "May", "June",
-                                                  "July", "August", "September", "October", "November", "December"))
+  # plotting - time of minimum tide height - need to figure out temperature scale 
+    monthly_abiotic_data$month <- factor(monthly_abiotic_data$month, levels = 1:12,
+                                         labels = c("January", "February", "March", "April", "May", "June",
+                                                    "July", "August", "September", "October", "November", "December"))
   
-ggplot(monthly_abiotic_data, aes(x = month)) +
-  geom_bar(aes(y = Avg_Min_Tide_Height), stat = "identity", fill = "skyblue", alpha = 0.7) +
-  geom_line(aes(y = Avg_Max_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "red") +
-  geom_line(aes(y = Avg_Min_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "blue") +
-  scale_y_continuous(name = "Average height of low tide (m)", 
-                     limits = c(0, 1.5),
-                     sec.axis = sec_axis(~ . * (. + 4) / (max(monthly_abiotic_data$Avg_Max_Temp) + 4) * 35 - 4, name = "Temperature (°C)")) +
-  labs(x = "Month", y = "Average height of low tide (m)", 
-       title = "Average height of low tide and average maximum and minimum Temperature (2019-2023)",
-       caption = "Data Source: Your Source") +
-  theme_minimal()
-
-# plotting - time of minimum tide height - need to figure out temperature scale 
-ggplot(monthly_abiotic_data, aes(x = month)) +
-  geom_bar(aes(y = mean_hour_of_min_tide), stat = "identity", fill = "skyblue", alpha = 0.7) +
-  geom_line(aes(y = Avg_Max_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "red") +
-  geom_line(aes(y = Avg_Min_Temp * (3/max(Avg_Max_Temp)), group = 1), color = "blue") +
-  scale_y_continuous(name = "Average time of low tide (hour)", 
-                     limits = c(0, 23),
-                     sec.axis = sec_axis(~ . * (. + 4) / (max(monthly_abiotic_data$Avg_Max_Temp) + 4) * 35 - 4, name = "Temperature (°C)")) +
-  labs(x = "Month", y = "Average height of low tide (m)", 
-       title = "Average height of low tide and average maximum and minimum Temperature (2019-2023)",
-       caption = "Data Source: Your Source") +
-  theme_minimal()
+    ggplot(monthly_abiotic_data, aes(x = month)) +
+      geom_bar(aes(y = low_tide_time), stat = "identity", fill = "blue", alpha = 0.5) +
+      geom_line(aes(y = Avg_Max_Temp, group = 1), color = "red") +
+      geom_line(aes(y = Avg_Min_Temp, group = 1), color = "green") +
+      scale_y_continuous(sec.axis = sec_axis(~.+5, name = "Temperature (°C)")) +
+      labs(x = "Month",
+           y = "Low Tide Time (hrs)",
+           title = "Monthly Low Tide Time and Temperature",
+           color = "Temperature") +
+      theme_minimal()
+    
 #=================================================================================================================================
 
+    

@@ -211,7 +211,7 @@ require(RColorBrewer)
           scale_fill_gradient(low = "lightblue", high = "darkblue") +
           labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height vs Total and Relative Percent Covers of Algae and Invertebrates") +
           theme_minimal() +
-          scale_y_discrete(limits = c("low", "medium", "high"))
+          scale_y_discrete(limits = c("Low", "Medium", "High"))
       }
       
 # SPES Data
@@ -225,8 +225,7 @@ require(RColorBrewer)
       df_var <- data.frame(site_TA = data$Site_TA,
                            year = data$Year,
                            var = data[,varname])
-      df_var$site_TA <- as.character(df_var$site_TA)
-      
+
       # aggregate to the mean per visit (or check what makes sense for you: e.g. average monthly count, etc.)
       df_var_mean <- aggregate(var ~ year + site_TA, data=df_var, FUN=mean)
       names(df_var_mean)[3] <- "mean_count"
@@ -239,8 +238,9 @@ require(RColorBrewer)
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(mean_count - sd_count, 0), ymax = mean_count + sd_count),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA")
-      
+        ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA") +
+        scale_fill_brewer(palette = "Set1") +
+        labs(title = paste(plot_varname, "over Time"))
     }
     
   # presence absence of sea star species
@@ -281,11 +281,13 @@ require(RColorBrewer)
       
       ggplot(data = agg_all, aes(x = Year, y = get(paste("mean_", agg_variable, sep = "")), group = Site_TA, fill = Site_TA)) +
         geom_bar(stat = "identity", position = "dodge") +
-        geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
+        geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), 
+                          ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(paste("Mean limpet", agg_variable, " (mm)")) +
-        xlab("Site TA") +
+        ylab(paste("Mean", agg_variable, " (mm)")) +
+        xlab("Time (years)") +
         labs(fill = "Site TA") +
+        scale_fill_brewer(palette = "Set1") +
         theme_minimal()
     }
   
@@ -304,7 +306,7 @@ require(RColorBrewer)
         scale_fill_gradient(low = scale_fill[1], high = scale_fill[2]) +
         labs(x = "Count", y = "Tide Height", title = paste("Intertidal Height vs Count of", count_variable)) +
         theme_minimal() +
-        scale_y_discrete(limits = c("low", "medium", "high"))
+        scale_y_discrete(limits = c("Low", "Medium", "High"))
     }
     
   #=================================================================================================================================
@@ -313,7 +315,7 @@ require(RColorBrewer)
   #=================================================================================================================================
   # Density of sea stars per TA (2019-2023)
     # error bars look insane
-    SS_density_TA <- plot_count_per_TA_SPES("Density_of_Sea_Stars_Count", "Mean count of sea stars", transect_SPES)
+    SS_density_TA <- plot_count_per_TA_SPES("Density_of_Sea_Stars_Count", "Mean Count of Sea Stars", transect_SPES)
       SS_density_TA
     
   # Presence absence of sea stars 
@@ -325,7 +327,7 @@ require(RColorBrewer)
       plot_mottled 
   #=================================================================================================================================
       
-# Limpet Data - fix aesthetics
+# Limpet Data - colouring good, need to add title and change y axis label
   #=================================================================================================================================
   # plot limpet length
     limpet_length_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Length_mm")

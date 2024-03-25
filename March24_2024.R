@@ -187,39 +187,43 @@ require(RColorBrewer)
 # Overall functions
   #================================================================================================================================
   # plot percent cover along the transect line - need to fix aesthetics
-      cover_intertidal_height <- function(data) {
-        selected_data <- data.frame(
-          intertidal_height = data$intertidal_height,
-          Total = data$Total_Cover,
-          Algae = data$`Algae_Cover`,
-          Invertebrates = data$`Invertebrates_Cover`
-        )
-        
-        quad_agg_total <- aggregate(Total ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
-        quad_agg_algae <- aggregate(Algae ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
-        quad_agg_intertebrates <- aggregate(Invertebrates ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
-        
-        quad_agg <- quad_agg_total %>%
-          left_join(quad_agg_algae, by = "intertidal_height") %>%
-          left_join(quad_agg_intertebrates, by = "intertidal_height")
-        
-        tidy_quad_data <- pivot_longer(quad_agg, cols = c(Total, Algae, Invertebrates), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
-        
-        ggplot(tidy_quad_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
-          geom_tile(color = "white") +
-          geom_text(aes(label = Percent_Cover), vjust = 1) +
-          scale_fill_gradient(low = "lightblue", high = "darkblue") +
-          labs(x = "Percent Cover", y = "Intertidal Height", title = "Intertidal Height and Percent Cover") +
-          theme_minimal() +
-          scale_y_discrete(limits = c("low", "medium", "high"))
-      }
+    cover_intertidal_height <- function(data, color_scale = c("low" = "lightblue", "high" = "darkblue"), 
+                                        plot_title = "Intertidal Height and Percent Cover") {
+      selected_data <- data.frame(
+        intertidal_height = data$intertidal_height,
+        Total = data$Total_Cover,
+        Algae = data$`Algae_Cover`,
+        Invertebrates = data$`Invertebrates_Cover`
+      )
       
+      quad_agg_total <- aggregate(Total ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
+      quad_agg_algae <- aggregate(Algae ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
+      quad_agg_intertebrates <- aggregate(Invertebrates ~ intertidal_height, data = selected_data, FUN = function(x) round(mean(x)))
+      
+      quad_agg <- quad_agg_total %>%
+        left_join(quad_agg_algae, by = "intertidal_height") %>%
+        left_join(quad_agg_intertebrates, by = "intertidal_height")
+      
+      tidy_quad_data <- pivot_longer(quad_agg, cols = c(Total, Algae, Invertebrates), names_to = "Percent_Cover_Type", values_to = "Percent_Cover")
+      
+      ggplot(tidy_quad_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
+        geom_tile(color = "white", alpha = 0.85) +
+        geom_text(aes(label = Percent_Cover), vjust = 1) +
+        scale_fill_gradientn(colours = color_scale, name = "Percent Cover") +
+        labs(x = "Percent Cover", y = "Intertidal Height", title = plot_title) +  # Custom plot title
+        theme_minimal() +
+        theme(plot.title = element_text(size = rel(0.9))) +
+        scale_y_discrete(limits = c("low", "medium", "high"))
+    }
+    
 # SPES Data
 #=================================================================================================================================
 # Functions 
   #=================================================================================================================================
+  site_colors <- site_colors <- c("skyblue2", "darkolivegreen3", "gold2", "orchid2", "royalblue1", "coral")
+    
   # plotting a variable for every TA for every year.
-    plot_count_per_TA_SPES <- function(varname, plot_varname, data){
+    plot_count_per_TA_SPES <- function(data, varname, plot_title, plot_yaxis){
       
       # create data frame with relevant columns
       df_var <- data.frame(site_TA = data$Site_TA,
@@ -238,9 +242,9 @@ require(RColorBrewer)
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(mean_count - sd_count, 0), ymax = mean_count + sd_count),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(plot_varname) + xlab("Time (years)") + labs(fill = "Site TA") +
-        scale_fill_brewer(palette = "Set1") +
-        labs(title = paste(plot_varname, "Over Time"))
+        ylab(plot_yaxis) + xlab("Time (years)") + labs(fill = "Site TA") +
+        scale_fill_manual(values = site_colors) +
+        labs(title = plot_title)
     }
     
   # presence absence of sea star species
@@ -273,7 +277,7 @@ require(RColorBrewer)
     }
     
   # limpet plots
-    limpet_plots_SPES <- function(data, agg_variable) {
+    limpet_plots_SPES <- function(data, agg_variable, plot_title, plot_yaxis) {
       agg_mean <- aggregate(get(agg_variable) ~ Year + Site_TA, data = data, FUN = mean)
       names(agg_mean)[3] <- paste("mean_", agg_variable, sep = "")
       
@@ -287,15 +291,17 @@ require(RColorBrewer)
         geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), 
                           ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(paste("Mean", agg_variable, " (mm)")) +
+        ylab(plot_yaxis) +
         xlab("Time (years)") +
         labs(fill = "Site TA") +
-        scale_fill_brewer(palette = "Set1") +
-        theme_minimal()
+        scale_fill_manual(values = site_colors) +
+        theme_minimal() +
+        labs(title = plot_title)
     }
   
   # plot count along intertidal height
-    plot_count_intertidal_height <- function(data, count_variable, scale_fill = c("lightgreen", "darkgreen")) {
+    # plot count along intertidal height
+    plot_count_intertidal_height <- function(data, count_variable, scale_fill = c("lightblue", "darkblue"), plot_title) {
       # Aggregate the data for the specified count variable
       agg_data <- aggregate(data[[count_variable]], by = list(data$intertidal_height), FUN = function(x) round(mean(x, na.rm = TRUE)))
       # Rename columns
@@ -304,21 +310,23 @@ require(RColorBrewer)
       tidy_data <- tidyr::pivot_longer(agg_data, cols = c(Count), names_to = "Count_Type", values_to = "Count")
       # Generate the plot
       ggplot(tidy_data, aes(x = Count_Type, y = intertidal_height, fill = Count)) +
-        geom_tile(color = "white") +
+        geom_tile(color = "white", alpha = 0.85) +
         geom_text(aes(label = Count), vjust = 1) +
         scale_fill_gradient(low = scale_fill[1], high = scale_fill[2]) +
-        labs(x = "Count", y = "Tide Height", title = paste("Intertidal Height vs Count of", count_variable)) +
+        labs(x = "Count", y = "Tide Height", title = plot_title) +
         theme_minimal() +
-        scale_y_discrete(limits = c("Low", "Medium", "High"))
+        scale_y_discrete(limits = c("low", "medium", "high"))
     }
-    
+
   #=================================================================================================================================
   
 # Transect Data - aesthetics good
   #=================================================================================================================================
   # Density of sea stars per TA (2019-2023)
     # error bars look insane
-    SS_density_TA <- plot_count_per_TA_SPES("Density_of_Sea_Stars_Count", "Mean Count of Sea Stars", transect_SPES)
+    SS_density_TA <- plot_count_per_TA_SPES(transect_SPES, "Density_of_Sea_Stars_Count", 
+                                            "Mean Count of Sea Stars in the Spring/Summer Over Time", 
+                                            "Mean Count of Sea Stars")
       SS_density_TA
     
   # Presence absence of sea stars 
@@ -330,31 +338,43 @@ require(RColorBrewer)
       plot_mottled 
   #=================================================================================================================================
       
-# Limpet Data - colouring good, need to add title and change y axis label
+# Limpet Data - aesthetics good
   #=================================================================================================================================
   # plot limpet length
-    limpet_length_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Length_mm")
+    limpet_length_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Length_mm",
+                                            "Mean Length of Limpets in the Spring/Summer Over Time",
+                                            "Mean Length (mm)")
       limpet_length_SPES
       
   # plot limpet width
-    limpet_width_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Width_mm")
+      limpet_width_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Width_mm",
+                                              "Mean Width of Limpets in the Spring/Summer Over Time",
+                                              "Mean Width (mm)")
       limpet_width_SPES
     
   #=================================================================================================================================
       
-# 1m quadrat data - need to fix intertidal height
+# 1m quadrat data - aesthetics good
   #=================================================================================================================================
   # Littorine Snails
-    plot_count_per_TA_SPES("Littorine_snails", "Mean Count of Littorine Snails", quad1m_SPES)
+    Lit_density_TA <- plot_count_per_TA_SPES(quad1m_SPES, "Littorine_snails", 
+                                              "Mean Count of Littorine Snails in the Spring/Summer Over Time", 
+                                              "Mean Count of Littorine Snails")
+    Lit_density_TA
 
   # Limpet Count
-    plot_count_per_TA_SPES("Limpets", "Mean Count of Limpets", quad1m_SPES)
-    
+    Limpet_density_TA <- plot_count_per_TA_SPES(quad1m_SPES, "Limpets", 
+                                             "Mean Count of Limpets in the Spring/Summer Over Time", 
+                                             "Mean Count of Limpets")
+    Limpet_density_TA
+
   # Changes in intertidal height composition - not working look at old function (March 22)
-      lit_snail_height <- plot_count_intertidal_height(quad1m_SPES, 'Littorine_snails', scale_fill = c("lightblue", "darkblue"))
+      lit_snail_height <- plot_count_intertidal_height(quad1m_SPES, 'Littorine_snails', scale_fill = c("lightgreen", "darkgreen"), 
+                                                       "Intertidal Height and Count of Littorine Snails in the Spring/Summer")
         lit_snail_height
         
-      limpet_height <- plot_count_intertidal_height(quad1m_SPES, 'Limpets', scale_fill = c("yellow", "red"))
+      limpet_height <- plot_count_intertidal_height(quad1m_SPES, 'Limpets', scale_fill = c("purple", "purple4"),
+                                                    "Intertidal Height and Count of Limpets in the Spring/Summer")
         limpet_height  
         
   #=================================================================================================================================
@@ -467,7 +487,8 @@ require(RColorBrewer)
     print(quad_0.25_SPES_invert_plot)
 
   # cover of algae vs invertebrates across the transect - summer
-    cover_intertidal_height(quad0.25m_SPES)
+    cover_intertidal_height(quad0.25m_SPES, color_scale = c("low" = "yellow", "high" = "red"), 
+                            plot_title = "Intertidal Height and Mean Percent Cover in Spring/Summer 2019-2023")
     
   #=================================================================================================================================
 
@@ -491,12 +512,14 @@ require(RColorBrewer)
       
       df_var_all <- merge(df_var_mean, df_var_sd, by = "site_TA")
       
+      site_colors <- c("red", "blue", "green", "orange", "purple", "yellow")
+      
       ggplot(data = df_var_all, aes(x = site_TA, y = mean_count, fill = site_TA)) +
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(mean_count - sd_count, 0), ymax = mean_count + sd_count),
                       position = position_dodge(width = 0.9), width = 0.25) +
         ylab(plot_varname) + xlab("Sampling Site") + labs(fill = "Site TA") +
-        scale_fill_brewer(palette = "Set1")
+        scale_fill_brewer(values = site_colors)
   }
     
   # identity of sea stars - had to change christinas 
@@ -661,7 +684,8 @@ require(RColorBrewer)
   print(invert_quad0.25m_ENVR_plot)
   
   # cover of algae vs invertebrates across the transect - winter
-  cover_intertidal_height(quad0.25m_ENVR)
+  cover_intertidal_height(quad0.25m_ENVR, color_scale = c("low" = "lightblue", "high" = "darkblue"), 
+                          plot_title = "Intertidal Height and Mean Percent Cover in Winter 2023/2024")
   
   #=================================================================================================================================
 

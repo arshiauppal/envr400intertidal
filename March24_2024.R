@@ -1,5 +1,6 @@
 # March 24, 2024 - jess
 require(dplyr)
+require(tidyr)
 require(stringr)
 require(ggplot2)
 require(lubridate)
@@ -683,6 +684,50 @@ require(RColorBrewer)
 
 # Transect data - NEED TO PLOT SEA STAR
   #=================================================================================================================================
+    names(transect_ENVR)[names(transect_ENVR) == "Density_of_Sea_Stars_count"] <- "Density_of_Sea_Stars_Count"
+    
+    ss_agg_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, data = transect_SPES_TA, FUN = mean, na.rm = TRUE)
+    
+    # Calculate standard deviation of sea stars count by season and Site_TA for SPES data
+    ss_agg_sd_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, 
+                                data = transect_SPES_TA, 
+                                FUN = function(x) sd(x, na.rm = TRUE))
+    
+    # Rename standard deviation column for consistency
+    names(ss_agg_sd_SPES)[names(ss_agg_sd_SPES) == "Density_of_Sea_Stars_Count"] <- "sd_ss"
+    
+    # Aggregate mean sea stars count by season and Site_TA for ENVR data
+    ss_agg_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, data = transect_ENVR, FUN = mean, na.rm = TRUE)
+    
+    # Calculate standard deviation of sea stars count by season and Site_TA for ENVR data
+    ss_agg_sd_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, 
+                                data = transect_ENVR, 
+                                FUN = function(x) sd(x, na.rm = TRUE))
+    
+    # Rename standard deviation column for consistency
+    names(ss_agg_sd_ENVR)[names(ss_agg_sd_ENVR) == "Density_of_Sea_Stars_Count"] <- "sd_ss"
+    
+    # Combine aggregated data and standard deviation data for both datasets
+    ss_agg_combined <- rbind(ss_agg_SPES, ss_agg_ENVR)
+    ss_agg_sd_combined <- rbind(ss_agg_sd_SPES, ss_agg_sd_ENVR)
+    
+    ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA"))
+    
+    # plotting limpet function - need to fix aesthetics
+    plot_ss <- function(data, y_variable) {
+      # Generate the plot
+      ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
+        geom_bar(stat = "identity", position = "dodge") +
+        geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_ss, 0), 
+                          ymax = !!sym(y_variable) + sd_ss),
+                      position = position_dodge(width = 0.9), 
+                      width = 0.25) +
+        labs(x = "Site_TA", y = y_variable, title = paste("Plot of", y_variable, "by Site and Season")) +
+        scale_fill_discrete(name = "Season") +
+        theme_minimal()
+    }
+    # length
+    plot_ss(ss_merge, "Density_of_Sea_Stars_Count")
   #=================================================================================================================================
     
 # Limpet data
@@ -804,7 +849,7 @@ require(RColorBrewer)
         theme_minimal()
   #=================================================================================================================================
   
-# Abiotic Analysis - scale looks better but need to fix aesthetics
+# Abiotic Analysis
 #=================================================================================================================================
 # Find average time of lowest low tide  per month 
   # Time of lowest low tide height 
@@ -858,21 +903,6 @@ require(RColorBrewer)
       coord_cartesian(ylim = c(-5, 33)) +  
       labs(x = "Month",
            y = "Low Tide Time (hrs)",
-           title = "Average Time of the Lowest Low Tide and Average Maximum and Minimum Temperatures",
-           color = "Temperature") +
-      theme_minimal()
-    
-    ggplot(monthly_abiotic_data, aes(x = month)) +
-      geom_bar(aes(y = low_tide_time, fill = low_tide_time), stat = "identity") +
-      geom_line(aes(y = low_tide_time, color = "Time of Lowest Tide"), group = 1) +  # Use geom_line for bars
-      geom_line(aes(y = Avg_Max_Temp, color = "Maximum"), group = 1, show.legend = TRUE) +
-      geom_line(aes(y = Avg_Min_Temp, color = "Minimum"), group = 1, show.legend = TRUE) +
-      scale_fill_gradient(low = "lightgreen", high = "darkgreen", name = "Time of Lowest Tide") +  
-      scale_color_manual(values = cb_palette, name = "Temperature") +  # Color mapping for lines
-      scale_y_continuous(name = "Temperature (°C)", limits = c(-5, 33), sec.axis = sec_axis(~. - 5, name = "Low Tide Time (hrs)")) +
-      coord_cartesian(ylim = c(-5, 33)) +  # Adjust primary y-axis limits
-      labs(x = "Month",
-           y = "Value",
            title = "Average Time of the Lowest Low Tide and Average Maximum and Minimum Temperatures",
            color = "Temperature") +
       theme_minimal()

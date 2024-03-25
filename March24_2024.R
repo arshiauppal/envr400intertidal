@@ -400,24 +400,20 @@ require(RColorBrewer)
     
     algae_cover_count$site_TA <- paste0("TA-", algae_cover_count$site_TA)
     
-    quad_0.25_SPES_algae <- ggplot(data = algae_cover_count, aes(x = year, y = algae_percent_cover)) +
+    quad_0.25_SPES_alage_plot <- ggplot(data = algae_cover_count, aes(x = year, y = algae_percent_cover)) +
       geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  # Adjust transparency with alpha
-      geom_line(aes(y = algae_count * adj, color = "Algae"), linetype = "solid", group = 1) +
+      geom_line(data = algae_cover_count, aes(x = year, y = algae_count), color = "blue") +  # Add line for algae count
       geom_errorbar(aes(ymin = pmax(0, algae_percent_cover - sd_cover), 
                         ymax = pmin(100, algae_percent_cover + sd_cover)), 
                     width = 0.25, position = position_dodge(width = 0.9),
                     color = "black", size = 0.5) +  # Adjust error bar aesthetics
       labs(x = "Year", y = "Percent Cover", 
-           title = "Mean Percent Cover and Count of Algae", 
-           fill = "Year",
-           color = "Species Count") +
+           title = "Mean Percent Cover and Count of Invertebrate Organisms", 
+           fill = "Year", color = "Invertebrate Species Count") +
       scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +
       facet_wrap(~ site_TA) +
-      scale_fill_viridis(discrete = TRUE) +
-      scale_color_manual(values = line_colors, labels = c("Algae")) +  # Define labels for the legend
-      theme_minimal() +
-      guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
-             color = guide_legend(override.aes = list(fill = NULL)))  # Remove line color from legend
+      scale_fill_viridis(discrete = TRUE) +      
+      theme_minimal()
     
     # Print the plot
     print(quad_0.25_SPES_algae)
@@ -862,6 +858,21 @@ require(RColorBrewer)
       coord_cartesian(ylim = c(-5, 33)) +  
       labs(x = "Month",
            y = "Low Tide Time (hrs)",
+           title = "Average Time of the Lowest Low Tide and Average Maximum and Minimum Temperatures",
+           color = "Temperature") +
+      theme_minimal()
+    
+    ggplot(monthly_abiotic_data, aes(x = month)) +
+      geom_bar(aes(y = low_tide_time, fill = low_tide_time), stat = "identity") +
+      geom_line(aes(y = low_tide_time, color = "Time of Lowest Tide"), group = 1) +  # Use geom_line for bars
+      geom_line(aes(y = Avg_Max_Temp, color = "Maximum"), group = 1, show.legend = TRUE) +
+      geom_line(aes(y = Avg_Min_Temp, color = "Minimum"), group = 1, show.legend = TRUE) +
+      scale_fill_gradient(low = "lightgreen", high = "darkgreen", name = "Time of Lowest Tide") +  
+      scale_color_manual(values = cb_palette, name = "Temperature") +  # Color mapping for lines
+      scale_y_continuous(name = "Temperature (°C)", limits = c(-5, 33), sec.axis = sec_axis(~. - 5, name = "Low Tide Time (hrs)")) +
+      coord_cartesian(ylim = c(-5, 33)) +  # Adjust primary y-axis limits
+      labs(x = "Month",
+           y = "Value",
            title = "Average Time of the Lowest Low Tide and Average Maximum and Minimum Temperatures",
            color = "Temperature") +
       theme_minimal()

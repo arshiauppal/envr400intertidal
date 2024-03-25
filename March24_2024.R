@@ -4,6 +4,8 @@ require(stringr)
 require(ggplot2)
 require(lubridate)
 require(reshape2)
+require(viridis)
+require(RColorBrewer)
 
 # read data
 #=================================================================================================================================
@@ -369,20 +371,20 @@ require(reshape2)
       names(cover_sd)[3] <- "sd_cover"
     
       percent_cover_all <- merge(all_cover, cover_sd, by = c("year", "site_TA"))
-      percent_cover_all$year <- factor(percent_cover_all$year)
+      percent_cover_all$site_TA <- paste0("TA-", percent_cover_all$site_TA)
     
-    ggplot(percent_cover_all, aes(x = as.factor(year), y = total_cover)) +
-      geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
-      geom_bar(aes(y = invert_relative, fill = "Invertebrates"), position = "stack", stat = "identity") +
-      geom_errorbar(aes(ymin = invert_relative - sd_cover/2, ymax = invert_relative + sd_cover/2,
-                        group = site_TA),  # Group by site_TA
-                    position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
-      facet_wrap(~site_TA) +
-      labs(x = "Year", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
-      scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
-      theme_minimal() 
+      ggplot(percent_cover_all, aes(x = as.factor(year), y = total_cover)) +
+        geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
+        geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
+        geom_errorbar(aes(ymin = invert_cover - sd_cover/2, ymax = invert_cover + sd_cover/2,
+                          group = site_TA),  # Group by site_TA
+                      position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
+        facet_wrap(~site_TA) +
+        labs(x = "Year", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates", fill = "Organismal Class") +
+        scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
+        theme_minimal()
   
-  # percent cover and count of algae - cant get second axis to look right
+  # percent cover and count of algae - scale works but line not being plotted
     algae_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                        year = quad0.25m_SPES$Year,
                                        algae_percent_cover = quad0.25m_SPES$Algae_Cover,
@@ -393,25 +395,35 @@ require(reshape2)
       names(algae_percent_sd)[3] <- "sd_cover"
     
     algae_cover_count <- merge(algae_cc, algae_percent_sd, by = c("year", "site_TA"))
-
-    p <- ggplot(algae_cover_count, aes(x = factor(year))) +
-      geom_bar(aes(y = algae_percent, fill = factor(year)), stat = "identity", position = "dodge") +
-      geom_errorbar(aes(ymin = pmax(0, algae_percent - sd_cover), ymax = pmin(100, algae_percent + sd_cover)), width = 0.25, position = position_dodge(width = 0.9)) +
-      facet_wrap(~ site_TA, scales = "free") +  # Facet by site_TA
-      scale_fill_manual(values = c("red", "blue", "green", "orange", "purple")) +  # Providing enough colors for different years
-      labs(x = "Year", y = "Algae Percent Cover", fill = "Year") +
+    
+    adj <- 25
+    
+    algae_cover_count$site_TA <- paste0("TA-", algae_cover_count$site_TA)
+    
+    quad_0.25_SPES_algae <- ggplot(data = algae_cover_count, aes(x = year, y = algae_percent_cover)) +
+      geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  # Adjust transparency with alpha
+      geom_line(aes(y = algae_count * adj, color = "Algae"), linetype = "solid", group = 1) +
+      geom_errorbar(aes(ymin = pmax(0, algae_percent_cover - sd_cover), 
+                        ymax = pmin(100, algae_percent_cover + sd_cover)), 
+                    width = 0.25, position = position_dodge(width = 0.9),
+                    color = "black", size = 0.5) +  # Adjust error bar aesthetics
+      labs(x = "Year", y = "Percent Cover", 
+           title = "Mean Percent Cover and Count of Algae", 
+           fill = "Year",
+           color = "Species Count") +
+      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +
+      facet_wrap(~ site_TA) +
+      scale_fill_viridis(discrete = TRUE) +
+      scale_color_manual(values = line_colors, labels = c("Algae")) +  # Define labels for the legend
       theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+      guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
+             color = guide_legend(override.aes = list(fill = NULL)))  # Remove line color from legend
     
-    # Adding secondary y-axis for algae count
-    p <- p + geom_line(data = algae_cover_count, aes(y = algae_count), color = "black", size = 1, alpha = 0.5) +
-      scale_y_continuous(name = "Algae Percent Cover", sec.axis = sec_axis(~./0.01, name = "Algae Count", breaks = seq(0, 4, by = 1)))
-    
-    # Display the plot
-    print(p)
+    # Print the plot
+    print(quad_0.25_SPES_algae)
     
   
-  # percent cover of invertebrates and count of sessile and mobile - scale works!
+  # percent cover of invertebrates and count of sessile and mobile
     invert_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                         year = quad0.25m_SPES$Year,
                                         invert_percent_cover = quad0.25m_SPES$Invertebrates_Cover,
@@ -426,19 +438,32 @@ require(reshape2)
     
     adj <- 25
     
-    quad_0.25_SPES_invert_plot <- ggplot(data = invert_cover_count, aes(x = year, y = invert_percent)) +
-      geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack") +
-      geom_line(aes(y = sessile_count*adj), color = "red", linetype = "solid", group = 1) +
-      geom_line(aes(y = mobile_count*adj), color = "green", linetype = "dashed", group = 1) +
-      labs(x = "Year", y = "Percentage of Total Cover", fill = "Year", color = "Cover Component") +
-      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +  # Secondary y-axis for algae count
+    line_colors <- brewer.pal(n = 3, name = "Set1")
+    
+    invert_cover_count$site_TA <- paste0("TA-", invert_cover_count$site_TA)
+    
+    quad_0.25_SPES_invert_plot <- ggplot(data = invert_cover_count, aes(x = year, y = invert_percent_cover)) +
+      geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  # Adjust transparency with alpha
+      geom_line(aes(y = sessile_count * adj, color = "Sessile"), linetype = "solid", group = 1) +
+      geom_line(aes(y = mobile_count * adj, color = "Mobile"), linetype = "dashed", group = 1) +
+      geom_errorbar(aes(ymin = pmax(0, invert_percent_cover - sd_cover), 
+                        ymax = pmin(100, invert_percent_cover + sd_cover)), 
+                    width = 0.25, position = position_dodge(width = 0.9),
+                    color = "black", size = 0.5) +  # Adjust error bar aesthetics
+      labs(x = "Year", y = "Percent Cover", 
+           title = "Mean Percent Cover and Count of Invertebrate Organisms", 
+           fill = "Year", color = "Invertebrate Species Count") +
+      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +
       facet_wrap(~ site_TA) +
-      scale_fill_manual(values = c("blue", "green", "red", "orange", "purple", "brown")) +  # Manually setting colors for years
-      theme_minimal()
+      scale_fill_viridis(discrete = TRUE) +
+      scale_color_manual(values = line_colors, labels = c("Sessile", "Mobile")) +  # Define labels for the legend
+      theme_minimal() +
+      guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
+             color = guide_legend(override.aes = list(fill = NULL)))  # Remove line color from legend
     
+    # Print the plot
     print(quad_0.25_SPES_invert_plot)
-    
-    
+
   # cover of algae vs invertebrates across the transect - summer
     cover_intertidal_height(quad0.25m_SPES)
     
@@ -819,22 +844,25 @@ require(reshape2)
     monthly_max_temperature <- summarize_monthly_temperature(weather, summary_type = "max")
   
   # merge the abotic dfs by month 
-    monthly_temperature_data <- merge(average_monthly_max_temperature, average_monthly_min_temperature, by = "month")
+    monthly_temperature_data <- merge(monthly_max_temperature, monthly_min_temperature, by = "month")
     monthly_abiotic_data <- merge(monthly_temperature_data, average_low_tide_time, by = "month")
 
   # plotting - time of minimum tide height - need to figure out temperature scale 
     monthly_abiotic_data$month <- factor(monthly_abiotic_data$month, levels = 1:12,
                                          labels = c("January", "February", "March", "April", "May", "June",
                                                     "July", "August", "September", "October", "November", "December"))
-  
+ 
+    # Create the plot
     ggplot(monthly_abiotic_data, aes(x = month)) +
-      geom_bar(aes(y = low_tide_time), stat = "identity", fill = "blue", alpha = 0.5) +
-      geom_line(aes(y = Avg_Max_Temp, group = 1), color = "red") +
-      geom_line(aes(y = Avg_Min_Temp, group = 1), color = "green") +
-      scale_y_continuous(sec.axis = sec_axis(~.+5, name = "Temperature (°C)")) +
+      geom_bar(aes(y = low_tide_time, fill = low_tide_time), stat = "identity") +
+      geom_line(aes(y = Avg_Max_Temp, group = 1, color = "Maximum"), show.legend = TRUE) +
+      geom_line(aes(y = Avg_Min_Temp, group = 1, color = "Minimum"), show.legend = TRUE) +
+      scale_fill_gradient(low = "lightgreen", high = "darkgreen", name = "Time of Lowest Tide") +  
+      scale_y_continuous(name = "Temperature (°C)", limits = c(-5, 33), sec.axis = sec_axis(~. - 5, name = "Low Tide Time (hrs)")) +
+      coord_cartesian(ylim = c(-5, 33)) +  
       labs(x = "Month",
            y = "Low Tide Time (hrs)",
-           title = "Monthly Low Tide Time and Temperature",
+           title = "Average Time of the Lowest Low Tide and Average Maximum and Minimum Temperatures",
            color = "Temperature") +
       theme_minimal()
     

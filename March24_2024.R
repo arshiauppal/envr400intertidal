@@ -267,7 +267,7 @@ require(RColorBrewer)
                           na.value = "gray",
                           drop=FALSE) +  # Adjust colors as needed
         labs(x = "Year", y = "Sampling TA", fill = paste0(species_column, " Presence/Absence"), 
-             title = paste(species_column, "Sea Star Presence Absence Over Time")) +
+             title = paste(species_column, "Spring/Summer Sea Star Presence Absence Over Time")) +
         theme_minimal() +
         theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
           panel.grid.minor = element_blank(),  # Remove minor gridlines
@@ -300,7 +300,6 @@ require(RColorBrewer)
     }
   
   # plot count along intertidal height
-    # plot count along intertidal height
     plot_count_intertidal_height <- function(data, count_variable, scale_fill = c("lightblue", "darkblue"), plot_title) {
       # Aggregate the data for the specified count variable
       agg_data <- aggregate(data[[count_variable]], by = list(data$intertidal_height), FUN = function(x) round(mean(x, na.rm = TRUE)))
@@ -313,7 +312,7 @@ require(RColorBrewer)
         geom_tile(color = "white", alpha = 0.85) +
         geom_text(aes(label = Count), vjust = 1) +
         scale_fill_gradient(low = scale_fill[1], high = scale_fill[2]) +
-        labs(x = "Count", y = "Tide Height", title = plot_title) +
+        labs(x = "Count", y = "Tide Height", title = plot_title, paste0(count_variable, " Count")) +
         theme_minimal() +
         scale_y_discrete(limits = c("low", "medium", "high"))
     }
@@ -496,8 +495,10 @@ require(RColorBrewer)
 #=================================================================================================================================
 # Functions
   #=================================================================================================================================
+  site_colors_ENVR <- c("skyblue2", "orchid2", "coral")
+    
   # count per TA
-  plot_count_per_TA_ENVR <- function(data, varname, plot_varname){
+  plot_count_per_TA_ENVR <- function(data, varname, plot_varname, plot_title){
       
       # create data frame with relevant columns
       df_var <- data.frame(site_TA = data$Site_TA,
@@ -512,18 +513,16 @@ require(RColorBrewer)
       
       df_var_all <- merge(df_var_mean, df_var_sd, by = "site_TA")
       
-      site_colors <- c("red", "blue", "green", "orange", "purple", "yellow")
-      
       ggplot(data = df_var_all, aes(x = site_TA, y = mean_count, fill = site_TA)) +
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(mean_count - sd_count, 0), ymax = mean_count + sd_count),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(plot_varname) + xlab("Sampling Site") + labs(fill = "Site TA") +
-        scale_fill_brewer(values = site_colors)
+        ylab(plot_varname) + xlab("Site TA") + labs(title = plot_title, fill = "Site TA") +
+        scale_fill_manual(values = site_colors_ENVR)
   }
     
-  # identity of sea stars - had to change christinas 
-  presence_absence_ENVR <- function(data, species_column) {
+  # identity of sea stars
+  presence_absence_ENVR <- function(data, species_column, plot_varname) {
       df <- data.frame(Site_TA = data$Site_TA,
                        Species = data[[species_column]])
       
@@ -538,19 +537,20 @@ require(RColorBrewer)
       
       ggplot(df_merge, aes(x = as.character(Site_TA), y = "", fill = Species)) +
         geom_tile(colour ='black') +
-        scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"), na.value = "gray",
-                          drop=FALSE) +  # Adjust colors as needed
-        labs(x = "Sampling Site", y = paste0(species_column, " Presence")) +
+        scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red",
+                          labels = c("TRUE" = "Present", "FALSE" = "Absent")), 
+                          na.value = "gray", drop=FALSE) +
+        labs(x = "Sampling Site", y = plot_varname,
+             title = "Winter Sea Star Presence Absence Over Time", fill = paste0(species_column, " Presence/Absence")) +
         theme_minimal() +
         theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
               panel.grid.minor = element_blank(),  # Remove minor gridlines
-              axis.text.y = element_text(angle = 0, hjust = 0.5)  # Adjust y-axis text alignment
-        ) +
+              axis.text.y = element_text(angle = 0, hjust = 0.5)) +
         scale_y_discrete(breaks = unique(df_merge$Site_TA))  # Set breaks for y-axis
     }
   
   # limpet plots
-  limpet_plots_ENVR <- function(data, agg_variable) {
+  limpet_plots_ENVR <- function(data, agg_variable, plot_varname, plot_title) {
     agg_mean <- aggregate(get(agg_variable) ~ Site_TA, data = data, FUN = mean)
     names(agg_mean)[2] <- paste("mean_", agg_variable, sep = "")
     
@@ -563,48 +563,55 @@ require(RColorBrewer)
       geom_bar(stat = "identity", position = "dodge") +
       geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                     position = position_dodge(width = 0.9), width = 0.25) +
-      ylab(paste("Mean limpet", agg_variable, " (mm)")) +
+      ylab(plot_varname) +
       xlab("Site TA") +
-      labs(fill = "Site TA") +
+      labs(fill = "Site TA", title = plot_title) +
+      scale_fill_manual(values = site_colors_ENVR)+
       theme_minimal()
   }
   
   #=================================================================================================================================
 
-# Transect - need to fix aesthetics (cant get colour scheme to match SPES)
+# Transect - cant change TRUE/FALSE to Present/Absent idk why but not working
   #=================================================================================================================================
   # Density of sea stars per TA 
-    SS_density_TA_ENVR <- plot_count_per_TA_ENVR(transect_ENVR, "Density_of_Sea_Stars_count", "Mean Count of Sea Stars")
+    SS_density_TA_ENVR <- plot_count_per_TA_ENVR(transect_ENVR, "Density_of_Sea_Stars_count", "Mean Count of Sea Stars",
+                                                 "Mean Count of Sea Stars during Winter 2023/2024")
       SS_density_TA_ENVR
   
   # Density of Oysters per TA
-    oyster_density_TA_ENVR <- plot_count_per_TA_ENVR("Density_of_Oysters_count", "Count of Oysters", transect_ENVR)
+    oyster_density_TA_ENVR <- plot_count_per_TA_ENVR(transect_ENVR, "Density_of_Oysters_count", "Mean Count of Oysters",
+                                                     "Mean Count of Oysters during Winter 2023/2024")
       oyster_density_TA_ENVR
   
   # Presence absence of sea stars 
-    plot_ochre_ENVR <- presence_absence_ENVR(transect_ENVR, "Ochre_EO")
+    plot_ochre_ENVR <- presence_absence_ENVR(transect_ENVR, "Ochre_EO", "Ochre")
       plot_ochre_ENVR
   
-    plot_leather_ENVR <- presence_absence_ENVR(transect_ENVR, "Leather_EL")
+    plot_leather_ENVR <- presence_absence_ENVR(transect_ENVR, "Leather_EL", "Leather")
       plot_leather_ENVR
   
-    plot_mottled_ENVR <- presence_absence_ENVR(transect_ENVR, "Mottled_EM")
+    plot_mottled_ENVR <- presence_absence_ENVR(transect_ENVR, "Mottled_EM", "Mottled")
       plot_mottled_ENVR
   #=================================================================================================================================
 
-# Limpet data - fix aesthetics
+# Limpet data - done
   #=================================================================================================================================
   # limpet length
-    limpet_length_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Length_mm")
+    limpet_length_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Length_mm", 
+                                            "Mean Limpet Length (mm)", 
+                                            "Mean Length of Limpets in Winter 2023/2024")
       limpet_length_ENVR
       
   # limpet width
-    limpet_width_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Width_mm")
+    limpet_width_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Width_mm", 
+                                           "Mean Width Length (mm)", 
+                                           "Mean Width of Limpets in Winter 2023/2024")
       limpet_width_ENVR
       
   #=================================================================================================================================
 
-# 0.25m Quadrat - lots of working
+# 0.25m Quadrat - percent cover doing the thing again
   #=================================================================================================================================
   # Mean total and relative percent cover of algae and invertebrates for each site and year - need to fix aesthetics
     percent_cover_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,

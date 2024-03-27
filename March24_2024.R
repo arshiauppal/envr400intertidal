@@ -297,7 +297,7 @@ require(RColorBrewer)
         scale_fill_manual(values = site_colors) +
         theme_minimal() +
         labs(title = plot_title) +
-        scale_y_continuous(limits = c(0, 40))
+        scale_y_continuous(limits = c(0, 25))
     }
   
   # plot count along intertidal height
@@ -343,7 +343,7 @@ require(RColorBrewer)
   #=================================================================================================================================
   # plot limpet length
     limpet_length_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Length_mm",
-                                            "Mean Length of Limpets in the Spring/Summer Over Time",
+                                            "Mean Length and Width of Limpets in the Spring/Summer Over Time",
                                             "Mean Length (mm)")
       limpet_length_SPES
       
@@ -443,7 +443,7 @@ require(RColorBrewer)
       theme_minimal()
     
     # Print the plot
-    print(quad_0.25_SPES_algae)
+    print(quad_0.25m_SPES_algae)
     
   
   # percent cover of invertebrates and count of sessile and mobile
@@ -634,38 +634,47 @@ require(RColorBrewer)
 
   percent_cover_all <- merge(all_cover, cover_sd, by = "site_TA")
   
+  
   ggplot(percent_cover_all, aes(x = site_TA, y = total_cover)) +
     geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
     geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
-    geom_errorbar(aes(ymin = invert_cover - cover_sd/2, ymax = invert_cover + cover_sd/2,
-                      group = site_TA),  # Group by site_TA
-                  position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
-    labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
-    scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
+    geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2), 
+                  position = position_dodge(width = 0.9), width = 0.5) +
+    labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates", fill = "Organismal Class") +
+    scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
     theme_minimal()
-  
-  # bar graph of relative percent cover of algae and count of algae species *ADJUST AESTHETICS
+    
+  # bar graph of relative percent cover of algae and count of algae species *ADJUST AESTHETICS - getting no error bars
   algae_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
                                      algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
                                      algae_count = quad0.25m_ENVR$Algae_Count)
+  algae_ENVR <- algae_ENVR[complete.cases(algae_ENVR$algae_percent_cover) & is.numeric(algae_ENVR$algae_percent_cover), ]
+  
   algae_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ site_TA, data=algae_ENVR, FUN = mean)
-  algae_percent_sd <- aggregate(algae_percent_cover ~ site_TA, data=algae_ENVR, FUN = function(x) sd(x))
-    names(algae_percent_sd_ENVR)[2] <- "algae_percent_sd"
+  algae_percent_sd <- aggregate(algae_percent_cover ~ site_TA, data=algae_ENVR, FUN = function(x) sd(x), na.action = na.omit)
+    names(algae_percent_sd)[2] <- "algae_percent_sd"
 
   algae_merge_ENVR <- merge(algae_ENVR, algae_percent_sd, by = "site_TA")
   
   quad_0.25m_ENVR_algae_plot <- ggplot(algae_merge_ENVR, aes(x = site_TA)) +
     geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
-    geom_errorbar(aes(ymin = pmin(algae_percent_cover - algae_percent_sd, 100), 
-                      ymax = pmin(algae_percent_cover + algae_percent_sd, 100)), 
-                  width = 0.2, position = position_dodge(width = 0.5), color = "black") +
-    geom_line(aes(y = algae_count*max(algae_merge_ENVR$algae_percent_cover)/max(algae_merge_ENVR$algae_count)), color = "red", group = 1) +
-    scale_y_continuous(name = "Percent Cover",
-                       sec.axis = sec_axis(~./max(algae_merge_ENVR$algae_percent_cover)*max(algae_merge_ENVR$algae_count), name = "Count of Algae", labels = scales::comma)) +
-    labs(x = "Sites") +
-    scale_fill_manual(values = rainbow(length(unique(algae_merge_ENVR$site_TA)))) +  # Change bar colors according to site
+    geom_errorbar(aes(ymin = pmin(0, algae_percent_cover - algae_percent_sd), 
+                      ymax = pmin(100, algae_percent_cover + algae_percent_sd)), 
+                  width = 0.2, 
+                  color = "black", size = 0.5, 
+                  position = position_dodge(width = 0.9)) + 
+    geom_line(aes(y = algae_count * max(algae_percent_cover) / max(algae_count), 
+                  color = "red", linetype = "Species Count"), 
+              group = 1) + 
+    labs(x = "Site TA", y = "Percent Cover",
+         title = "Mean Percent Cover and Count of Algae", 
+         fill = "Site TA", color = "Algae Species Count" ) +
+    scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
+                       sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
+    scale_fill_manual(values = site_colors_ENVR) + 
+    scale_color_manual(values = c("red"), labels = c("Algae Species Count")) +
+    guides(color = guide_legend(title = "Line Legend")) +  # To rename the legend title
     theme_minimal()
-  print(quad_0.25m_ENVR_algae_plot)
   
   # bar graph of relative percent cover of invertebrates and count of mobile and sessile - added error bars but the scale of the count is way off, need to fix aesthetics too
   invert_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
@@ -673,24 +682,29 @@ require(RColorBrewer)
                                      sessile_count = quad0.25m_ENVR$Sessile_Invertebrates_Count_Above + quad0.25m_ENVR$Sessile_Invertebrates_Count_Below,
                                      mobile_count = quad0.25m_ENVR$Mobile_Invertebrates_Count_Above + quad0.25m_ENVR$Mobile_Invertebrates_Count_Below)
   
-  invert_ENVR <- aggregate(cbind(invert_percent_cover, sessile_count, mobile_count)  ~ site_TA, data=invert_quad0.25m_ENVR, FUN = mean)
+  invert_total_ENVR <- aggregate(invert_percent_cover ~ site_TA, data=invert_quad0.25m_ENVR, FUN = mean)
+  invert_count_ENVR <- aggregate(cbind(sessile_count, mobile_count)  ~ site_TA, data=invert_quad0.25m_ENVR, FUN = function(x) round(mean(x)))
   invert_percent_sd_ENVR <- aggregate(invert_percent_cover ~ site_TA, data=invert_quad0.25m_ENVR, FUN = function(x) sd(x))
     names(invert_percent_sd_ENVR)[2] <- "invert_percent_sd"
   
-  invert_merge_ENVR <- merge(invert_ENVR, invert_percent_sd_ENVR, by = "site_TA")
-  
+  invert_merge_ENVR <- merge(invert_total_ENVR, invert_count_ENVR, by = "site_TA")
+  invert_merge_ENVR <- merge(invert_merge_ENVR, invert_percent_sd_ENVR, by = "site_TA")
+
   invert_quad0.25m_ENVR_plot <- ggplot(invert_merge_ENVR, aes(x = site_TA)) +
     geom_bar(aes(y = invert_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
     geom_errorbar(aes(ymin = pmax(invert_percent_cover - invert_percent_sd, 0), 
                       ymax = pmin(invert_percent_cover + invert_percent_sd, 100)), 
                   width = 0.2, position = position_dodge(width = 0.5), color = "black") +
-    geom_line(aes(y = sessile_count), color = "red", linetype = "solid", group = 1) +
-    geom_line(aes(y = mobile_count), color = "green", linetype = "dashed", group = 1) +
-    scale_y_continuous(name = "Percent Cover",
-                       sec.axis = sec_axis(~./max(invert_merge_ENVR$invert_percent_cover)*max(invert_merge_ENVR$sessile_count), name = "Count of Sessile and Mobile", labels = scales::comma)) +
-    labs(x = "Sites") +
-    scale_fill_manual(values = rainbow(length(unique(invert_merge_ENVR$site_TA)))) +  # Change bar colors according to site
+    geom_line(aes(y = sessile_count*adj, color = "red"), linetype = "solid", group = 1) +
+    geom_line(aes(y = mobile_count*adj, color = "green"), linetype = "dashed", group = 1) +
+    labs(x = "Site TA", y = "Percent Cover", 
+         title = "Mean Percent Cover and Count of Invertebrate Organisms", 
+         fill = "Site TA", color = "Organismal Class") +
+    scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
+                       sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
+    scale_fill_manual(values = site_colors_ENVR) +  # Choose bar colors
     theme_minimal()
+  
   print(invert_quad0.25m_ENVR_plot)
   
   # cover of algae vs invertebrates across the transect - winter

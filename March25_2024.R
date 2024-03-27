@@ -735,8 +735,29 @@ require(RColorBrewer)
     quad1m_SPES_TA <- subset_TAs(quad1m_SPES)
     quad0.25m_SPES_TA <- subset_TAs(quad0.25m_SPES)
     limpet_SPES_TA <- subset_TAs(limpet_SPES)
+  
+  # seasonal stats
+    calculate_seasonality <- function(data1, data2, var_name) {
+      # Create data frames for each dataset
+        Stats1 <- data.frame(DOY = data1$DOY, 
+                           data1[[var_name]])
+          names(Stats1)[2] <- var_name
+      
+        Stats2 <- data.frame(DOY = data2$DOY, 
+                           data2[[var_name]])
+          names(Stats2)[2] <- var_name
+      
+      # Combine data frames from both datasets
+        Stats_all <- rbind(Stats1, Stats2)
+      
+      # Fit linear model
+        Seasonality <- lm(as.formula(paste(var_name, "~ DOY")), data = Stats_all)
+      
+      # Return summary of the linear model
+        return(summary(Seasonality))
+    }
 
-# Transect data - fix aesthetics
+# Transect data - fix aesthetics, stats done
   #=================================================================================================================================
     names(transect_ENVR)[names(transect_ENVR) == "Density_of_Sea_Stars_count"] <- "Density_of_Sea_Stars_Count"
     
@@ -764,7 +785,6 @@ require(RColorBrewer)
     
     ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA"))
     
-    # plotting limpet function
     plot_ss <- function(data, y_variable) {
       # Generate the plot
       ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
@@ -781,21 +801,14 @@ require(RColorBrewer)
     plot_ss(ss_merge, "Density_of_Sea_Stars_Count")
     
     # stats
-      SS_Stats_SPES <- data.frame(DOY = transect_SPES_TA$DOY,
-                                  SS_count = transect_SPES_TA$Density_of_Sea_Stars_Count)
-     
-      SS_Stats_ENVR <- data.frame(DOY = transect_ENVR$DOY,
-                                  SS_count = transect_ENVR$Density_of_Sea_Stars_Count)
-      
-      SS_Stats_all <- rbind(SS_Stats_SPES, SS_Stats_ENVR)
-    
-      SS_seasonality <- lm(SS_count ~ DOY, data = SS_Stats_all)
-        summary(SS_seasonality)
+      calculate_seasonality(transect_SPES_TA, transect_ENVR, 
+                          "Density_of_Sea_Stars_Count")
         # Adjusted R-squared = 0.1134
         # p-value = 0.02526
+      
   #=================================================================================================================================
     
-# Limpet data - fix aesthetics
+# Limpet data - fix aesthetics, stats done
   #=================================================================================================================================
     # Aggregate data by Site_TA
     limp_agg_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, data = limpet_SPES_TA, FUN = mean, na.action = na.omit)
@@ -835,6 +848,19 @@ require(RColorBrewer)
       plot_limpet(limpet_merge, "Mean_Length_mm")
       # width
       plot_limpet(limpet_merge, "Mean_Width_mm")
+    
+    # stats
+      # Length
+        calculate_seasonality(limpet_SPES_TA, limpet_ENVR, 
+                              "Mean_Length_mm")
+          # Adjusted R-squared = 0.4948
+          # p-value = 8.649e-08
+        
+      # Width
+        calculate_seasonality(limpet_SPES_TA, limpet_ENVR, 
+                                "Mean_Width_mm")
+            # Adjusted R-squared = 0.4716
+            # p-value = 2.223e-07
   #=================================================================================================================================
 
 # 0.25m data - need to fix percent cover graphs and make individual graphs
@@ -851,10 +877,9 @@ require(RColorBrewer)
           invert_cover = dataframe$Adjusted_Invert_Cover
         )
         
-        cover <- cover[complete.cases(cover_SPES$total_cover) &
-                                   complete.cases(cover_SPES$algae_cover) &
-                                   complete.cases(cover_SPES$invert_cover), ]
-        
+        cover <- cover[complete.cases(cover$total_cover) &
+                                   complete.cases(cover$algae_cover) &
+                                   complete.cases(cover$invert_cover), ]
         return(cover)
       }
       
@@ -868,9 +893,7 @@ require(RColorBrewer)
                                     FUN = function(x) sd(x, na.rm = TRUE),
                                     na.action = na.omit)
         names(cover_agg_sd_SPES)[names(cover_agg_sd_SPES) == "invert_cover"] <- "sd"
-
-  
-      
+        
       cover_agg_ENVR <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_ENVR, FUN = mean, na.action = na.omit)
       cover_agg_sd_ENVR <- aggregate(invert_cover ~ season + site_TA, 
                                      data = cover_ENVR, 
@@ -907,36 +930,67 @@ require(RColorBrewer)
         scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
         theme_minimal()
       
-      ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover, fill = season)) +
-        geom_bar(position = "stack", stat = "identity") +
-        geom_bar(aes(y = invert_cover), position = "stack", stat = "identity") +
-        geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
-                          group = interaction(site_TA, season)),
-                      position = position_dodge(width = 0.9), width = 0.5) +
-        labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
-        scale_fill_discrete(name = "Season") +
-        theme_minimal()
-      
-    # algae only - cannot get the aggregation function to work
-      aggregate_algae_season <- function(data) {
-        algae<- data.frame(site_TA = data$Site_TA,
-                                 season = data$season,
-                                 algae_percent_cover = data$Algae_Cover,
-                                 algae_count = data$Algae_Count)
-        
-        algae <- aggregate(cbind(algae_percent_cover, algae_count) ~ site_TA + season, data = algae, FUN = function(x) mean(x, na.rm = TRUE))
-        algae_percent_sd <- aggregate(algae_percent_cover ~ site_TA + season, data = algae, FUN = function(x) sd(x, na.rm = TRUE))
-          names(algae_percent_sd)[3] <- "algae_percent_sd"
-        
-        algae_merge <- merge(algae, algae_percent_sd, by = c("site_TA", "season"))
-        
-        return(algae_merge)
-      }
+      # stats
+        # Total cover
+          calculate_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, 
+                                "Total_Cover")
+              # Adjusted R-squared = -0.003463
+              # p-value = 0.4979
+          
+          # Relative Algae
+            calculate_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, 
+                                    "Adjusted_Algae_Cover")
+                # Adjusted R-squared = 0.05133
+                # p-value = 0.003445
+              
+          # Relative Invertebrates
+            calculate_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, 
+                                  "Adjusted_Invert_Cover")
+                  # Adjusted R-squared = 0.02332
+                  # p-value = 0.003639
+              
+    # algae only - cannot get the aggregation function to work for sd - gives all NA
+        algae_SPES_TA <- data.frame(site_TA = quad0.25m_SPES_TA$Site_TA,
+                                    season = quad0.25m_SPES_TA$season,
+                                     algae_percent_cover = quad0.25m_SPES_TA$Algae_Cover,
+                                     algae_count = quad0.25m_SPES_TA$Algae_Count)
+        algae_SPES_TA <- algae_ENVR[complete.cases(algae_SPES_TA$algae_percent_cover) & is.numeric(algae_SPES_TA$algae_percent_cover), ]
+            
+            
+        algae_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                                 season = quad0.25m_ENVR$season,
+                                     algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
+                                     algae_count = quad0.25m_ENVR$Algae_Count)
+        algae_ENVR <- algae_ENVR[complete.cases(algae_ENVR$algae_percent_cover) & is.numeric(algae_ENVR$algae_percent_cover), ]
+            
+            algae_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data=algae_ENVR, FUN = mean)
+            algae_percent_sd_ENVR <- aggregate(algae_percent_cover ~ season + site_TA, data=algae_ENVR, FUN = function(x) sd(x), na.action = na.omit)
+              names(algae_percent_sd)[2] <- "algae_percent_sd"
+            
+            algae_merge_ENVR <- merge(algae_ENVR, algae_percent_sd, by = "site_TA")
+            
+            cover_SPES <- select_cover(quad0.25m_SPES_TA)
+            cover_ENVR <- select_cover(quad0.25m_ENVR)
+            
+            # Aggregate data - function?
+            cover_agg_SPES <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_SPES, FUN = mean, na.action = na.omit)
+            cover_agg_sd_SPES <- aggregate(invert_cover ~ season + site_TA, 
+                                           data = cover_SPES, 
+                                           FUN = function(x) sd(x, na.rm = TRUE),
+                                           na.action = na.omit)
+            names(cover_agg_sd_SPES)[names(cover_agg_sd_SPES) == "invert_cover"] <- "sd"
+            
+            cover_agg_ENVR <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_ENVR, FUN = mean, na.action = na.omit)
+            cover_agg_sd_ENVR <- aggregate(invert_cover ~ season + site_TA, 
+                                           data = cover_ENVR, 
+                                           FUN = function(x) sd(x, na.rm = TRUE),
+                                           na.action = na.omit)
+            names(cover_agg_sd_ENVR)[names(cover_agg_sd_ENVR) == "invert_cover"] <- "sd"
+            
       
         agg_algae_data_SPES <- aggregate_algae_season(quad0.25m_SPES_TA)
         agg_algae_data_ENVR <- aggregate_algae_season(quad0.25m_ENVR)
-        
-        
+      
       algae_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
                                algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
                                algae_count = quad0.25m_ENVR$Algae_Count)

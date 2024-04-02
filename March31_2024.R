@@ -1,4 +1,4 @@
-# March 27, 2024
+# March 31, 2024
 require(dplyr)
 require(tidyr)
 require(stringr)
@@ -945,7 +945,6 @@ require(RColorBrewer)
     ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA"))
     
     plot_ss <- function(data, y_variable) {
-      # Generate the plot
       ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_ss, 0), 

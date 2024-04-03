@@ -460,7 +460,7 @@ require(RColorBrewer)
               # p-value = 0.874
   #=================================================================================================================================
     
-# 0.25m quadrat data - algae line not showing up, stats done, should make functions (messy and overwhelming)
+# 0.25m quadrat data - stats done, should make functions (messy and overwhelming)
   #=================================================================================================================================
   # Mean total and relative percent cover of algae and invertebrates for each site and year
     # Select data
@@ -522,14 +522,14 @@ require(RColorBrewer)
     
     quad_0.25m_SPES_algae_plot <- ggplot(data = algae_cover_count, aes(x = year, y = algae_percent_cover)) +
       geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  # Adjust transparency with alpha
-      geom_line(data = algae_cover_count, aes(x = year, y = algae_count), color = "blue") +  # Add line for algae count
+      geom_line(data = algae_cover_count, aes(x = year, y = algae_count*adj, group = 1), color = "red") +  # Add line for algae count
       geom_errorbar(aes(ymin = pmax(0, algae_percent_cover - sd_cover), 
                         ymax = pmin(100, algae_percent_cover + sd_cover)), 
                     width = 0.25, position = position_dodge(width = 0.9),
                     color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
       labs(x = "Year", y = "Percent Cover", 
-           title = "Mean Percent Cover and Count of Invertebrate Organisms", 
-           fill = "Year", color = "Invertebrate Species Count") +
+           title = "Mean Percent Cover and Count of Algae", 
+           fill = "Year", color = "Algae Species Count") +
       scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +
       facet_wrap(~ site_TA) +
       scale_fill_viridis(discrete = TRUE) +      
@@ -791,45 +791,44 @@ require(RColorBrewer)
       summary(TCover_ENVR_anova)
       # p-value = 0.00474
       
-  # bar graph of relative percent cover of algae and count of algae species *ADJUST AESTHETICS - getting no error bars
+  # bar graph of relative percent cover of algae and count of algae species - not working
   algae_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
                                      algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
                                      algae_count = quad0.25m_ENVR$Algae_Count)
   algae_ENVR <- algae_ENVR[complete.cases(algae_ENVR$algae_percent_cover) & is.numeric(algae_ENVR$algae_percent_cover), ]
   
-  algae_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ site_TA, data=algae_ENVR, FUN = mean)
-  algae_percent_sd <- aggregate(algae_percent_cover ~ site_TA, data=algae_ENVR, FUN = function(x) sd(x), na.action = na.omit)
+  algae_total <- aggregate(cbind(algae_percent_cover, algae_count) ~ site_TA, data= algae_ENVR, FUN = mean)
+  algae_percent_sd <- aggregate(algae_percent_cover ~ site_TA, data = algae_ENVR, FUN = function(x) sd(x), na.action = na.omit)
     names(algae_percent_sd)[2] <- "algae_percent_sd"
 
-  algae_merge_ENVR <- merge(algae_ENVR, algae_percent_sd, by = "site_TA")
+  algae_merge_ENVR <- merge(algae_total, algae_percent_sd, by = "site_TA")
   
   quad_0.25m_ENVR_algae_plot <- ggplot(algae_merge_ENVR, aes(x = site_TA)) +
-    geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
-    geom_errorbar(aes(ymin = pmin(0, algae_percent_cover - algae_percent_sd), 
-                      ymax = pmin(100, algae_percent_cover + algae_percent_sd)), 
-                  width = 0.2, 
-                  color = "black", size = 0.5, 
-                  position = position_dodge(width = 0.9)) + 
-    geom_line(aes(y = algae_count * max(algae_percent_cover) / max(algae_count), 
-                  color = "red", linetype = "Species Count"), 
-              group = 1) + 
-    labs(x = "Site TA", y = "Percent Cover",
-         title = "Mean Percent Cover and Count of Algae", 
-         fill = "Site TA", color = "Algae Species Count" ) +
+    geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5, alpha = 0.8) +
+    geom_line(aes(y = algae_count*adj, color = "Algae"), group = 1) +
+    geom_errorbar(aes(ymin = pmax(algae_percent_cover - algae_percent_sd, 0), 
+                      ymax = pmin(algae_percent_cover + algae_percent_sd, 100)), 
+                  width = 0.2, position = position_dodge(width = 0.5), color = "black") +
+    labs(x = "Site TA", y = "Percent Cover", 
+         title = "Mean Percent Cover and Count of Algae in the Winter", 
+         fill = "Site TA", color = "Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
-                       sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
-    scale_fill_manual(values = site_colors_ENVR) + 
-    scale_color_manual(values = c("red"), labels = c("Algae Species Count")) +
-    guides(color = guide_legend(title = "Line Legend")) +  # To rename the legend title
-    theme_minimal()
+                       sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
+    scale_fill_viridis(discrete = TRUE) +
+    theme_minimal() +
+    guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
+           color = guide_legend(override.aes = list(fill = NULL))) +
+    guides(color = guide_legend(order = 1), fill = guide_legend(order = 2))
+  
   print(quad_0.25m_ENVR_algae_plot)
+
   
   # Stats
     AlgaeCover_ENVR_anova <- aov(Algae_Cover ~ Site_TA, data = quad0.25m_ENVR)
       summary(AlgaeCover_ENVR_anova)
       # p-value = 3.81e-05
   
-  # bar graph of relative percent cover of invertebrates and count of mobile and sessile - need to fix name of legend
+  # bar graph of relative percent cover of invertebrates and count of mobile and sessile
   invert_quad0.25m_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
                                      invert_percent_cover = quad0.25m_ENVR$Invertebrates_Cover,
                                      sessile_count = quad0.25m_ENVR$Sessile_Invertebrates_Count_Above + quad0.25m_ENVR$Sessile_Invertebrates_Count_Below,
@@ -844,19 +843,23 @@ require(RColorBrewer)
   invert_merge_ENVR <- merge(invert_merge_ENVR, invert_percent_sd_ENVR, by = "site_TA")
 
   invert_quad0.25m_ENVR_plot <- ggplot(invert_merge_ENVR, aes(x = site_TA)) +
-    geom_bar(aes(y = invert_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
+    geom_bar(aes(y = invert_percent_cover, fill = site_TA), stat = "identity", width = 0.5, alpha = 0.8) +
+    geom_line(aes(y = sessile_count*adj, color = "Sessile"), linetype = "solid", group = 1) +
+    geom_line(aes(y = mobile_count*adj, color = "Mobile"), linetype = "dashed", group = 1) +
     geom_errorbar(aes(ymin = pmax(invert_percent_cover - invert_percent_sd, 0), 
                       ymax = pmin(invert_percent_cover + invert_percent_sd, 100)), 
                   width = 0.2, position = position_dodge(width = 0.5), color = "black") +
-    geom_line(aes(y = sessile_count*adj, color = "red"), linetype = "solid", group = 1) +
-    geom_line(aes(y = mobile_count*adj, color = "green"), linetype = "dashed", group = 1) +
     labs(x = "Site TA", y = "Percent Cover", 
-         title = "Mean Percent Cover and Count of Invertebrate Organisms", 
-         fill = "Site TA", color = "Organismal Class") +
+         title = "Mean Percent Cover and Count of Invertebrate Organisms in the Winter", 
+         fill = "Site TA", color = "Invertebrate Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                        sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
-    scale_fill_manual(values = site_colors_ENVR) +  # Choose bar colors
-    theme_minimal()
+    scale_fill_viridis(discrete = TRUE) +
+    scale_color_manual(values = line_colors, labels = c("Sessile", "Mobile")) +  # Define labels for the legend
+    theme_minimal() +
+    guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
+           color = guide_legend(override.aes = list(fill = NULL))) +
+    guides(color = guide_legend(order = 1), fill = guide_legend(order = 2))
   
   print(invert_quad0.25m_ENVR_plot)
   
@@ -944,19 +947,21 @@ require(RColorBrewer)
     
     ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA"))
     
-    plot_ss <- function(data, y_variable) {
+    plot_ss <- function(data, y_variable, title, x_label, y_label) {
       ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_ss, 0), 
                           ymax = !!sym(y_variable) + sd_ss),
                       position = position_dodge(width = 0.9), 
                       width = 0.25) +
-        labs(x = "Site_TA", y = y_variable, title = paste("Plot of", y_variable, "by Site and Season")) +
+        labs(x = x_label, y = y_label, title = title) +
         scale_fill_discrete(name = "Season") +
         theme_minimal()
     }
-
-    plot_ss(ss_merge, "Density_of_Sea_Stars_Count")
+    
+    plot_ss(data = ss_merge, y_variable = "Density_of_Sea_Stars_Count", 
+            title = "Density of Sea Stars from Spring 2023 - Winter 2023/2024", 
+            x_label = "Site TA", y_label = "Density of Sea Stars (Count)")
     
     # stats
       calculate_seasonality(transect_SPES_TA, transect_ENVR, 
@@ -987,25 +992,39 @@ require(RColorBrewer)
       
     limpet_merge <- merge(limp_agg_combined, limp_agg_sd_combined, by = c("season", "Site_TA"))
 
-    # plotting limpet function - need to fix aesthetics
-    plot_limpet <- function(data, y_variable) {
-      # Generate the plot
-      ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
+    # plot length
+   plot_limpet_length_season <- ggplot(limpet_merge, aes(x = factor(Site_TA), y = Mean_Length_mm, fill = season)) +
         geom_bar(stat = "identity", position = "dodge") +
-        geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_length, 0), 
-                          ymax = !!sym(y_variable) + sd_length),
+        geom_errorbar(aes(ymin = pmax(Mean_Length_mm - sd_length, 0), 
+                          ymax = Mean_Length_mm + sd_length),
                       position = position_dodge(width = 0.9), 
                       width = 0.25) +
-        labs(x = "Site_TA", y = y_variable, title = paste("Plot of", y_variable, "by Site and Season")) +
-        scale_fill_manual(name = "Season",
-                          values = c("Spring" = "lightgreen", "Summer" = "yellow", "Autumn" = "orange", "Winter" = "lightblue")) +
-        theme_minimal()
-    }
+        labs(x = "Site TA", y = "Mean Limpet Length (mm)", title = "Mean Length of Limpets from Spring 2023 - Winter 2023/2024") +
+        scale_fill_discrete(name = "Season") +
+        theme_minimal() + 
+        ylim(0, 30)
+    plot_limpet_length_season
       
-      # length
-      plot_limpet(limpet_merge, "Mean_Length_mm")
+    # plot width
+    plot_limpet_width_season <- ggplot(limpet_merge, aes(x = factor(Site_TA), y = Mean_Width_mm, fill = season)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      geom_errorbar(aes(ymin = pmax(Mean_Width_mm - sd_width, 0), 
+                        ymax = Mean_Width_mm + sd_length),
+                    position = position_dodge(width = 0.9), 
+                    width = 0.25) +
+      labs(x = "Site TA", y = "Mean Limpet Width (mm)", title = "Mean Width of Limpets from Spring 2023 - Winter 2023/2024") +
+      scale_fill_discrete(name = "Season") +
+      theme_minimal() +
+      ylim(0, 30)
+    plot_limpet_width_season  
+    
+    
+    # length
+      plot_ss(limpet_merge, "Mean_Length_mm",
+              title = "Mean Length of Limpets from Spring 2023 - Winter 2023/2024", 
+              x_label = "Site TA", y_label = "Mean Length of Limpets (mm)")
       # width
-      plot_limpet(limpet_merge, "Mean_Width_mm")
+      plot_ss(limpet_merge, "Mean_Width_mm")
     
     # stats
       # Length
@@ -1021,7 +1040,7 @@ require(RColorBrewer)
             # p-value = 1.287e-13
   #=================================================================================================================================
 
-# 0.25m data - need to fix percent cover graphs and make individual graphs, stats not done
+# 0.25m data - need to fix percent cover graphs and make individual graphs, stats done
   #=================================================================================================================================
   #Percent cover 
       # Select Data
@@ -1065,29 +1084,20 @@ require(RColorBrewer)
       
       cover_merge <- merge(cover_agg_combined, cover_agg_sd_combined, by = c("season", "site_TA"))
       
-    # plot - arshia can you look i give up 
-      ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover)) +
+    # plot total cover
+      total_cover_seasonal <- ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover)) +
         geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
         geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
         geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
                           group = site_TA),  # Group by site_TA
                       position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
         facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
-        labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
-        scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
-        theme_minimal()
-      
-      ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover)) +
-        geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
-        geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
-        geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
-                          group = site_TA),  # Group by site_TA
-                      position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
-        facet_grid(season ~ ., scales = "free_x", space = "free_x") +  # Facet by season with different bar graphs for each site
-        labs(x = "Site_TA", y = "Total Cover", title = "Total Cover segmented by Algae and Invertebrates") +
-        scale_fill_manual(values = c("Algae" = "green", "Invertebrates" = "blue")) +
-        theme_minimal()
-      
+        labs(x = "Site TA", y = "Percent Cover", title = "Mean Total Percent Cover of Algae and Invertebrates in 2023/2024", fill = "Organismal Class") +
+        scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
+        theme_minimal() +
+        scale_y_continuous(limits = c(0, 100))
+      total_cover_seasonal
+
       # stats
         # Total cover
           calculate_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, 
@@ -1107,56 +1117,32 @@ require(RColorBrewer)
                   # Adjusted R-squared = -0.006866
                   # p-value = 0.916
               
-    # algae only - cannot get the aggregation function to work for sd - gives all NA
+    # algae only 
         algae_SPES_TA <- data.frame(site_TA = quad0.25m_SPES_TA$Site_TA,
                                     season = quad0.25m_SPES_TA$season,
                                      algae_percent_cover = quad0.25m_SPES_TA$Algae_Cover,
                                      algae_count = quad0.25m_SPES_TA$Algae_Count)
         algae_SPES_TA <- algae_SPES_TA[complete.cases(algae_SPES_TA$algae_percent_cover) & is.numeric(algae_SPES_TA$algae_percent_cover), ]
             
-            
-        algae_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+          algae_total_SPES <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data=algae_SPES_TA, FUN = mean)
+          algae_percent_sd_SPES <- aggregate(algae_percent_cover ~ season + site_TA, data=algae_SPES_TA, FUN = function(x) sd(x), na.action = na.omit)
+            names(algae_percent_sd_ENVR)[2] <- "algae_percent_sd"
+        
+        algae_ENVR_seasonal <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
                                  season = quad0.25m_ENVR$season,
                                      algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
                                      algae_count = quad0.25m_ENVR$Algae_Count)
-        algae_ENVR <- algae_ENVR[complete.cases(algae_ENVR$algae_percent_cover) & is.numeric(algae_ENVR$algae_percent_cover), ]
+        algae_ENVR_seasonal <- algae_ENVR_seasonal[complete.cases(algae_ENVR_seasonal$algae_percent_cover) & is.numeric(algae_ENVR_seasonal$algae_percent_cover), ]
             
-            algae_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data=algae_ENVR, FUN = mean)
-            algae_percent_sd_ENVR <- aggregate(algae_percent_cover ~ season + site_TA, data=algae_ENVR, FUN = function(x) sd(x), na.action = na.omit)
+            algae_total_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data= algae_ENVR_seasonal, FUN = mean)
+            algae_percent_sd_ENVR <- aggregate(algae_percent_cover ~ season + site_TA, data= algae_ENVR_seasonal, FUN = function(x) sd(x), na.action = na.omit)
               names(algae_percent_sd_ENVR)[2] <- "algae_percent_sd"
             
-            algae_merge_ENVR <- merge(algae_ENVR, algae_percent_sd_ENVR, by = "site_TA")
+        # Combined
+          algae_agg_combined <- rbind(algae_total_SPES, algae_total_ENVR)
+          algae_agg_sd_combined <- rbind(algae_percent_sd_SPES, algae_percent_sd_ENVR)
             
-            cover_SPES <- select_cover(quad0.25m_SPES_TA)
-            cover_ENVR <- select_cover(quad0.25m_ENVR)
-            
-            # Aggregate data - function?
-            cover_agg_SPES <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_SPES, FUN = mean, na.action = na.omit)
-            cover_agg_sd_SPES <- aggregate(invert_cover ~ season + site_TA, 
-                                           data = cover_SPES, 
-                                           FUN = function(x) sd(x, na.rm = TRUE),
-                                           na.action = na.omit)
-            names(cover_agg_sd_SPES)[names(cover_agg_sd_SPES) == "invert_cover"] <- "sd"
-            
-            cover_agg_ENVR <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_ENVR, FUN = mean, na.action = na.omit)
-            cover_agg_sd_ENVR <- aggregate(invert_cover ~ season + site_TA, 
-                                           data = cover_ENVR, 
-                                           FUN = function(x) sd(x, na.rm = TRUE),
-                                           na.action = na.omit)
-            names(cover_agg_sd_ENVR)[names(cover_agg_sd_ENVR) == "invert_cover"] <- "sd"
-            
-      
-        agg_algae_data_SPES <- aggregate_algae_season(quad0.25m_SPES_TA)
-        agg_algae_data_ENVR <- aggregate_algae_season(quad0.25m_ENVR)
-      
-      algae_ENVR <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
-                               algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
-                               algae_count = quad0.25m_ENVR$Algae_Count)
-      algae_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ site_TA, data=algae_ENVR, FUN = mean)
-      algae_percent_sd <- aggregate(algae_percent_cover ~ site_TA, data=algae_ENVR, FUN = function(x) sd(x))
-      names(algae_percent_sd_ENVR)[2] <- "algae_percent_sd"
-      
-      algae_merge_ENVR <- merge(algae_ENVR, algae_percent_sd, by = "site_TA")
+          algae_merge <- merge(algae_agg_combined, algae_agg_sd_combined, by = c("season", "site_TA"))
       
       quad_0.25m_ENVR_algae_plot <- ggplot(algae_merge_ENVR, aes(x = site_TA)) +
         geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +

@@ -208,7 +208,7 @@ require(RColorBrewer)
   #================================================================================================================================
   # plot percent cover along the transect line - need to fix aesthetics
     cover_intertidal_height <- function(data, color_scale = c("low" = "lightblue", "high" = "darkblue"), 
-                                        plot_title = "Intertidal Height and Percent Cover") {
+                                        plot_title = "Intertidal Height and Mean Percent Cover") {
       selected_data <- data.frame(
         intertidal_height = data$intertidal_height,
         Total = data$Total_Cover,
@@ -228,11 +228,11 @@ require(RColorBrewer)
       
       ggplot(tidy_quad_data, aes(x = Percent_Cover_Type, y = intertidal_height, fill = Percent_Cover)) +
         geom_tile(color = "white", alpha = 0.85) +
-        geom_text(aes(label = Percent_Cover), vjust = 1) +
+        geom_text(aes(label = Percent_Cover), vjust = 1.3) +
         scale_fill_gradientn(colours = color_scale, name = "Percent Cover") +
         labs(x = "Percent Cover", y = "Intertidal Height", title = plot_title) +  # Custom plot title
         theme_minimal() +
-        theme(plot.title = element_text(size = rel(0.9))) +
+        theme(plot.title = element_text(size = rel(1.3))) +
         scale_y_discrete(limits = c("low", "medium", "high"))
     }
     
@@ -288,7 +288,7 @@ require(RColorBrewer)
                           na.value = "gray",
                           drop=FALSE) +  # Adjust colors as needed
         labs(x = "Year", y = "Sampling TA", fill = paste0(species_column, " Presence/Absence"), 
-             title = paste(species_column, "Spring/Summer Sea Star Presence Absence Over Time")) +
+             title = paste(species_column, "Sea Star Presence Absence in the Spring/Summer from 2019-2023")) +
         theme_minimal() +
         theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
           panel.grid.minor = element_blank(),  # Remove minor gridlines
@@ -346,7 +346,7 @@ require(RColorBrewer)
   #=================================================================================================================================
   # Density of sea stars per TA (2019-2023)
     SS_density_TA <- plot_count_per_TA_SPES(transect_SPES, "Density_of_Sea_Stars_Count", 
-                                            "Mean Count of Sea Stars in the Spring/Summer Over Time", 
+                                            "Mean Count of Sea Stars in the Spring/Summer from 2019-2023 ", 
                                             "Mean Count of Sea Stars")
       SS_density_TA
       
@@ -373,7 +373,7 @@ require(RColorBrewer)
   #=================================================================================================================================
   # plot limpet length
     limpet_length_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Length_mm",
-                                            "Mean Length and Width of Limpets in the Spring/Summer Over Time",
+                                            "Mean Length and Width of Limpets in the Spring/Summer from 2019-2023",
                                             "Mean Length (mm)")
       limpet_length_SPES
       
@@ -389,7 +389,7 @@ require(RColorBrewer)
       
   # plot limpet width
       limpet_width_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Width_mm",
-                                              "Mean Width of Limpets in the Spring/Summer Over Time",
+                                              "Mean Width of Limpets in the Spring/Summer from 2019-2023",
                                               "Mean Width (mm)")
       limpet_width_SPES
       
@@ -408,7 +408,7 @@ require(RColorBrewer)
   #=================================================================================================================================
   # Littorine Snails
     Lit_density_TA <- plot_count_per_TA_SPES(quad1m_SPES, "Littorine_snails", 
-                                              "Mean Count of Littorine Snails in the Spring/Summer Over Time", 
+                                              "Mean Count of Littorine Snails in the Spring/Summer from 2019-2023", 
                                               "Mean Count of Littorine Snails")
     Lit_density_TA
     
@@ -424,7 +424,7 @@ require(RColorBrewer)
 
   # Limpet Count
     Limpet_density_TA <- plot_count_per_TA_SPES(quad1m_SPES, "Limpets", 
-                                             "Mean Count of Limpets in the Spring/Summer Over Time", 
+                                             "Mean Count of Limpets in the Spring/Summer from 2019-2023", 
                                              "Mean Count of Limpets")
     Limpet_density_TA
     
@@ -489,7 +489,7 @@ require(RColorBrewer)
                           group = site_TA),  # Group by site_TA
                       position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
         facet_wrap(~site_TA) +
-        labs(x = "Year", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in the Summer", fill = "Organismal Class") +
+        labs(x = "Year", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in the Spring/Summer from 2019-2023", fill = "Organismal Class") +
         scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
         theme_minimal() +
         scale_y_continuous(limits = c(0, 100))
@@ -528,9 +528,9 @@ require(RColorBrewer)
                     width = 0.25, position = position_dodge(width = 0.9),
                     color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
       labs(x = "Year", y = "Percent Cover", 
-           title = "Mean Percent Cover and Count of Algae in the Spring/Summer", 
+           title = "Mean Percent Cover and Count of Algae in the Spring/Summer 2019-2023", 
            fill = "Year", color = "Algae Species Count") +
-      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +
+      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
       facet_wrap(~ site_TA) +
       scale_fill_viridis(discrete = TRUE) +      
       scale_color_manual(name = "Species Count",
@@ -550,7 +550,7 @@ require(RColorBrewer)
           summary(AlgaeCover_Site_anova)
           # p-value = 5.24e-06
     
-  # percent cover of invertebrates and count of sessile and mobile
+  # percent cover of invertebrates and count of sessile and mobile - NEED TO FIX LEGEND CODE
     invert_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                         year = quad0.25m_SPES$Year,
                                         invert_percent_cover = quad0.25m_SPES$Invertebrates_Cover,
@@ -568,25 +568,27 @@ require(RColorBrewer)
     line_colors <- brewer.pal(n = 3, name = "Set1")
     
     invert_cover_count$site_TA <- paste0("TA-", invert_cover_count$site_TA)
-    
+
     quad_0.25_SPES_invert_plot <- ggplot(data = invert_cover_count, aes(x = year, y = invert_percent_cover)) +
-      geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  # Adjust transparency with alpha
-      geom_line(aes(y = sessile_count * adj, color = "Sessile"), linetype = "solid", group = 1) +
-      geom_line(aes(y = mobile_count * adj, color = "Mobile"), linetype = "dashed", group = 1) +
+      geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  
+      geom_line(aes(y = sessile_count * adj), color = "blue", linetype = "solid", group = 1) +
+      geom_line(aes(y = mobile_count * adj), color = "red", linetype = "dashed", group = 1) +
       geom_errorbar(aes(ymin = pmax(0, invert_percent_cover - sd_cover), 
                         ymax = pmin(100, invert_percent_cover + sd_cover)), 
                     width = 0.25, position = position_dodge(width = 0.9),
-                    color = "black", size = 0.5) +  # Adjust error bar aesthetics
+                    color = "black", size = 0.5) +
       labs(x = "Year", y = "Percent Cover", 
-           title = "Mean Percent Cover and Count of Invertebrates in the Spring/Summer", 
-           fill = "Year", color = "Invertebrate Species Count") +
+           title = "Mean Percent Cover and Count of Invertebrates in the Spring/Summer 2019-2023", 
+           fill = "Year", color = "Species Count") +
       scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
       facet_wrap(~ site_TA) +
       scale_fill_viridis(discrete = TRUE) +
-      scale_color_manual(values = line_colors, labels = c("Sessile", "Mobile")) +  # Define labels for the legend
+      scale_color_manual(values = line_colors, labels = c("Sessile", "Mobile"),
+                         aesthetics = c("color", "linetype")) +  # Mapping color and linetype aesthetics
       theme_minimal() +
-      guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
-             color = guide_legend(override.aes = list(fill = NULL)))  # Remove line color from legend
+      guides(fill = guide_legend(override.aes = list(color = NULL)),
+             color = guide_legend(override.aes = list(fill = NULL))) 
+    
     print(quad_0.25_SPES_invert_plot)
     
     # Stats
@@ -601,7 +603,7 @@ require(RColorBrewer)
 
   # cover of algae vs invertebrates across the transect - summer
     cover_intertidal_height(quad0.25m_SPES, color_scale = c("low" = "yellow", "high" = "red"), 
-                            plot_title = "Intertidal Height and Mean Percent Cover in Spring/Summer 2019-2023")
+                            plot_title = "Intertidal Height and Mean Percent Cover in the Spring/Summer from 2019-2023")
     # Stats
       # Total Cover
         TCover_Height_anova <- aov(Total_Cover ~ intertidal_height, data = quad0.25m_SPES)
@@ -669,7 +671,7 @@ require(RColorBrewer)
                           labels = c("TRUE" = "Present", "FALSE" = "Absent")), 
                           na.value = "gray", drop=FALSE) +
         labs(x = "Sampling Site", y = plot_varname,
-             title = "Winter Sea Star Presence Absence Over Time", fill = paste0(species_column, " Presence/Absence")) +
+             title = "Sea Star Presence Absence in Winter 2023/2024", fill = paste0(species_column, " Presence/Absence")) +
         theme_minimal() +
         theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
               panel.grid.minor = element_blank(),  # Remove minor gridlines
@@ -738,8 +740,8 @@ require(RColorBrewer)
   #=================================================================================================================================
   # limpet length
     limpet_length_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Length_mm", 
-                                            "Mean Limpet Length (mm)", 
-                                            "Mean Length of Limpets in Winter 2023/2024")
+                                            "Mean Length (mm)", 
+                                            "Mean Length and Width of Limpets in Winter 2023/2024")
       limpet_length_ENVR
     
     # Stats
@@ -749,7 +751,7 @@ require(RColorBrewer)
         
   # limpet width
     limpet_width_ENVR <- limpet_plots_ENVR(limpet_ENVR, "Mean_Width_mm", 
-                                           "Mean Width Length (mm)", 
+                                           "Mean Width (mm)", 
                                            "Mean Length and Width of Limpets in Winter 2023/2024")
       limpet_width_ENVR
       
@@ -785,7 +787,7 @@ require(RColorBrewer)
     geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
     geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2), 
                   position = position_dodge(width = 0.9), width = 0.5) +
-    labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in the Winter", fill = "Organismal Class") +
+    labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in Winter 2023/2024", fill = "Organismal Class") +
     scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
     theme_minimal() +
     scale_y_continuous(limits = c(0, 100))
@@ -814,7 +816,7 @@ require(RColorBrewer)
                       ymax = pmin(algae_percent_cover + algae_percent_sd, 100)), 
                   width = 0.2, position = position_dodge(width = 0.5), color = "black") +
     labs(x = "Site TA", y = "Percent Cover", 
-         title = "Mean Percent Cover and Count of Algae in the Winter", 
+         title = "Mean Percent Cover and Count of Algae in Winter 2023/2024", 
          fill = "Site TA", color = "Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                        sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
@@ -847,19 +849,19 @@ require(RColorBrewer)
   invert_merge_ENVR <- merge(invert_merge_ENVR, invert_percent_sd_ENVR, by = "site_TA")
 
   invert_quad0.25m_ENVR_plot <- ggplot(invert_merge_ENVR, aes(x = site_TA)) +
-    geom_bar(aes(y = invert_percent_cover, fill = site_TA), stat = "identity", width = 0.5, alpha = 0.8) +
+    geom_bar(aes(y = invert_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
     geom_line(aes(y = sessile_count*adj, color = "Sessile"), linetype = "solid", group = 1) +
     geom_line(aes(y = mobile_count*adj, color = "Mobile"), linetype = "dashed", group = 1) +
     geom_errorbar(aes(ymin = pmax(invert_percent_cover - invert_percent_sd, 0), 
                       ymax = pmin(invert_percent_cover + invert_percent_sd, 100)), 
                   width = 0.2, position = position_dodge(width = 0.5), color = "black") +
     labs(x = "Site TA", y = "Percent Cover", 
-         title = "Mean Percent Cover and Count of Invertebrates in the Winter", 
-         fill = "Site TA", color = "Invertebrate Species Count") +
+         title = "Mean Percent Cover and Count of Invertebrates in Winter 2023/2024", 
+         fill = "Site TA", color = "Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                        sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
     scale_fill_manual(values = site_colors_ENVR) +
-    scale_color_manual(values = line_colors, labels = c("Sessile", "Mobile")) +  # Define labels for the legend
+    scale_color_manual(values = line_colors) +  # Remove labels from here
     theme_minimal() +
     guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
            color = guide_legend(override.aes = list(fill = NULL))) +
@@ -1003,7 +1005,7 @@ require(RColorBrewer)
                           ymax = Mean_Length_mm + sd_length),
                       position = position_dodge(width = 0.9), 
                       width = 0.25) +
-        labs(x = "Site TA", y = "Mean Limpet Length (mm)", title = "Mean Length of Limpets from Spring 2023 - Winter 2023/2024") +
+        labs(x = "Site TA", y = "Mean Length (mm)", title = "Mean Length and Width of Limpets from Spring 2023 - Winter 2023/2024") +
         scale_fill_discrete(name = "Season") +
         theme_minimal() + 
         ylim(0, 30)
@@ -1016,7 +1018,7 @@ require(RColorBrewer)
                         ymax = Mean_Width_mm + sd_length),
                     position = position_dodge(width = 0.9), 
                     width = 0.25) +
-      labs(x = "Site TA", y = "Mean Limpet Width (mm)", title = "Mean Width of Limpets from Spring 2023 - Winter 2023/2024") +
+      labs(x = "Site TA", y = "Mean Width (mm)", title = "Mean Width of Limpets from Spring 2023 - Winter 2023/2024") +
       scale_fill_discrete(name = "Season") +
       theme_minimal() +
       ylim(0, 30)
@@ -1096,7 +1098,7 @@ require(RColorBrewer)
                           group = site_TA),  # Group by site_TA
                       position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
         facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
-        labs(x = "Site TA", y = "Percent Cover", title = "Mean Total Percent Cover of Algae and Invertebrates in 2023/2024", fill = "Organismal Class") +
+        labs(x = "Site TA", y = "Percent Cover", title = "Mean Total Percent Cover of Algae and Invertebrates from Spring 2023 - Winter 2024", fill = "Organismal Class") +
         scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
         theme_minimal() +
         scale_y_continuous(limits = c(0, 100))
@@ -1156,7 +1158,7 @@ require(RColorBrewer)
                           width = 0.25, position = position_dodge(width = 0.9),
                           color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
             facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
-            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count of Algae in 2023/2024", fill = "Site TA") +
+            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count of Algae from Spring 2023 - Winter 2024", fill = "Site TA") +
             scale_fill_manual(values = site_colors_ENVR) +
             scale_color_manual(name = "Species Count",
                                values = c("Algae" = "red"),
@@ -1206,10 +1208,10 @@ require(RColorBrewer)
                           width = 0.25, position = position_dodge(width = 0.9),
                           color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
             facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
-            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count Invertebrates in 2023/2024", fill = "Site TA") +
+            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count of Invertebrates from Spring 2023 - Winter 2024", fill = "Site TA") +
             scale_fill_manual(values = site_colors_ENVR) +
-            scale_color_manual(name = "Invertebrate Species Count",
-                               values = c("Sessile" = "red", "Mobile" = "blue"),
+            scale_color_manual(name = "Species Count",
+                               values = c("Sessile" = "blue", "Mobile" = "red"),
                                labels = c("Sessile", "Mobile")) +
             theme_minimal() +
             scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
@@ -1262,6 +1264,9 @@ require(RColorBrewer)
     monthly_abiotic_data$month <- factor(monthly_abiotic_data$month, levels = 1:12,
                                          labels = c("January", "February", "March", "April", "May", "June",
                                                     "July", "August", "September", "October", "November", "December"))
+    file_path <- "~/Desktop/abiotic.csv"
+    write.csv(monthly_abiotic_data, file = file_path, row.names = FALSE)
+    
   # Create the plot
     ggplot(monthly_abiotic_data, aes(x = month)) +
       geom_bar(aes(y = low_tide_time), stat = "identity") +

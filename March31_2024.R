@@ -489,7 +489,7 @@ require(RColorBrewer)
                           group = site_TA),  # Group by site_TA
                       position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
         facet_wrap(~site_TA) +
-        labs(x = "Year", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates", fill = "Organismal Class") +
+        labs(x = "Year", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in the Summer", fill = "Organismal Class") +
         scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
         theme_minimal() +
         scale_y_continuous(limits = c(0, 100))
@@ -522,18 +522,22 @@ require(RColorBrewer)
     
     quad_0.25m_SPES_algae_plot <- ggplot(data = algae_cover_count, aes(x = year, y = algae_percent_cover)) +
       geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  # Adjust transparency with alpha
-      geom_line(data = algae_cover_count, aes(x = year, y = algae_count*adj, group = 1), color = "red") +  # Add line for algae count
+      geom_line(data = algae_cover_count, aes(x = year, y = algae_count*adj, group = 1, color = "Algae")) +  # Add line for algae count
       geom_errorbar(aes(ymin = pmax(0, algae_percent_cover - sd_cover), 
                         ymax = pmin(100, algae_percent_cover + sd_cover)), 
                     width = 0.25, position = position_dodge(width = 0.9),
                     color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
       labs(x = "Year", y = "Percent Cover", 
-           title = "Mean Percent Cover and Count of Algae", 
+           title = "Mean Percent Cover and Count of Algae in the Spring/Summer", 
            fill = "Year", color = "Algae Species Count") +
       scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +
       facet_wrap(~ site_TA) +
       scale_fill_viridis(discrete = TRUE) +      
+      scale_color_manual(name = "Species Count",
+                         values = c("Algae" = "red"),
+                         labels = c("Algae")) +  # Define the color and label for the legend
       theme_minimal()
+    
     print(quad_0.25m_SPES_algae_plot)
     
     # Stats
@@ -574,9 +578,9 @@ require(RColorBrewer)
                     width = 0.25, position = position_dodge(width = 0.9),
                     color = "black", size = 0.5) +  # Adjust error bar aesthetics
       labs(x = "Year", y = "Percent Cover", 
-           title = "Mean Percent Cover and Count of Invertebrate Organisms", 
+           title = "Mean Percent Cover and Count of Invertebrates in the Spring/Summer", 
            fill = "Year", color = "Invertebrate Species Count") +
-      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Count", breaks = seq(0, 4, 1))) +
+      scale_y_continuous(sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
       facet_wrap(~ site_TA) +
       scale_fill_viridis(discrete = TRUE) +
       scale_color_manual(values = line_colors, labels = c("Sessile", "Mobile")) +  # Define labels for the legend
@@ -781,7 +785,7 @@ require(RColorBrewer)
     geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
     geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2), 
                   position = position_dodge(width = 0.9), width = 0.5) +
-    labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates", fill = "Organismal Class") +
+    labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in the Winter", fill = "Organismal Class") +
     scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
     theme_minimal() +
     scale_y_continuous(limits = c(0, 100))
@@ -804,7 +808,7 @@ require(RColorBrewer)
   algae_merge_ENVR <- merge(algae_total, algae_percent_sd, by = "site_TA")
   
   quad_0.25m_ENVR_algae_plot <- ggplot(algae_merge_ENVR, aes(x = site_TA)) +
-    geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5, alpha = 0.8) +
+    geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
     geom_line(aes(y = algae_count*adj, color = "Algae"), group = 1) +
     geom_errorbar(aes(ymin = pmax(algae_percent_cover - algae_percent_sd, 0), 
                       ymax = pmin(algae_percent_cover + algae_percent_sd, 100)), 
@@ -814,7 +818,7 @@ require(RColorBrewer)
          fill = "Site TA", color = "Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                        sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
-    scale_fill_viridis(discrete = TRUE) +
+    scale_fill_manual(values = site_colors_ENVR) +
     theme_minimal() +
     guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
            color = guide_legend(override.aes = list(fill = NULL))) +
@@ -850,11 +854,11 @@ require(RColorBrewer)
                       ymax = pmin(invert_percent_cover + invert_percent_sd, 100)), 
                   width = 0.2, position = position_dodge(width = 0.5), color = "black") +
     labs(x = "Site TA", y = "Percent Cover", 
-         title = "Mean Percent Cover and Count of Invertebrate Organisms in the Winter", 
+         title = "Mean Percent Cover and Count of Invertebrates in the Winter", 
          fill = "Site TA", color = "Invertebrate Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                        sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
-    scale_fill_viridis(discrete = TRUE) +
+    scale_fill_manual(values = site_colors_ENVR) +
     scale_color_manual(values = line_colors, labels = c("Sessile", "Mobile")) +  # Define labels for the legend
     theme_minimal() +
     guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
@@ -1126,7 +1130,7 @@ require(RColorBrewer)
             
           algae_total_SPES <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data=algae_SPES_TA, FUN = mean)
           algae_percent_sd_SPES <- aggregate(algae_percent_cover ~ season + site_TA, data=algae_SPES_TA, FUN = function(x) sd(x), na.action = na.omit)
-            names(algae_percent_sd_ENVR)[2] <- "algae_percent_sd"
+            names(algae_percent_sd_SPES)[3] <- "algae_percent_sd"
         
         algae_ENVR_seasonal <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
                                  season = quad0.25m_ENVR$season,
@@ -1136,26 +1140,83 @@ require(RColorBrewer)
             
             algae_total_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data= algae_ENVR_seasonal, FUN = mean)
             algae_percent_sd_ENVR <- aggregate(algae_percent_cover ~ season + site_TA, data= algae_ENVR_seasonal, FUN = function(x) sd(x), na.action = na.omit)
-              names(algae_percent_sd_ENVR)[2] <- "algae_percent_sd"
+              names(algae_percent_sd_ENVR)[3] <- "algae_percent_sd"
             
         # Combined
           algae_agg_combined <- rbind(algae_total_SPES, algae_total_ENVR)
           algae_agg_sd_combined <- rbind(algae_percent_sd_SPES, algae_percent_sd_ENVR)
             
-          algae_merge <- merge(algae_agg_combined, algae_agg_sd_combined, by = c("season", "site_TA"))
+          algae_merge_season <- merge(algae_agg_combined, algae_agg_sd_combined, by = c("season", "site_TA"))
       
-      quad_0.25m_ENVR_algae_plot <- ggplot(algae_merge_ENVR, aes(x = site_TA)) +
-        geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
-        geom_errorbar(aes(ymin = pmin(algae_percent_cover - algae_percent_sd, 100), 
-                          ymax = pmin(algae_percent_cover + algae_percent_sd, 100)), 
-                      width = 0.2, position = position_dodge(width = 0.5), color = "black") +
-        geom_line(aes(y = algae_count*max(algae_merge_ENVR$algae_percent_cover)/max(algae_merge_ENVR$algae_count)), color = "red", group = 1) +
-        scale_y_continuous(name = "Percent Cover",
-                           sec.axis = sec_axis(~./max(algae_merge_ENVR$algae_percent_cover)*max(algae_merge_ENVR$algae_count), name = "Count of Algae", labels = scales::comma)) +
-        labs(x = "Sites") +
-        scale_fill_manual(values = rainbow(length(unique(algae_merge_ENVR$site_TA)))) +  # Change bar colors according to site
-        theme_minimal()
-      print(quad_0.25m_ENVR_algae_plot)
+          algae_cover_seasonal <- ggplot(algae_merge_season, aes(x = factor(site_TA), y = algae_percent_cover)) +
+            geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
+            geom_point(aes(y = algae_count*adj, color = "Algae")) +
+            geom_errorbar(aes(ymin = pmax(0, algae_percent_cover - algae_percent_sd),
+                              ymax = pmin(100, algae_percent_cover + algae_percent_sd)),
+                          width = 0.25, position = position_dodge(width = 0.9),
+                          color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
+            facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
+            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count of Algae in 2023/2024", fill = "Site TA") +
+            scale_fill_manual(values = site_colors_ENVR) +
+            scale_color_manual(name = "Species Count",
+                               values = c("Algae" = "red"),
+                               labels = c("Algae")) +  # Define the color and label for the legend
+            theme_minimal() +
+            scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
+                               sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
+            guides(fill = guide_legend(order = 2), color = guide_legend(order = 1))  # Specify the order of legend items
+          
+          algae_cover_seasonal
+          
+      # invert only
+          invert_SPES_TA <- data.frame(site_TA = quad0.25m_SPES_TA$Site_TA,
+                                      season = quad0.25m_SPES_TA$season,
+                                      invert_percent_cover = quad0.25m_SPES_TA$Invertebrates_Cover,
+                                      sessile_count = quad0.25m_SPES_TA$Sessile_Invertebrates_Count,
+                                      mobile_count = quad0.25m_SPES_TA$Mobile_Invertebrates_Count)
+          invert_SPES_TA <- invert_SPES_TA[complete.cases(invert_SPES_TA$invert_percent_cover) & is.numeric(invert_SPES_TA$invert_percent_cover), ]
+          
+          invert_total_SPES <- aggregate(cbind(invert_percent_cover, sessile_count, mobile_count) ~ season + site_TA, data=invert_SPES_TA, FUN = mean)
+          invert_percent_sd_SPES <- aggregate(invert_percent_cover ~ season + site_TA, data=invert_SPES_TA, FUN = function(x) sd(x), na.action = na.omit)
+            names(invert_percent_sd_SPES)[3] <- "invert_percent_sd"
+          
+          invert_ENVR_seasonal <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                                             season = quad0.25m_ENVR$season,
+                                             invert_percent_cover = quad0.25m_ENVR$Invertebrates_Cover,
+                                             sessile_count = quad0.25m_ENVR$Sessile_Invertebrates_Count_Above + quad0.25m_ENVR$Sessile_Invertebrates_Count_Below,
+                                             mobile_count = quad0.25m_ENVR$Mobile_Invertebrates_Count_Above + quad0.25m_ENVR$Mobile_Invertebrates_Count_Below)
+          invert_ENVR_seasonal <- invert_ENVR_seasonal[complete.cases(invert_ENVR_seasonal$invert_percent_cover) & is.numeric(invert_ENVR_seasonal$invert_percent_cover), ]
+          
+          invert_total_ENVR <- aggregate(cbind(invert_percent_cover, sessile_count, mobile_count) ~ season + site_TA, data= invert_ENVR_seasonal, FUN = mean)
+          invert_percent_sd_ENVR <- aggregate(invert_percent_cover ~ season + site_TA, data= invert_ENVR_seasonal, FUN = function(x) sd(x), na.action = na.omit)
+            names(invert_percent_sd_ENVR)[3] <- "invert_percent_sd"
+          
+          # Combined
+          invert_agg_combined <- rbind(invert_total_SPES, invert_total_ENVR)
+          invert_agg_sd_combined <- rbind(invert_percent_sd_SPES, invert_percent_sd_ENVR)
+          
+          invert_merge_season <- merge(invert_agg_combined, invert_agg_sd_combined, by = c("season", "site_TA"))
+          
+          invert_cover_seasonal <- ggplot(invert_merge_season, aes(x = factor(site_TA), y = invert_percent_cover)) +
+            geom_bar(aes(y = invert_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
+            geom_point(aes(y = sessile_count*adj, color = "Sessile")) +
+            geom_point(aes(y = mobile_count*adj, color = "Mobile")) +
+            geom_errorbar(aes(ymin = pmax(0, invert_percent_cover - invert_percent_sd),
+                              ymax = pmin(100, invert_percent_cover + invert_percent_sd)),
+                          width = 0.25, position = position_dodge(width = 0.9),
+                          color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
+            facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
+            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count Invertebrates in 2023/2024", fill = "Site TA") +
+            scale_fill_manual(values = site_colors_ENVR) +
+            scale_color_manual(name = "Invertebrate Species Count",
+                               values = c("Sessile" = "red", "Mobile" = "blue"),
+                               labels = c("Sessile", "Mobile")) +
+            theme_minimal() +
+            scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
+                               sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
+            guides(fill = guide_legend(order = 2), color = guide_legend(order = 1))  # Specify the order of legend items
+          
+          invert_cover_seasonal
   #=================================================================================================================================
   
 # Abiotic Analysis

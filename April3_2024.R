@@ -1,4 +1,4 @@
-# March 31, 2024
+# April 3, 2024
 require(dplyr)
 require(tidyr)
 require(stringr)
@@ -349,6 +349,9 @@ require(RColorBrewer)
                                             "Mean Count of Sea Stars in the Spring/Summer from 2019-2023 ", 
                                             "Mean Count of Sea Stars")
       SS_density_TA
+      
+      SS_var_sd <- aggregate(Density_of_Sea_Stars_Count ~ Year + Site_TA, data = transect_SPES, FUN = function(x) sd(x))
+      names(df_var_sd)[3] <- "sd_count"
       
       # Stats
         # Year

@@ -30,40 +30,40 @@ require(RColorBrewer)
 #=================================================================================================================================
 # Functions
   #=================================================================================================================================
-  # function to add a year column - for ease of yearly analysis
+  # function to add a year column - for ease of yearly analysis (extracts the year out of the date column)
     add_year_column <- function(data, date_column_name) {
       data[[date_column_name]] <- format(as.Date(data[[date_column_name]]), "%d/%m/%Y") # format original date column to be in day/month/year
       data$Year <- format(as.Date(data[[date_column_name]], "%d/%m/%Y"), "%Y") # from formatted date column, pulls out year
       return(data)
     }
     
-  # change 0 and 1 values to true and false/presence and absence
+  # change 0 and 1 values to true and false to indicate presence and absence of species
     convert_to_logical <- function(df, start_col_index, end_col_index) {
       df <- df %>%
-        mutate(across(start_col_index:end_col_index, as.logical)) # change the columns inbetween the start and end to logical or true/false
+        mutate(across(start_col_index:end_col_index, as.logical)) #  used to indicate the start and end of columns that need to be changed to true/false
       return(df)
     }
     
-  # change site TA columns to character values with "TA-" infront of the number
+  # change site TA columns to character values with "TA-" infront of the number --> adding the TA helps with understanding so it is not just the site numbers 
     change_TA_column <- function(data_frame) {
       modified_df <- data_frame %>%
         mutate(modified_TA = paste0("TA-", as.character(Site_TA)))
       return(modified_df)
     }
 
-  # get the season and month
+  # get the season and month - extract the month column from the date to use for seasonal analysis 
     get_season <- function(date){
       date <- as.Date(date) # make sure the input has date format
       mon <- months.Date(date, abbreviate = TRUE) # get month abbreviation
     
-      # define winter (Dec, Jan, Feb), spring (Mar, Apr, May),
-      # summer (Jun, Jul, Aug), fall (Sep, Oct, Nov)
+      # use function to define which months fall under winter (Dec, Jan, Feb), spring (Mar, Apr, May),
+      # summer (Jun, Jul, Aug), and fall (Sep, Oct, Nov)
       ifelse(mon %in% c("Dec", "Jan", "Feb"), "Winter",
             ifelse(mon %in% c("Mar", "Apr", "May"), "Spring",
                     ifelse(mon %in% c("Jun", "Jul", "Aug"), "Summer", "Fall")))
     }
   
-  # divide the transect into low, medium and high
+  # divide the transect into low, medium and high for intertidal height analysis 
     intertidal_height <- function(data_frame, column_name) {
       # Define breaks and labels
       breaks <- c(0, 10, 20, 30)
@@ -72,7 +72,7 @@ require(RColorBrewer)
       return(data_frame)
     }
     
-  # proportional percent cover
+  # proportional percent cover - function used to fix SPES's relative to total percent cover 
     adjusted_percent_cover <- function(dataframe, algae_cover_col, invertebrates_cover_col, total_cover_col) {
       dataframe$Adjusted_Algae_Cover <- dataframe[[algae_cover_col]] / (dataframe[[algae_cover_col]] + dataframe[[invertebrates_cover_col]]) * dataframe[[total_cover_col]]
       dataframe$Adjusted_Invert_Cover <- dataframe[[invertebrates_cover_col]] / (dataframe[[algae_cover_col]] + dataframe[[invertebrates_cover_col]]) * dataframe[[total_cover_col]]
@@ -81,7 +81,7 @@ require(RColorBrewer)
     
   #=================================================================================================================================
   
-# SPES Data
+# Cleaning Functions Applied to SPES Data
   #=================================================================================================================================
   # add year column
     transect_SPES <- add_year_column(transect_SPES, "Date")
@@ -89,7 +89,7 @@ require(RColorBrewer)
     quad0.25m_SPES <- add_year_column(quad0.25m_SPES, "Date")
     limpet_SPES <- add_year_column(limpet_SPES, "Date")
 
-  # create a DOY column
+  # create a DOY column that takes the existing date column and rearranges it to date, month, year
     transect_SPES$DOY <- yday(dmy(transect_SPES$Date))
     quad1m_SPES$DOY <- yday(dmy(quad1m_SPES$Date))
     quad0.25m_SPES$DOY <- yday(dmy(quad0.25m_SPES$Date))
@@ -99,13 +99,13 @@ require(RColorBrewer)
     quad0.25m_SPES <- convert_to_logical(quad0.25m_SPES, 14, 44)
     transect_SPES <- convert_to_logical(transect_SPES, 12, 14)
 
-  # change site_TA column to character and to correct format
+  # change site_TA column to a character and to correct format --> easiest to work with site_ta as a character
     transect_SPES <- change_TA_column(transect_SPES)
     quad1m_SPES <- change_TA_column(quad1m_SPES)
     quad0.25m_SPES <- change_TA_column(quad0.25m_SPES)
     limpet_SPES <- change_TA_column(limpet_SPES)
     
-  # get the season and month
+  # get the season and month --> creates new month and season columns 
     transect_SPES$season <- get_season(transect_SPES$Date)
     transect_SPES$month <- month(as.Date(transect_SPES$Date))
 
@@ -118,16 +118,16 @@ require(RColorBrewer)
     limpet_SPES$season <- get_season(limpet_SPES$Date)
     limpet_SPES$month <- month(as.Date(limpet_SPES$Date))
   
-  # get intertidal height
+  # get intertidal height through transect point column
     quad0.25m_SPES <- intertidal_height(quad0.25m_SPES, "Transect_Point_m")
     quad1m_SPES <- intertidal_height(quad1m_SPES, "Transect_Point_m")
     
-  # proportional percent cover
+  # proportional percent cover to adjust relative to total % cover for SPES data 
     quad0.25m_SPES <- adjusted_percent_cover(quad0.25m_SPES, "Algae_Cover", "Invertebrates_Cover", "Total_Cover")
     
   #=================================================================================================================================
 
-# ENVR 400 2024 Data
+# Cleaning Functions Applied to ENVR 400 2024 Data
   #=================================================================================================================================
   # add year column
     transect_ENVR <- add_year_column(transect_ENVR, "Date") 
@@ -180,9 +180,9 @@ require(RColorBrewer)
     
   #=================================================================================================================================
 
-# Abiotic Data
+#Cleaning Functions Applied to Abiotic Data
   #=================================================================================================================================
-  # Separate out tide data date and time
+  # Separate out date and time from tide data
     tide <- tide %>%
       mutate(date = as.Date(Obs_date),
           time = format(strptime(Obs_date, format = "%Y-%m-%d %H:%M"), "%H:%M"))
@@ -193,7 +193,7 @@ require(RColorBrewer)
     tide$hour <- format(tide$time, "%H")
     tide$hour <- as.numeric(tide$hour)
   
-  # seasonal and monthly tide
+  #get seasonal and monthly information for tide
     tide$season <- get_season(tide$date)
     tide$month <- month(as.Date(tide$date))
 
@@ -205,7 +205,7 @@ require(RColorBrewer)
     weather$month <- month(as.Date(weather$date))
   #=================================================================================================================================
 
-# Overall functions
+# Overall functions- General 
   #================================================================================================================================
   # plot percent cover along the transect line - need to fix aesthetics
     cover_intertidal_height <- function(data, color_scale = c("low" = "lightblue", "high" = "darkblue"), 
@@ -237,11 +237,11 @@ require(RColorBrewer)
         scale_y_discrete(limits = c("low", "medium", "high"))
     }
     
-# SPES Data
+# SPES Data Visualization 
 #=================================================================================================================================
 # Functions 
   #=================================================================================================================================
-  # plotting a variable for every TA for every year.
+  # General Function for plotting a variable for every TA for every year.
     plot_count_per_TA_SPES <- function(data, varname, plot_title, plot_yaxis){
       
       # create data frame with relevant columns
@@ -272,7 +272,7 @@ require(RColorBrewer)
               legend.title=element_text(size=14)) #change font size of legend title   
     }
     
-  # presence absence of sea star species
+  # presence absence plot of sea star species
     presence_absence_SPES <- function(data, species_column) {
       df <- data.frame(Year = data$Year,
           Site_TA = data$Site_TA,
@@ -301,7 +301,7 @@ require(RColorBrewer)
         scale_y_discrete(breaks = unique(data$Site_TA)) # Set breaks for y-axis
     }
     
-  # limpet plots
+  # Func6ion for limpet plots
     limpet_plots_SPES <- function(data, agg_variable, plot_title, plot_yaxis) {
       agg_mean <- aggregate(get(agg_variable) ~ Year + Site_TA, data = data, FUN = mean)
       names(agg_mean)[3] <- paste("mean_", agg_variable, sep = "")
@@ -331,7 +331,7 @@ require(RColorBrewer)
               legend.title=element_text(size=14)) #change font size of legend title   
     }
   
-  # plot count along intertidal height
+  # plot for specified variable count  along intertidal height
     plot_count_intertidal_height <- function(data, count_variable, scale_fill = c("lightblue", "darkblue"), plot_title) {
       # Aggregate the data for the specified count variable
       agg_data <- aggregate(data[[count_variable]], by = list(data$intertidal_height), FUN = function(x) round(mean(x, na.rm = TRUE)))
@@ -358,7 +358,7 @@ require(RColorBrewer)
   
 # Transect Data - aesthetics good, stats done
   #=================================================================================================================================
-  # Density of sea stars per TA (2019-2023)
+  # Density of sea stars per TA (2019-2023) - SPES
     SS_density_TA <- plot_count_per_TA_SPES(transect_SPES, "Density_of_Sea_Stars_Count", 
                                             "Mean Count of Sea Stars in the Spring/Summer from 2019-2023 ", 
                                             "Mean Count of Sea Stars")
@@ -377,7 +377,7 @@ require(RColorBrewer)
               summary(SS_Sites_anova)
               # p-value = 0.0619
       
-  # Presence absence of sea stars 
+  # Presence absence of sea stars visualization
     plot_ochre <- presence_absence_SPES(transect_SPES, "Ochre")
       plot_ochre
     plot_leather <- presence_absence_SPES(transect_SPES, "Leather")
@@ -386,7 +386,7 @@ require(RColorBrewer)
       plot_mottled 
   #=================================================================================================================================
       
-# Limpet Data - aesthetics good, stats done
+# Limpet Data for SPES - aesthetics good, stats done
   #=================================================================================================================================
   # plot limpet length
     limpet_length_SPES <- limpet_plots_SPES(limpet_SPES, "Mean_Length_mm",
@@ -410,7 +410,7 @@ require(RColorBrewer)
                                               "Mean Width (mm)")
       limpet_width_SPES
       
-      # Stats
+      # Anova Statistics
         # Year
           Width_Year_anova <- aov(Mean_Width_mm ~ Year, data = limpet_SPES)
             summary(Width_Year_anova)
@@ -421,15 +421,15 @@ require(RColorBrewer)
             # p-value = 0.0017
   #=================================================================================================================================
       
-# 1m quadrat data - aesthetics good, stats done
+# SPES 1m quadrat data - aesthetics good, stats done
   #=================================================================================================================================
-  # Littorine Snails
+  # Littorine Snails Visualization
     Lit_density_TA <- plot_count_per_TA_SPES(quad1m_SPES, "Littorine_snails", 
                                               "Mean Count of Littorine Snails in the Spring/Summer from 2019-2023", 
                                               "Mean Count of Littorine Snails")
     Lit_density_TA
     
-    # Stats
+    #ANOVA Statistics
       # Year
         Lit_Year_anova <- aov(Littorine_snails ~ Year, data = quad1m_SPES)
           summary(Lit_Year_anova)
@@ -439,13 +439,13 @@ require(RColorBrewer)
           summary(Lit_Site_anova)
           # p-value = 0.0015
 
-  # Limpet Count
+  # Limpet Count Visualization
     Limpet_density_TA <- plot_count_per_TA_SPES(quad1m_SPES, "Limpets", 
                                              "Mean Count of Limpets in the Spring/Summer from 2019-2023", 
                                              "Mean Count of Limpets")
     Limpet_density_TA
     
-    # Stats
+    # ANOVA Stats
       # Year
         Limp_Year_anova <- aov(Limpets ~ Year, data = quad1m_SPES)
           summary(Limp_Year_anova)
@@ -455,12 +455,12 @@ require(RColorBrewer)
           summary(Limp_Site_anova)
           # p-value = 0.00178
 
-  # Changes in intertidal height composition
+  # Changes in intertidal height composition Visualiization 
       lit_snail_height <- plot_count_intertidal_height(quad1m_SPES, 'Littorine_snails', scale_fill = c("lightgreen", "darkgreen"), 
                                                        "Intertidal Height and Count of Littorine Snails in the Spring/Summer")
         lit_snail_height
         
-        # Stats
+        # ANOVA Stats
           # Intertidal height
             Lit_Height_anova <- aov(Littorine_snails ~ intertidal_height, data = quad1m_SPES)
               summary(Lit_Height_anova)
@@ -470,17 +470,18 @@ require(RColorBrewer)
                                                     "Intertidal Height and Count of Organisms in the Spring/Summer")
         limpet_height  
         
-        # Stats
+        # ANOVA Stats
           # Intertidal height
             Limp_Height_anova <- aov(Limpets ~ intertidal_height, data = quad1m_SPES)
               summary(Limp_Height_anova)
               # p-value = 0.874
   #=================================================================================================================================
     
-# 0.25m quadrat data - stats done, should make functions (messy and overwhelming)
+# SPES 0.25m quadrat data - stats done, should make functions (messy and overwhelming)
   #=================================================================================================================================
   # Mean total and relative percent cover of algae and invertebrates for each site and year
-    # Select data
+   
+   # Select data
     percent_cover_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                      year = quad0.25m_SPES$Year,
                                      total_cover = quad0.25m_SPES$Total_Cover,
@@ -510,7 +511,7 @@ require(RColorBrewer)
         theme_minimal() +
         scale_y_continuous(limits = c(0, 100))
       
-    # Stats
+    # ANOVA Stats
       # Year
         TCover_Year_anova <- aov(Total_Cover ~ Year, data = quad0.25m_SPES)
           summary(TCover_Year_anova)
@@ -520,7 +521,7 @@ require(RColorBrewer)
           summary(TCover_Site_anova)
           # p-value = 0.395
   
-  # percent cover and count of algae - LINE NOT SHOWING UP
+  # Visualization of percent cover and count of algae - LINE NOT SHOWING UP
     algae_quad0.25m_SPES <- data.frame(site_TA = quad0.25m_SPES$Site_TA,
                                        year = quad0.25m_SPES$Year,
                                        algae_percent_cover = quad0.25m_SPES$Algae_Cover,
@@ -554,7 +555,7 @@ require(RColorBrewer)
     
     print(quad_0.25m_SPES_algae_plot)
     
-    # Stats
+    # ANOVA Stats
       # Year
         AlgaeCover_Year_anova <- aov(Algae_Cover ~ Year, data = quad0.25m_SPES)
           summary(AlgaeCover_Year_anova)

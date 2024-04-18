@@ -44,10 +44,11 @@ require(RColorBrewer)
       return(df)
     }
     
-  # change columns to character
-    convert_to_character <- function(data, column_name) {
-      data[[column_name]] <- as.character(data[[column_name]])
-      return(data)
+  # change site TA columns to character values with "TA-" infront of the number
+    change_TA_column <- function(data_frame) {
+      modified_df <- data_frame %>%
+        mutate(modified_TA = paste0("TA-", as.character(Site_TA)))
+      return(modified_df)
     }
 
   # get the season and month
@@ -98,11 +99,11 @@ require(RColorBrewer)
     quad0.25m_SPES <- convert_to_logical(quad0.25m_SPES, 14, 44)
     transect_SPES <- convert_to_logical(transect_SPES, 12, 14)
 
-  # change site_TA to character
-    transect_SPES <- convert_to_character(transect_SPES, "Site_TA")
-    quad1m_SPES <- convert_to_character(quad1m_SPES, "Site_TA")
-    quad0.25m_SPES <- convert_to_character(quad0.25m_SPES, "Site_TA")
-    limpet_SPES <- convert_to_character(limpet_SPES, "Site_TA")
+  # change site_TA column to character and to correct format
+    transect_SPES <- change_TA_column(transect_SPES)
+    quad1m_SPES <- change_TA_column(quad1m_SPES)
+    quad0.25m_SPES <- change_TA_column(quad0.25m_SPES)
+    limpet_SPES <- change_TA_column(limpet_SPES)
     
   # get the season and month
     transect_SPES$season <- get_season(transect_SPES$Date)
@@ -156,10 +157,10 @@ require(RColorBrewer)
     quad0.25m_ENVR <- convert_to_logical(quad0.25m_ENVR, 47, 54)
     quad0.25m_ENVR <- convert_to_logical(quad0.25m_ENVR, 57, 62)
     
-  # change site_TA to character
-    transect_ENVR <- convert_to_character(transect_ENVR, "Site_TA")
-    quad0.25m_ENVR <- convert_to_character(quad0.25m_ENVR, "Site_TA")
-    limpet_ENVR <- convert_to_character(limpet_ENVR, "Site_TA")
+  # change site_TA column to character and to correct format
+    transect_ENVR <- change_TA_column(transect_ENVR)
+    quad0.25m_ENVR <- change_TA_column(quad0.25m_ENVR)
+    limpet_ENVR <- change_TA_column(limpet_ENVR)
     
   # get season and month
     transect_ENVR$season <- get_season(transect_ENVR$Date)
@@ -240,8 +241,6 @@ require(RColorBrewer)
 #=================================================================================================================================
 # Functions 
   #=================================================================================================================================
-  site_colors <- site_colors <- c("skyblue2", "darkolivegreen3", "gold2", "orchid2", "royalblue1", "coral")
-    
   # plotting a variable for every TA for every year.
     plot_count_per_TA_SPES <- function(data, varname, plot_title, plot_yaxis){
       
@@ -258,14 +257,19 @@ require(RColorBrewer)
       
       df_var_all <- merge(df_var_mean, df_var_sd, by = c("year", "site_TA"))
       
-      ggplot(data = df_var_all, aes(x = year, y = mean_count, group = site_TA, fill = site_TA)) +
-        geom_bar(stat = "identity", position = "dodge") +
+      ggplot(data = df_var_all, aes(x = site_TA, y = mean_count, group = year, fill = year)) +
+        geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
         geom_errorbar(aes(ymin = pmax(mean_count - sd_count, 0), ymax = mean_count + sd_count),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(plot_yaxis) + xlab("Time (years)") + labs(fill = "Site TA") +
-        scale_fill_manual(values = site_colors) +
+        ylab(plot_yaxis) + xlab("Site") + labs(fill = "Year") +
+        scale_fill_viridis(discrete = TRUE) +
         labs(title = plot_title) +
-        theme_minimal()
+        theme_minimal() +
+        theme(plot.title=element_text(size=15), #change font size of plot title
+              axis.text=element_text(size=11), #change font size of axis text
+              axis.title=element_text(size=14), #change font size of axis titles
+              legend.text=element_text(size=11), #change font size of legend text
+              legend.title=element_text(size=14)) #change font size of legend title   
     }
     
   # presence absence of sea star species
@@ -287,7 +291,7 @@ require(RColorBrewer)
                           labels = c("TRUE" = "Present", "FALSE" = "Absent"),
                           na.value = "gray",
                           drop=FALSE) +  # Adjust colors as needed
-        labs(x = "Year", y = "Sampling TA", fill = paste0(species_column, " Presence/Absence"), 
+        labs(x = "Year", y = "Site", fill = paste0(species_column, " Presence/Absence"), 
              title = paste(species_column, "Sea Star Presence Absence in the Spring/Summer from 2019-2023")) +
         theme_minimal() +
         theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
@@ -307,18 +311,24 @@ require(RColorBrewer)
       
       agg_all <- left_join(agg_mean, agg_sd, by = c("Year", "Site_TA"))
       
-      ggplot(data = agg_all, aes(x = Year, y = get(paste("mean_", agg_variable, sep = "")), group = Site_TA, fill = Site_TA)) +
-        geom_bar(stat = "identity", position = "dodge") +
+      ggplot(data = agg_all, aes(x = Year, y = get(paste("mean_", agg_variable, sep = "")), group = Site_TA, fill = Year)) +
+        geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
         geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), 
                           ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                       position = position_dodge(width = 0.9), width = 0.25) +
+        facet_wrap(~Site_TA) +
         ylab(plot_yaxis) +
-        xlab("Time (years)") +
-        labs(fill = "Site TA") +
-        scale_fill_manual(values = site_colors) +
+        xlab("Site") +
+        labs(fill = "Year") +
+        scale_fill_viridis(discrete = TRUE) +
         theme_minimal() +
         labs(title = plot_title) +
-        scale_y_continuous(limits = c(0, 25))
+        scale_y_continuous(limits = c(0, 25)) +
+        theme(plot.title=element_text(size=15), #change font size of plot title
+              axis.text=element_text(size=11), #change font size of axis text
+              axis.title=element_text(size=14), #change font size of axis titles
+              legend.text=element_text(size=11), #change font size of legend text
+              legend.title=element_text(size=14)) #change font size of legend title   
     }
   
   # plot count along intertidal height
@@ -337,7 +347,11 @@ require(RColorBrewer)
         labs(x = "Count", y = "Tide Height", title = plot_title, fill = paste0(count_variable, " Count")) +
         theme_minimal() +
         scale_y_discrete(limits = c("low", "medium", "high")) +
-        theme(plot.title = element_text(size = 10)) 
+        theme(plot.title=element_text(size=15), #change font size of plot title
+                     axis.text=element_text(size=11), #change font size of axis text
+                     axis.title=element_text(size=14), #change font size of axis titles
+                     legend.text=element_text(size=11), #change font size of legend text
+                     legend.title=element_text(size=14)) #change font size of legend title   
     }
 
   #=================================================================================================================================
@@ -482,7 +496,6 @@ require(RColorBrewer)
       names(cover_sd)[3] <- "sd_cover"
     
       percent_cover_all <- merge(all_cover, cover_sd, by = c("year", "site_TA"))
-      percent_cover_all$site_TA <- paste0("TA-", percent_cover_all$site_TA)
       
     # plot
       ggplot(percent_cover_all, aes(x = as.factor(year), y = total_cover)) +
@@ -520,8 +533,6 @@ require(RColorBrewer)
     algae_cover_count <- merge(algae_cc, algae_percent_sd, by = c("year", "site_TA"))
     
     adj <- 25
-    
-    algae_cover_count$site_TA <- paste0("TA-", algae_cover_count$site_TA)
     
     quad_0.25m_SPES_algae_plot <- ggplot(data = algae_cover_count, aes(x = year, y = algae_percent_cover)) +
       geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  # Adjust transparency with alpha
@@ -570,8 +581,6 @@ require(RColorBrewer)
     
     line_colors <- brewer.pal(n = 3, name = "Set1")
     
-    invert_cover_count$site_TA <- paste0("TA-", invert_cover_count$site_TA)
-
     quad_0.25_SPES_invert_plot <- ggplot(data = invert_cover_count, aes(x = year, y = invert_percent_cover)) +
       geom_bar(stat = "identity", aes(fill = as.factor(year)), position = "stack", alpha = 0.8) +  
       geom_line(aes(y = sessile_count * adj), color = "blue", linetype = "solid", group = 1) +
@@ -649,9 +658,14 @@ require(RColorBrewer)
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(mean_count - sd_count, 0), ymax = mean_count + sd_count),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(plot_varname) + xlab("Site TA") + labs(title = plot_title, fill = "Site TA") +
+        ylab(plot_varname) + xlab("Site") + labs(title = plot_title, fill = "Site") +
         scale_fill_manual(values = site_colors_ENVR) +
-        theme_minimal()
+        theme_minimal() +
+        theme(plot.title=element_text(size=15), #change font size of plot title
+              axis.text=element_text(size=11), #change font size of axis text
+              axis.title=element_text(size=14), #change font size of axis titles
+              legend.text=element_text(size=11), #change font size of legend text
+              legend.title=element_text(size=14)) #change font size of legend title  
   }
     
   # identity of sea stars
@@ -697,11 +711,16 @@ require(RColorBrewer)
       geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                     position = position_dodge(width = 0.9), width = 0.25) +
       ylab(plot_varname) +
-      xlab("Site TA") +
-      labs(fill = "Site TA", title = plot_title) +
+      xlab("Site") +
+      labs(fill = "Site", title = plot_title) +
       scale_fill_manual(values = site_colors_ENVR) +
       scale_y_continuous(limits = c(0, 33)) +
-      theme_minimal()
+      theme_minimal() +
+      theme(plot.title=element_text(size=15), #change font size of plot title
+            axis.text=element_text(size=11), #change font size of axis text
+            axis.title=element_text(size=14), #change font size of axis titles
+            legend.text=element_text(size=11), #change font size of legend text
+            legend.title=element_text(size=14)) #change font size of legend title 
   }
   
   #=================================================================================================================================
@@ -790,10 +809,15 @@ require(RColorBrewer)
     geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
     geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2), 
                   position = position_dodge(width = 0.9), width = 0.5) +
-    labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in Winter 2023/2024", fill = "Organismal Class") +
+    labs(x = "Site", y = "Percent Cover", title = "Mean Percent Cover of Algae and Invertebrates in Winter 2023/2024", fill = "Organismal Class") +
     scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
     theme_minimal() +
-    scale_y_continuous(limits = c(0, 100))
+    scale_y_continuous(limits = c(0, 100)) +
+    theme(plot.title=element_text(size=15), #change font size of plot title
+          axis.text=element_text(size=11), #change font size of axis text
+          axis.title=element_text(size=14), #change font size of axis titles
+          legend.text=element_text(size=11), #change font size of legend text
+          legend.title=element_text(size=14)) #change font size of legend title 
   
   # Stats
     TCover_ENVR_anova <- aov(Total_Cover ~ Site_TA, data = quad0.25m_ENVR)
@@ -818,14 +842,19 @@ require(RColorBrewer)
     geom_errorbar(aes(ymin = pmax(algae_percent_cover - algae_percent_sd, 0), 
                       ymax = pmin(algae_percent_cover + algae_percent_sd, 100)), 
                   width = 0.2, position = position_dodge(width = 0.5), color = "black") +
-    labs(x = "Site TA", y = "Percent Cover", 
+    labs(x = "Site", y = "Percent Cover", 
          title = "Mean Percent Cover and Count of Algae in Winter 2023/2024", 
-         fill = "Site TA", color = "Species Count") +
+         fill = "Site", color = "Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                        sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
     scale_fill_manual(values = site_colors_ENVR) +
     theme_minimal() +
-    guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
+    theme(plot.title=element_text(size=15), #change font size of plot title
+          axis.text=element_text(size=11), #change font size of axis text
+          axis.title=element_text(size=14), #change font size of axis titles
+          legend.text=element_text(size=11), #change font size of legend text
+          legend.title=element_text(size=14)) + #change font size of legend title 
+    guides(fill = guide_legend(override.aes = list(color = NULL)),
            color = guide_legend(override.aes = list(fill = NULL))) +
     guides(color = guide_legend(order = 1), fill = guide_legend(order = 2))
   
@@ -858,14 +887,19 @@ require(RColorBrewer)
     geom_errorbar(aes(ymin = pmax(invert_percent_cover - invert_percent_sd, 0), 
                       ymax = pmin(invert_percent_cover + invert_percent_sd, 100)), 
                   width = 0.2, position = position_dodge(width = 0.5), color = "black") +
-    labs(x = "Site TA", y = "Percent Cover", 
+    labs(x = "Site", y = "Percent Cover", 
          title = "Mean Percent Cover and Count of Invertebrates in Winter 2023/2024", 
-         fill = "Site TA", color = "Species Count") +
+         fill = "Site", color = "Species Count") +
     scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                        sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
     scale_fill_manual(values = site_colors_ENVR) +
     scale_color_manual(values = line_colors) +  # Remove labels from here
     theme_minimal() +
+    theme(plot.title=element_text(size=15), #change font size of plot title
+          axis.text=element_text(size=11), #change font size of axis text
+          axis.title=element_text(size=14), #change font size of axis titles
+          legend.text=element_text(size=11), #change font size of legend text
+          legend.title=element_text(size=14)) + #change font size of legend title 
     guides(fill = guide_legend(override.aes = list(color = NULL)),  # Remove fill color from legend
            color = guide_legend(override.aes = list(fill = NULL))) +
     guides(color = guide_legend(order = 1), fill = guide_legend(order = 2))
@@ -932,18 +966,18 @@ require(RColorBrewer)
   #=================================================================================================================================
     names(transect_ENVR)[names(transect_ENVR) == "Density_of_Sea_Stars_count"] <- "Density_of_Sea_Stars_Count"
     
-    ss_agg_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, data = transect_SPES_TA, FUN = mean, na.rm = TRUE)
+    ss_agg_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, data = transect_SPES_TA, FUN = mean, na.rm = TRUE)
     
     # Calculate standard deviation of sea stars count by season and Site_TA for SPES data
-    ss_agg_sd_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, 
+    ss_agg_sd_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, 
                                 data = transect_SPES_TA, 
                                 FUN = function(x) sd(x, na.rm = TRUE))
       names(ss_agg_sd_SPES)[names(ss_agg_sd_SPES) == "Density_of_Sea_Stars_Count"] <- "sd_ss"
 
-    ss_agg_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, data = transect_ENVR, FUN = mean, na.rm = TRUE)
+    ss_agg_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, data = transect_ENVR, FUN = mean, na.rm = TRUE)
     
     # Calculate standard deviation of sea stars count by season and Site_TA for ENVR data
-    ss_agg_sd_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA, 
+    ss_agg_sd_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, 
                                 data = transect_ENVR, 
                                 FUN = function(x) sd(x, na.rm = TRUE))
     
@@ -954,10 +988,10 @@ require(RColorBrewer)
     ss_agg_combined <- rbind(ss_agg_SPES, ss_agg_ENVR)
     ss_agg_sd_combined <- rbind(ss_agg_sd_SPES, ss_agg_sd_ENVR)
     
-    ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA"))
+    ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA", "modified_TA"))
     
     plot_ss <- function(data, y_variable, title, x_label, y_label) {
-      ggplot(data, aes(x = factor(Site_TA), y = !!sym(y_variable), fill = season)) +
+      ggplot(data, aes(x = factor(modified_TA), y = !!sym(y_variable), fill = season)) +
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_ss, 0), 
                           ymax = !!sym(y_variable) + sd_ss),
@@ -965,12 +999,17 @@ require(RColorBrewer)
                       width = 0.25) +
         labs(x = x_label, y = y_label, title = title) +
         scale_fill_discrete(name = "Season") +
-        theme_minimal()
+        theme_minimal() +
+        theme(plot.title=element_text(size=15), #change font size of plot title
+              axis.text=element_text(size=11), #change font size of axis text
+              axis.title=element_text(size=14), #change font size of axis titles
+              legend.text=element_text(size=11), #change font size of legend text
+              legend.title=element_text(size=14)) #change font size of legend title
     }
     
     plot_ss(data = ss_merge, y_variable = "Density_of_Sea_Stars_Count", 
-            title = "Density of Sea Stars from Spring 2023 - Winter 2023/2024", 
-            x_label = "Site TA", y_label = "Density of Sea Stars (Count)")
+            title = "Density of Sea Stars from May 2023 - February 2024", 
+            x_label = "Site", y_label = "Density of Sea Stars (Count)")
     
     # stats
       calculate_seasonality(transect_SPES_TA, transect_ENVR, 
@@ -983,54 +1022,66 @@ require(RColorBrewer)
 # Limpet data - fix aesthetics, stats done
   #=================================================================================================================================
     # Aggregate data by Site_TA
-    limp_agg_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, data = limpet_SPES_TA, FUN = mean, na.action = na.omit)
-    limp_agg_sd_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, 
+    limp_agg_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, data = limpet_SPES_TA, FUN = mean, na.action = na.omit)
+    limp_agg_sd_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, 
                              data = limpet_SPES_TA, 
                              FUN = function(x) sd(x, na.rm = TRUE),
                              na.action = na.omit)
       names(limp_agg_sd_SPES)[names(limp_agg_sd_SPES) == "Mean_Length_mm"] <- "sd_length"
       names(limp_agg_sd_SPES)[names(limp_agg_sd_SPES) == "Mean_Width_mm"] <- "sd_width"
 
-    limp_agg_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, data = limpet_ENVR, FUN = mean, na.action = na.omit)
-    limp_agg_sd_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA, data = limpet_ENVR, FUN = function(x) sd(x, na.rm = TRUE), na.action = na.omit)
+    limp_agg_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, data = limpet_ENVR, FUN = mean, na.action = na.omit)
+    limp_agg_sd_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, data = limpet_ENVR, FUN = function(x) sd(x, na.rm = TRUE), na.action = na.omit)
       names(limp_agg_sd_ENVR)[names(limp_agg_sd_ENVR) == "Mean_Length_mm"] <- "sd_length"
       names(limp_agg_sd_ENVR)[names(limp_agg_sd_ENVR) == "Mean_Width_mm"] <- "sd_width"
     
     limp_agg_combined <- rbind(limp_agg_SPES, limp_agg_ENVR)
     limp_agg_sd_combined <- rbind(limp_agg_sd_SPES, limp_agg_sd_ENVR)
       
-    limpet_merge <- merge(limp_agg_combined, limp_agg_sd_combined, by = c("season", "Site_TA"))
+    limpet_merge <- merge(limp_agg_combined, limp_agg_sd_combined, by = c("season", "Site_TA", "modified_TA"))
 
     # plot length
-   plot_limpet_length_season <- ggplot(limpet_merge, aes(x = factor(Site_TA), y = Mean_Length_mm, fill = season)) +
+   plot_limpet_length_season <- ggplot(limpet_merge, aes(x = factor(modified_TA), y = Mean_Length_mm, fill = season)) +
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(Mean_Length_mm - sd_length, 0), 
                           ymax = Mean_Length_mm + sd_length),
                       position = position_dodge(width = 0.9), 
                       width = 0.25) +
-        labs(x = "Site TA", y = "Mean Length (mm)", title = "Mean Length and Width of Limpets from Spring 2023 - Winter 2023/2024") +
+        labs(x = "Site", y = "Mean Length (mm)", title = "Mean Length of Limpets from May 2023 - February 2024") +
         scale_fill_discrete(name = "Season") +
         theme_minimal() + 
-        ylim(0, 30)
+        ylim(0, 30) +
+        theme(plot.title=element_text(size=15), #change font size of plot title
+           axis.text=element_text(size=11), #change font size of axis text
+           axis.title=element_text(size=14), #change font size of axis titles
+           legend.text=element_text(size=11), #change font size of legend text
+           legend.title=element_text(size=14)) #change font size of legend title
+   
     plot_limpet_length_season
       
     # plot width
-    plot_limpet_width_season <- ggplot(limpet_merge, aes(x = factor(Site_TA), y = Mean_Width_mm, fill = season)) +
+    plot_limpet_width_season <- ggplot(limpet_merge, aes(x = factor(modified_TA), y = Mean_Width_mm, fill = season)) +
       geom_bar(stat = "identity", position = "dodge") +
       geom_errorbar(aes(ymin = pmax(Mean_Width_mm - sd_width, 0), 
                         ymax = Mean_Width_mm + sd_length),
                     position = position_dodge(width = 0.9), 
                     width = 0.25) +
-      labs(x = "Site TA", y = "Mean Width (mm)", title = "Mean Width of Limpets from Spring 2023 - Winter 2023/2024") +
+      labs(x = "Site", y = "Mean Width (mm)", title = "Mean Width of Limpets from May 2023 - February 2024") +
       scale_fill_discrete(name = "Season") +
       theme_minimal() +
-      ylim(0, 30)
+      ylim(0, 30) +
+      theme(plot.title=element_text(size=15), #change font size of plot title
+            axis.text=element_text(size=11), #change font size of axis text
+            axis.title=element_text(size=14), #change font size of axis titles
+            legend.text=element_text(size=11), #change font size of legend text
+            legend.title=element_text(size=14)) #change font size of legend title
+    
     plot_limpet_width_season  
     
     
     # length
       plot_ss(limpet_merge, "Mean_Length_mm",
-              title = "Mean Length of Limpets from Spring 2023 - Winter 2023/2024", 
+              title = "Mean Length of Limpets from May 2023 - February 2024", 
               x_label = "Site TA", y_label = "Mean Length of Limpets (mm)")
       # width
       plot_ss(limpet_merge, "Mean_Width_mm")
@@ -1056,6 +1107,7 @@ require(RColorBrewer)
       select_cover <- function(dataframe) {
         cover <- data.frame(
           site_TA = dataframe$Site_TA,
+          modified_TA = dataframe$modified_TA,
           year = dataframe$Year,
           season = dataframe$season,
           total_cover = dataframe$Total_Cover,
@@ -1073,15 +1125,15 @@ require(RColorBrewer)
         cover_ENVR <- select_cover(quad0.25m_ENVR)
       
      # Aggregate data - function?
-      cover_agg_SPES <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_SPES, FUN = mean, na.action = na.omit)
-      cover_agg_sd_SPES <- aggregate(invert_cover ~ season + site_TA, 
+      cover_agg_SPES <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA + modified_TA, data = cover_SPES, FUN = mean, na.action = na.omit)
+      cover_agg_sd_SPES <- aggregate(invert_cover ~ season + site_TA + modified_TA, 
                                     data = cover_SPES, 
                                     FUN = function(x) sd(x, na.rm = TRUE),
                                     na.action = na.omit)
         names(cover_agg_sd_SPES)[names(cover_agg_sd_SPES) == "invert_cover"] <- "sd"
         
-      cover_agg_ENVR <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA, data = cover_ENVR, FUN = mean, na.action = na.omit)
-      cover_agg_sd_ENVR <- aggregate(invert_cover ~ season + site_TA, 
+      cover_agg_ENVR <- aggregate(cbind(total_cover, algae_cover, invert_cover) ~ season + site_TA + modified_TA, data = cover_ENVR, FUN = mean, na.action = na.omit)
+      cover_agg_sd_ENVR <- aggregate(invert_cover ~ season + site_TA + modified_TA, 
                                      data = cover_ENVR, 
                                      FUN = function(x) sd(x, na.rm = TRUE),
                                      na.action = na.omit)
@@ -1091,20 +1143,25 @@ require(RColorBrewer)
       cover_agg_combined <- rbind(cover_agg_SPES, cover_agg_ENVR)
       cover_agg_sd_combined <- rbind(cover_agg_sd_SPES, cover_agg_sd_ENVR)
       
-      cover_merge <- merge(cover_agg_combined, cover_agg_sd_combined, by = c("season", "site_TA"))
+      cover_merge <- merge(cover_agg_combined, cover_agg_sd_combined, by = c("season", "site_TA", "modified_TA"))
       
     # plot total cover
-      total_cover_seasonal <- ggplot(cover_merge, aes(x = factor(site_TA), y = total_cover)) +
+      total_cover_seasonal <- ggplot(cover_merge, aes(x = factor(modified_TA), y = total_cover)) +
         geom_bar(aes(fill = "Algae"), position = "stack", stat = "identity") +
         geom_bar(aes(y = invert_cover, fill = "Invertebrates"), position = "stack", stat = "identity") +
         geom_errorbar(aes(ymin = invert_cover - sd/2, ymax = invert_cover + sd/2,
                           group = site_TA),  # Group by site_TA
                       position = position_dodge(width = 0.9), width = 0.5) +  # Use position_dodge()
         facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
-        labs(x = "Site TA", y = "Percent Cover", title = "Mean Total Percent Cover of Algae and Invertebrates from Spring 2023 - Winter 2024", fill = "Organismal Class") +
+        labs(x = "Site", y = "Percent Cover", title = "Mean Total Percent Cover of Algae and Invertebrates from May 2023 - February 2024", fill = "Organismal Class") +
         scale_fill_viridis(discrete = TRUE, option = "D", alpha = 0.8) +  # Using viridis color palette for fill with lighter shades
         theme_minimal() +
-        scale_y_continuous(limits = c(0, 100))
+        scale_y_continuous(limits = c(0, 100)) +
+        theme(plot.title=element_text(size=15), #change font size of plot title
+              axis.text=element_text(size=11), #change font size of axis text
+              axis.title=element_text(size=14), #change font size of axis titles
+              legend.text=element_text(size=11), #change font size of legend text
+              legend.title=element_text(size=14)) #change font size of legend title
       total_cover_seasonal
 
       # stats
@@ -1128,98 +1185,113 @@ require(RColorBrewer)
               
     # algae only 
         algae_SPES_TA <- data.frame(site_TA = quad0.25m_SPES_TA$Site_TA,
+                                    modified_TA = quad0.25m_SPES_TA$modified_TA,
                                     season = quad0.25m_SPES_TA$season,
                                      algae_percent_cover = quad0.25m_SPES_TA$Algae_Cover,
                                      algae_count = quad0.25m_SPES_TA$Algae_Count)
         algae_SPES_TA <- algae_SPES_TA[complete.cases(algae_SPES_TA$algae_percent_cover) & is.numeric(algae_SPES_TA$algae_percent_cover), ]
             
-          algae_total_SPES <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data=algae_SPES_TA, FUN = mean)
-          algae_percent_sd_SPES <- aggregate(algae_percent_cover ~ season + site_TA, data=algae_SPES_TA, FUN = function(x) sd(x), na.action = na.omit)
-            names(algae_percent_sd_SPES)[3] <- "algae_percent_sd"
+          algae_total_SPES <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA + modified_TA, data=algae_SPES_TA, FUN = mean)
+          algae_percent_sd_SPES <- aggregate(algae_percent_cover ~ season + site_TA + modified_TA, data=algae_SPES_TA, FUN = function(x) sd(x), na.action = na.omit)
+            names(algae_percent_sd_SPES)[4] <- "algae_percent_sd"
         
         algae_ENVR_seasonal <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
-                                 season = quad0.25m_ENVR$season,
-                                     algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
-                                     algae_count = quad0.25m_ENVR$Algae_Count)
+                                          modified_TA = quad0.25m_ENVR$modified_TA,
+                                          season = quad0.25m_ENVR$season,
+                                          algae_percent_cover = quad0.25m_ENVR$Algae_Cover,
+                                          algae_count = quad0.25m_ENVR$Algae_Count)
         algae_ENVR_seasonal <- algae_ENVR_seasonal[complete.cases(algae_ENVR_seasonal$algae_percent_cover) & is.numeric(algae_ENVR_seasonal$algae_percent_cover), ]
             
-            algae_total_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA, data= algae_ENVR_seasonal, FUN = mean)
-            algae_percent_sd_ENVR <- aggregate(algae_percent_cover ~ season + site_TA, data= algae_ENVR_seasonal, FUN = function(x) sd(x), na.action = na.omit)
-              names(algae_percent_sd_ENVR)[3] <- "algae_percent_sd"
+            algae_total_ENVR <- aggregate(cbind(algae_percent_cover, algae_count) ~ season + site_TA + modified_TA, data= algae_ENVR_seasonal, FUN = mean)
+            algae_percent_sd_ENVR <- aggregate(algae_percent_cover ~ season + site_TA + modified_TA, data= algae_ENVR_seasonal, FUN = function(x) sd(x), na.action = na.omit)
+              names(algae_percent_sd_ENVR)[4] <- "algae_percent_sd"
             
         # Combined
           algae_agg_combined <- rbind(algae_total_SPES, algae_total_ENVR)
           algae_agg_sd_combined <- rbind(algae_percent_sd_SPES, algae_percent_sd_ENVR)
             
-          algae_merge_season <- merge(algae_agg_combined, algae_agg_sd_combined, by = c("season", "site_TA"))
+          algae_merge_season <- merge(algae_agg_combined, algae_agg_sd_combined, by = c("season", "site_TA", "modified_TA"))
       
-          algae_cover_seasonal <- ggplot(algae_merge_season, aes(x = factor(site_TA), y = algae_percent_cover)) +
-            geom_bar(aes(y = algae_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
+          algae_cover_seasonal <- ggplot(algae_merge_season, aes(x = factor(modified_TA), y = algae_percent_cover)) +
+            geom_bar(aes(y = algae_percent_cover, fill = season), stat = "identity", width = 0.5) +
             geom_point(aes(y = algae_count*adj, color = "Algae")) +
             geom_errorbar(aes(ymin = pmax(0, algae_percent_cover - algae_percent_sd),
                               ymax = pmin(100, algae_percent_cover + algae_percent_sd)),
                           width = 0.25, position = position_dodge(width = 0.9),
                           color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
             facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
-            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count of Algae from Spring 2023 - Winter 2024", fill = "Site TA") +
-            scale_fill_manual(values = site_colors_ENVR) +
+            labs(x = "Site", y = "Percent Cover", title = "Mean Percent Cover and Count of Algae from May 2023 - February 2024", fill = "Site TA") +
+            scale_fill_discrete(name = "Season") +
             scale_color_manual(name = "Species Count",
                                values = c("Algae" = "red"),
                                labels = c("Algae")) +  # Define the color and label for the legend
             theme_minimal() +
             scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
                                sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
-            guides(fill = guide_legend(order = 2), color = guide_legend(order = 1))  # Specify the order of legend items
-          
+            guides(fill = guide_legend(order = 2), color = guide_legend(order = 1)) +
+            theme(plot.title=element_text(size=15), #change font size of plot title
+                  axis.text=element_text(size=11), #change font size of axis text
+                  axis.title=element_text(size=14), #change font size of axis titles
+                  legend.text=element_text(size=11), #change font size of legend text
+                  legend.title=element_text(size=14)) #change font size of legend title
+
           algae_cover_seasonal
           
       # invert only
           invert_SPES_TA <- data.frame(site_TA = quad0.25m_SPES_TA$Site_TA,
+                                      modified_TA = quad0.25m_SPES_TA$modified_TA,
                                       season = quad0.25m_SPES_TA$season,
                                       invert_percent_cover = quad0.25m_SPES_TA$Invertebrates_Cover,
                                       sessile_count = quad0.25m_SPES_TA$Sessile_Invertebrates_Count,
                                       mobile_count = quad0.25m_SPES_TA$Mobile_Invertebrates_Count)
           invert_SPES_TA <- invert_SPES_TA[complete.cases(invert_SPES_TA$invert_percent_cover) & is.numeric(invert_SPES_TA$invert_percent_cover), ]
           
-          invert_total_SPES <- aggregate(cbind(invert_percent_cover, sessile_count, mobile_count) ~ season + site_TA, data=invert_SPES_TA, FUN = mean)
-          invert_percent_sd_SPES <- aggregate(invert_percent_cover ~ season + site_TA, data=invert_SPES_TA, FUN = function(x) sd(x), na.action = na.omit)
-            names(invert_percent_sd_SPES)[3] <- "invert_percent_sd"
+          invert_total_SPES <- aggregate(cbind(invert_percent_cover, sessile_count, mobile_count) ~ season + site_TA + modified_TA, data=invert_SPES_TA, FUN = mean)
+          invert_percent_sd_SPES <- aggregate(invert_percent_cover ~ season + site_TA + modified_TA, data=invert_SPES_TA, FUN = function(x) sd(x), na.action = na.omit)
+            names(invert_percent_sd_SPES)[4] <- "invert_percent_sd"
           
           invert_ENVR_seasonal <- data.frame(site_TA = quad0.25m_ENVR$Site_TA,
+                                             modified_TA = quad0.25m_ENVR$modified_TA,
                                              season = quad0.25m_ENVR$season,
                                              invert_percent_cover = quad0.25m_ENVR$Invertebrates_Cover,
                                              sessile_count = quad0.25m_ENVR$Sessile_Invertebrates_Count_Above + quad0.25m_ENVR$Sessile_Invertebrates_Count_Below,
                                              mobile_count = quad0.25m_ENVR$Mobile_Invertebrates_Count_Above + quad0.25m_ENVR$Mobile_Invertebrates_Count_Below)
           invert_ENVR_seasonal <- invert_ENVR_seasonal[complete.cases(invert_ENVR_seasonal$invert_percent_cover) & is.numeric(invert_ENVR_seasonal$invert_percent_cover), ]
           
-          invert_total_ENVR <- aggregate(cbind(invert_percent_cover, sessile_count, mobile_count) ~ season + site_TA, data= invert_ENVR_seasonal, FUN = mean)
-          invert_percent_sd_ENVR <- aggregate(invert_percent_cover ~ season + site_TA, data= invert_ENVR_seasonal, FUN = function(x) sd(x), na.action = na.omit)
-            names(invert_percent_sd_ENVR)[3] <- "invert_percent_sd"
+          invert_total_ENVR <- aggregate(cbind(invert_percent_cover, sessile_count, mobile_count) ~ season + site_TA + modified_TA, data= invert_ENVR_seasonal, FUN = mean)
+          invert_percent_sd_ENVR <- aggregate(invert_percent_cover ~ season + site_TA + modified_TA, data= invert_ENVR_seasonal, FUN = function(x) sd(x), na.action = na.omit)
+            names(invert_percent_sd_ENVR)[4] <- "invert_percent_sd"
           
           # Combined
           invert_agg_combined <- rbind(invert_total_SPES, invert_total_ENVR)
           invert_agg_sd_combined <- rbind(invert_percent_sd_SPES, invert_percent_sd_ENVR)
           
-          invert_merge_season <- merge(invert_agg_combined, invert_agg_sd_combined, by = c("season", "site_TA"))
+          invert_merge_season <- merge(invert_agg_combined, invert_agg_sd_combined, by = c("season", "site_TA", "modified_TA"))
           
-          invert_cover_seasonal <- ggplot(invert_merge_season, aes(x = factor(site_TA), y = invert_percent_cover)) +
-            geom_bar(aes(y = invert_percent_cover, fill = site_TA), stat = "identity", width = 0.5) +
+          invert_cover_seasonal <- ggplot(invert_merge_season, aes(x = factor(modified_TA), y = invert_percent_cover)) +
+            geom_bar(aes(y = invert_percent_cover, fill = season), stat = "identity", width = 0.5) +
             geom_point(aes(y = sessile_count*adj, color = "Sessile")) +
             geom_point(aes(y = mobile_count*adj, color = "Mobile")) +
             geom_errorbar(aes(ymin = pmax(0, invert_percent_cover - invert_percent_sd),
                               ymax = pmin(100, invert_percent_cover + invert_percent_sd)),
                           width = 0.25, position = position_dodge(width = 0.9),
-                          color = "black", linewidth = 0.5) +  # Adjust error bar aesthetics
-            facet_grid(~season, scales = "free_x") +  # Facet by season with different bar graphs for each site
-            labs(x = "Site TA", y = "Percent Cover", title = "Mean Percent Cover and Count of Invertebrates from Spring 2023 - Winter 2024", fill = "Site TA") +
+                          color = "black", linewidth = 0.5) +
+            facet_grid(~season, scales = "free_x", labeller = as_labeller(function(x) stringr::str_remove_all(x, "season: "))) +  # Adjusted labeller function
+            labs(x = "Site", y = "Percent Cover", title = "Mean Percent Cover and Count of Invertebrates from May 2023 - February 2024", fill = "Season") +
             scale_fill_manual(values = site_colors_ENVR) +
             scale_color_manual(name = "Species Count",
-                               values = c("Sessile" = "blue", "Mobile" = "red"),
+                               values = c("Mobile" = "red", "Sessile" = "blue"),  
                                labels = c("Sessile", "Mobile")) +
             theme_minimal() +
+            theme(plot.title=element_text(size=15),
+                  axis.text=element_text(size=11),
+                  axis.title=element_text(size=14),
+                  legend.text=element_text(size=11),
+                  legend.title=element_text(size=14),
+                  strip.text = element_text(size = 11)) +  
             scale_y_continuous(limits = c(0, 100), name = "Percent Cover",
-                               sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +  # Adjusted primary y-axis scale
-            guides(fill = guide_legend(order = 2), color = guide_legend(order = 1))  # Specify the order of legend items
+                               sec.axis = sec_axis(~.x/adj, name = "Species Count", breaks = seq(0, 4, 1))) +
+            guides(fill = guide_legend(order = 2), color = guide_legend(order = 1))
           
           invert_cover_seasonal
   #=================================================================================================================================

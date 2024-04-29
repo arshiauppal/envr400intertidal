@@ -1128,25 +1128,71 @@
 # Combined SPES and ENVR 400 Seasonal Analysis  
 #=================================================================================================================================
   # Select TA-1, 4 and 6 from SPES data - the TAs which were also sampled in ENVR data
+    # df:
     subset_TAs <- function(df) {
     subset(df, Site_TA %in% c(1, 4, 6) & Year == 2023)
-  }
+    }
+          
       transect_SPES_TA <- subset_TAs(transect_SPES)
       quad1m_SPES_TA <- subset_TAs(quad1m_SPES)
       quad0.25m_SPES_TA <- subset_TAs(quad0.25m_SPES)
       limpet_SPES_TA <- subset_TAs(limpet_SPES)
   
-  # aggregate count data
-    aggregate_count_data_seasonal <- function(data, percent_cover_col, count_col, additional_count_col = NULL) {
+  # Aggregate seasonal organismal count data
+      # df:
+      # var:
+    aggregate_seasonal <- function(df, var) {
+        aggregate_mean <- aggregate(df[[var]], 
+                                    by = df[c("season", "Site_TA", "modified_TA")], 
+                                    FUN = mean, na.rm = TRUE)
+        colnames(aggregate_mean) <- c("season", "Site_TA", "modified_TA", "mean")
+        
+        aggregate_sd <- aggregate(df[[var]], 
+                                  by = df[c("season", "Site_TA", "modified_TA")], 
+                                  FUN = function(x) sd(x, na.rm = TRUE))
+        colnames(aggregate_sd) <- c("season", "Site_TA", "modified_TA", "sd")
+        
+        return(list(mean = aggregate_mean, sd = aggregate_sd))
+    }
+    
+  # Plot seasonal data
+    # df:
+    # y_var:
+    # ylab_text:
+    # title_text
+    plot_seasonal <- function(df, y_var, ylab_text, title_text) {
+      ggplot(df, aes(x = factor(modified_TA), y = {{y_var}}, fill = season)) +
+        geom_bar(stat = "identity", position = "dodge") +
+        geom_errorbar(aes(ymin = pmax({{y_var}} - sd, 0), 
+                          ymax = {{y_var}} + sd),
+                      position = position_dodge(width = 0.9), 
+                      width = 0.25) +
+        labs(x = "Site", y = ylab_text, title = title_text) +
+        scale_fill_discrete(name = "Season") +
+        theme_minimal() + 
+        ylim(0, 30) +
+        theme(plot.title=element_text(size=15), # change font size of plot title
+              axis.text=element_text(size=11), # change font size of axis text
+              axis.title=element_text(size=14), # change font size of axis titles
+              legend.text=element_text(size=11), # change font size of legend text
+              legend.title=element_text(size=14)) # change font size of legend title
+    }
+
+  # Aggregate seasonal algae and invertebrate percent cover and count data for their respective plots
+      # df:
+      # percent_cover_col:
+      # count_col:
+      # additional_count_col:
+    aggregate_cover_count_seasonal <- function(df, percent_cover_col, count_col, additional_count_col = NULL) {
       # Calculate mean percent cover and rounded mean count
-      total_cover_mean <- aggregate(data[[percent_cover_col]] ~ season + site_TA + modified_TA, data = data, FUN = function(x) mean(x))
+      total_cover_mean <- aggregate(df[[percent_cover_col]] ~ season + site_TA + modified_TA, data = df, FUN = function(x) mean(x))
       names(total_cover_mean) <- c("season", "site_TA", "modified_TA", "percent_cover") # Assign column names
       
-      count_rounded_mean <- aggregate(data[[count_col]] ~ season + site_TA + modified_TA, data = data, FUN = function(x) round(mean(x)))
+      count_rounded_mean <- aggregate(df[[count_col]] ~ season + site_TA + modified_TA, data = df, FUN = function(x) round(mean(x)))
       names(count_rounded_mean)[length(names(count_rounded_mean))] <- count_col # Assign column name as the original data column
       
       if (!is.null(additional_count_col)) {
-        additional_count_rounded_mean <- aggregate(data[[additional_count_col]] ~ season + site_TA + modified_TA, data = data, FUN = function(x) round(mean(x)))
+        additional_count_rounded_mean <- aggregate(df[[additional_count_col]] ~ season + site_TA + modified_TA, data = data, FUN = function(x) round(mean(x)))
         names(additional_count_rounded_mean)[length(names(additional_count_rounded_mean))] <- additional_count_col # Assign column name as the original data column
         
         total <- merge(total_cover_mean, count_rounded_mean, by = c("season", "site_TA", "modified_TA"))
@@ -1162,8 +1208,11 @@
       return(list(total = total, percent_sd = percent_sd))
     }
   
-  # seasonal stats
-    calculate_seasonality <- function(data1, data2, var_name) {
+  # Create a linear model for seasonal statistical analysis
+    # data1:
+    # data2:
+    # var_name:
+    lm_seasonality <- function(data1, data2, var_name) {
       # Create data frames for each dataset
         Stats1 <- data.frame(DOY = data1$DOY, 
                            data1[[var_name]])
@@ -1183,150 +1232,79 @@
         return(summary(Seasonality))
     }
 
-# Transect data - fix aesthetics, stats done
+# Transect data - error bar being weird (otherwise done)
   #=================================================================================================================================
-    names(transect_ENVR)[names(transect_ENVR) == "Density_of_Sea_Stars_count"] <- "Density_of_Sea_Stars_Count"
+   # Density of sea stars at each measured site (TA-1,4, and 6) from spring/summer 2023-winter 2024
+    # Determine mean count and standard deviation of SPES and ENVR data
+      ss_agg_SPES <- aggregate_seasonal(transect_SPES_TA, "Density_of_Sea_Stars_Count")
+      ss_agg_ENVR <- aggregate_seasonal(transect_ENVR, "Density_of_Sea_Stars_Count")
     
-    ss_agg_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, data = transect_SPES_TA, FUN = function(x) round(mean(x)))
+    # Combine the count and standard deviation into a single dataframe
+      ss_agg_combined <- rbind(ss_agg_SPES[["mean"]], ss_agg_ENVR[["mean"]])
+      ss_agg_sd_combined <- rbind(ss_agg_SPES[["sd"]], ss_agg_ENVR[["sd"]])
     
-    # Calculate standard deviation of sea stars count by season and Site_TA for SPES data
-    ss_agg_sd_SPES <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, 
-                                data = transect_SPES_TA, 
-                                FUN = function(x) sd(x, na.rm = TRUE))
-      names(ss_agg_sd_SPES)[names(ss_agg_sd_SPES) == "Density_of_Sea_Stars_Count"] <- "sd_ss"
-
-    ss_agg_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, data = transect_ENVR, FUN = function(x) round(mean(x)))
+        ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA", "modified_TA"))
     
-    # Calculate standard deviation of sea stars count by season and Site_TA for ENVR data
-    ss_agg_sd_ENVR <- aggregate(cbind(Density_of_Sea_Stars_Count) ~ season + Site_TA + modified_TA, 
-                                data = transect_ENVR, 
-                                FUN = function(x) sd(x, na.rm = TRUE))
+    # Plot data
+      ss_count_seasonal <- plot_seasonal(ss_merge, mean, "Density of Sea Stars (Count)", "Density of Sea Stars from May 2023 - February 2024")
+        ss_count_seasonal
     
-    # Rename standard deviation column for consistency
-    names(ss_agg_sd_ENVR)[names(ss_agg_sd_ENVR) == "Density_of_Sea_Stars_Count"] <- "sd_ss"
-    
-    # Combine aggregated data and standard deviation data for both datasets
-    ss_agg_combined <- rbind(ss_agg_SPES, ss_agg_ENVR)
-    ss_agg_sd_combined <- rbind(ss_agg_sd_SPES, ss_agg_sd_ENVR)
-    
-    ss_merge <- merge(ss_agg_combined, ss_agg_sd_combined, by = c("season", "Site_TA", "modified_TA"))
-    
-    plot_ss <- function(data, y_variable, title, x_label, y_label) {
-      ggplot(data, aes(x = factor(modified_TA), y = !!sym(y_variable), fill = season)) +
-        geom_bar(stat = "identity", position = "dodge") +
-        geom_errorbar(aes(ymin = pmax(!!sym(y_variable) - sd_ss, 0), 
-                          ymax = !!sym(y_variable) + sd_ss),
-                      position = position_dodge(width = 0.9), 
-                      width = 0.25) +
-        labs(x = x_label, y = y_label, title = title) +
-        scale_fill_discrete(name = "Season") +
-        theme_minimal() +
-        theme(plot.title=element_text(size=15), #change font size of plot title
-              axis.text=element_text(size=11), #change font size of axis text
-              axis.title=element_text(size=14), #change font size of axis titles
-              legend.text=element_text(size=11), #change font size of legend text
-              legend.title=element_text(size=14)) #change font size of legend title
-    }
-    
-    SS_Seasonal <- plot_ss(data = ss_merge, y_variable = "Density_of_Sea_Stars_Count", 
-            title = "Density of Sea Stars from May 2023 - February 2024", 
-            x_label = "Site", y_label = "Density of Sea Stars (Count)")
-    SS_Seasonal
-    
-    # stats
-      calculate_seasonality(transect_SPES_TA, transect_ENVR, 
-                          "Density_of_Sea_Stars_Count")
+    # Statistical analysis - linear regression model
+      lm_seasonality(transect_SPES_TA, transect_ENVR, "Density_of_Sea_Stars_Count")
         # Adjusted R-squared = 0.04474
         # p-value = 0.1135
       
   #=================================================================================================================================
     
-# Limpet data - fix aesthetics, stats done
+# Limpet data - quick documentation needed
   #=================================================================================================================================
-    # Aggregate data by Site_TA
-    limp_agg_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, data = limpet_SPES_TA, FUN = mean, na.action = na.omit)
-    limp_agg_sd_SPES <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, 
-                             data = limpet_SPES_TA, 
-                             FUN = function(x) sd(x, na.rm = TRUE),
-                             na.action = na.omit)
-      names(limp_agg_sd_SPES)[names(limp_agg_sd_SPES) == "Mean_Length_mm"] <- "sd_length"
-      names(limp_agg_sd_SPES)[names(limp_agg_sd_SPES) == "Mean_Width_mm"] <- "sd_width"
-
-    limp_agg_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, data = limpet_ENVR, FUN = mean, na.action = na.omit)
-    limp_agg_sd_ENVR <- aggregate(cbind(Mean_Length_mm, Mean_Width_mm) ~ season + Site_TA + modified_TA, data = limpet_ENVR, FUN = function(x) sd(x, na.rm = TRUE), na.action = na.omit)
-      names(limp_agg_sd_ENVR)[names(limp_agg_sd_ENVR) == "Mean_Length_mm"] <- "sd_length"
-      names(limp_agg_sd_ENVR)[names(limp_agg_sd_ENVR) == "Mean_Width_mm"] <- "sd_width"
-    
-    limp_agg_combined <- rbind(limp_agg_SPES, limp_agg_ENVR)
-    limp_agg_sd_combined <- rbind(limp_agg_sd_SPES, limp_agg_sd_ENVR)
+    # Seasonal limpet length from spring/summer 2023 - winter 2024
+      # 
+      length_agg_SPES <- aggregate_seasonal(limpet_SPES_TA, "Mean_Length_mm")
+      length_agg_ENVR <- aggregate_seasonal(limpet_ENVR, "Mean_Length_mm")
       
-    limpet_merge <- merge(limp_agg_combined, limp_agg_sd_combined, by = c("season", "Site_TA", "modified_TA"))
-
-    # plot length
-   plot_limpet_length_season <- ggplot(limpet_merge, aes(x = factor(modified_TA), y = Mean_Length_mm, fill = season)) +
-        geom_bar(stat = "identity", position = "dodge") +
-        geom_errorbar(aes(ymin = pmax(Mean_Length_mm - sd_length, 0), 
-                          ymax = Mean_Length_mm + sd_length),
-                      position = position_dodge(width = 0.9), 
-                      width = 0.25) +
-        labs(x = "Site", y = "Mean Length (mm)", title = "Mean Length of Limpets from May 2023 - February 2024") +
-        scale_fill_discrete(name = "Season") +
-        theme_minimal() + 
-        ylim(0, 30) +
-        theme(plot.title=element_text(size=15), #change font size of plot title
-           axis.text=element_text(size=11), #change font size of axis text
-           axis.title=element_text(size=14), #change font size of axis titles
-           legend.text=element_text(size=11), #change font size of legend text
-           legend.title=element_text(size=14)) #change font size of legend title
-   
-    plot_limpet_length_season
+      # 
+      length_agg_combined <- rbind(length_agg_SPES[["mean"]], length_agg_ENVR[["mean"]])
+      length_agg_sd_combined <- rbind(length_agg_SPES[["sd"]], length_agg_ENVR[["sd"]]) 
       
-    # plot width
-    plot_limpet_width_season <- ggplot(limpet_merge, aes(x = factor(modified_TA), y = Mean_Width_mm, fill = season)) +
-      geom_bar(stat = "identity", position = "dodge") +
-      geom_errorbar(aes(ymin = pmax(Mean_Width_mm - sd_width, 0), 
-                        ymax = Mean_Width_mm + sd_length),
-                    position = position_dodge(width = 0.9), 
-                    width = 0.25) +
-      labs(x = "Site", y = "Mean Width (mm)", title = "Mean Width of Limpets from May 2023 - February 2024") +
-      scale_fill_discrete(name = "Season") +
-      theme_minimal() +
-      ylim(0, 30) +
-      theme(plot.title=element_text(size=15), #change font size of plot title
-            axis.text=element_text(size=11), #change font size of axis text
-            axis.title=element_text(size=14), #change font size of axis titles
-            legend.text=element_text(size=11), #change font size of legend text
-            legend.title=element_text(size=14)) #change font size of legend title
+        length_merge <- merge(length_agg_combined, length_agg_sd_combined, by = c("season", "Site_TA", "modified_TA"))
+  
+      # Plot data
+        limpet_length_plot_seasonal <- plot_limpet_season(length_merge, mean, "Mean Length (mm)", "Mean Length of Limpets from May 2023 - February 2024")
+          limpet_length_plot_seasonal
     
-    plot_limpet_width_season  
+    # Seasonal limpet width from spring/summer 2023 - winter 2024
+      # 
+      width_agg_SPES <- aggregate_seasonal(limpet_SPES_TA, "Mean_Width_mm")
+      width_agg_ENVR <- aggregate_seasonal(limpet_ENVR, "Mean_Width_mm")
+      
+      # 
+      width_agg_combined <- rbind(width_agg_SPES[["mean"]], width_agg_ENVR[["mean"]])
+      width_agg_sd_combined <- rbind(width_agg_SPES[["sd"]], width_agg_ENVR[["sd"]]) 
+      
+        width_merge <- merge(width_agg_combined, width_agg_sd_combined, by = c("season", "Site_TA", "modified_TA"))
+  
+      # Plot data
+        limpet_width_plot_seasonal <- plot_limpet_season(width_merge, mean, "Mean Width (mm)", "Mean Width of Limpets from May 2023 - February 2024")
+          limpet_width_plot_seasonal
     
-    
-    # length
-      plot_ss(limpet_merge, "Mean_Length_mm",
-              title = "Mean Length of Limpets from May 2023 - February 2024", 
-              x_label = "Site TA", y_label = "Mean Length of Limpets (mm)")
-      # width
-      plot_ss(limpet_merge, "Mean_Width_mm")
-    
-    # stats
-      # Length
-        calculate_seasonality(limpet_SPES_TA, limpet_ENVR, 
-                              "Mean_Length_mm")
+    # Statistical analysis - linear regression model
+      # Limpet length
+        lm_seasonality(limpet_SPES_TA, limpet_ENVR, "Mean_Length_mm")
           # Adjusted R-squared = 0.7297
           # p-value = 1.963e-13
         
-      # Width
-        calculate_seasonality(limpet_SPES_TA, limpet_ENVR, 
-                                "Mean_Width_mm")
+      # Limpet width
+        lm_seasonality(limpet_SPES_TA, limpet_ENVR, "Mean_Width_mm")
             # Adjusted R-squared = 0.7352
             # p-value = 1.287e-13
   #=================================================================================================================================
 
-# 0.25m data - need to fix percent cover graphs and make individual graphs, stats done
+# 0.25m data - halfway there
   #=================================================================================================================================
-  #Percent cover 
+  # Total and proportional percent cover of algae and invertebrates per sampled TA from spring/summer 2023-winter 2024
     # Select Data
-      cover_SPES_seasonal <- select_total_cover(quad0.25m_SPES, include_year = FALSE, include_season = TRUE)
+      cover_SPES_seasonal <- select_total_cover(quad0.25m_SPES_TA, include_year = FALSE, include_season = TRUE)
       cover_ENVR_seasonal <- select_total_cover(quad0.25m_ENVR, include_year = FALSE, include_season = TRUE)
       
     # Aggregate SPES and ENVR data and combine into one dataframe
@@ -1354,26 +1332,13 @@
               strip.text = element_text(size = 11))
       total_cover_seasonal
 
-      # stats
-        # Total cover
-          calculate_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, 
-                                "Total_Cover")
+      # Statistical analysis - linear regression model
+        # Total percent cover
+          lm_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, "Total_Cover")
               # Adjusted R-squared = -0.004734
               # p-value = 0.6075
-          
-          # Relative Algae
-            calculate_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, 
-                                    "Adjusted_Algae_Cover")
-                # Adjusted R-squared = -0.006537
-                # p-value = 0.8097
               
-          # Relative Invertebrates
-            calculate_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, 
-                                  "Adjusted_Invert_Cover")
-                  # Adjusted R-squared = -0.006866
-                  # p-value = 0.916
-              
-  # Seasonal Algae Cover and Count
+  # Percent cover of algae and count of species per sampled TA from spring/summer 2023 - winter 2024
     # Select data
       algae_SPES_seasonal <- select_algae(quad0.25m_SPES_TA, include_year = FALSE, include_season = TRUE)
       algae_ENVR_seasonal <- select_algae(quad0.25m_ENVR, include_year = FALSE, include_season = TRUE)
@@ -1413,6 +1378,12 @@
                   strip.text = element_text(size = 11))
 
         algae_cover_seasonal
+        
+      # Statistical analysis - linear regression model
+        # Algae percent cover
+        lm_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, "Algae_Cover")
+          # Adjusted R-squared = -0.002941
+          # p-value = 0.4625
           
   # Seasonal Invertebrate Cover and Count
     # Select data
@@ -1454,6 +1425,12 @@
             guides(fill = guide_legend(order = 2), color = guide_legend(order = 1))
           
           invert_cover_seasonal
+          
+      # Statistical analysis - linear regression model
+        # Invertebrate percent cover
+          lm_seasonality(quad0.25m_SPES_TA, quad0.25m_ENVR, "Invertebrates_Cover")
+          # Adjusted R-squared = -0.003061
+          # p-value = 0.4702
   #=================================================================================================================================
   
 # Abiotic Analysis

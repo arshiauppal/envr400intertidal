@@ -32,7 +32,7 @@
     
 # Clean data
 #===================================================================================================================================
-# Functions
+# Functions - DONE
   #=================================================================================================================================
   # Extracts the year from the date column to create a new column
       # df: the dataframe that the year needs to be extracted from
@@ -99,7 +99,7 @@
     
   #=================================================================================================================================
   
-# SPES data cleaning
+# SPES data cleaning - DONE
   #=================================================================================================================================
   # Add year column
     transect_SPES <- add_year_column(transect_SPES, "Date")
@@ -145,7 +145,7 @@
     
   #=================================================================================================================================
 
-# ENVR 400 2024 data cleaning
+# ENVR 400 2024 data cleaning - DONE
   #=================================================================================================================================
   # Add year column
     transect_ENVR <- add_year_column(transect_ENVR, "Date") 
@@ -198,7 +198,7 @@
       
   #=================================================================================================================================
 
-# Abiotic data cleaning
+# Abiotic data cleaning - DONE
   #=================================================================================================================================
   # Separate date and time from tide data
     tide <- tide %>%
@@ -223,9 +223,12 @@
     weather$month <- month(as.Date(weather$date))
   #=================================================================================================================================
 
-# General visualization functions
+# General visualization functions - FINISH DOCUMENTATION
   #================================================================================================================================
   # Plot the total, algae and invertebrate percent cover across the intertidal zone height
+    # df:
+    # color_scale:
+    # plot_title:
     cover_intertidal_height <- function(df, color_scale = c("low" = "lightblue", "high" = "darkblue"), plot_title = "Intertidal Height and Mean Percent Cover") {
       selected_data <- data.frame(
         intertidal_height = df$intertidal_height,
@@ -261,6 +264,9 @@
     }
   
   # Create a dataframe for the total percent cover plot
+    # df:
+    # include_year:
+    # include_season:
     select_total_cover <- function(df, include_year = TRUE, include_season = TRUE) {
       if (include_year & include_season) {
         cover <- data.frame(
@@ -305,6 +311,9 @@
     }
   
   # Create a dataframe for the alage percent cover and species count plot
+    # df:
+    # include_year:
+    # include_season:
     select_algae <- function(df, include_year = TRUE, include_season = TRUE) {
       if (include_year & include_season) {
         algae_data <- data.frame(
@@ -345,6 +354,9 @@
     }
     
   # Create a dataframe for the invertebrate percent cover and species count plot
+    # df:
+    # include_year:
+    # include_season:
     select_invertebrate <- function(df, include_year = TRUE, include_season = TRUE) {
       if (include_year & include_season) {
         invertebrates_data <- data.frame(
@@ -388,24 +400,11 @@
       return(invertebrates_data)
     }
     
-  # Aggregate total percent cover data for the percent cover plots
-    aggregate_cover_data <- function(df, cover_cols, season_col = "season", site_TA_col = "site_TA", modified_TA_col = "modified_TA") {
-      # Aggregate mean cover data
-      cover_agg <- aggregate(. ~ season + site_TA + modified_TA, data = df[, c(cover_cols, season_col, site_TA_col, modified_TA_col)], FUN = mean, na.action = na.omit)
-      
-      # Aggregate standard deviation of cover data
-      cover_agg_sd <- aggregate(df[[cover_cols[3]]] ~ season + site_TA + modified_TA, data = df[, c(cover_cols[3], season_col, site_TA_col, modified_TA_col)], FUN = function(x) sd(x, na.rm = TRUE), na.action = na.omit)
-      
-      # Rename the standard deviation column
-      colnames(cover_agg_sd) <- c(season_col, site_TA_col, modified_TA_col, "cover_sd")
-      
-      # Merge aggregated data
-      cover_merge <- merge(cover_agg, cover_agg_sd, by = c(season_col, site_TA_col, modified_TA_col))
-      
-      return(cover_merge)
-    }
-    
   # Aggregate algae and invertebrate percent cover and count data for their respective plots
+    # df: The dataframe which contains the data to be aggregated
+    # percent_cover_col: The column which contains the algae or invertebrates percent cover data
+    # count_col: The column which contains the algae species count data or sessile species count data
+    # additional_count_col: Only used if aggregating invertebrate data - lets you aggreate the additional mobile species count data
     aggregate_count_data <- function(df, percent_cover_col, count_col, additional_count_col = NULL) {
       # Check if "year" column exists in the df
       if ("year" %in% colnames(df)) {
@@ -464,9 +463,13 @@
     
 # SPES Data Analysis
 #=================================================================================================================================
-# SPES visualization functions 
+# SPES visualization functions - DONE
   #=================================================================================================================================
   # Generate a plot of the mean count of a variable for every site for every year.
+    # df: The dataframe that contains the variable being plotted
+    # varname: The variable to be plotted
+    # plot_title: The title of the plot
+    # plot_yaxis: The title of the y-axis
     plot_count_SPES <- function(df, varname, plot_title, plot_yaxis){
       
       # create data frame with relevant columns
@@ -498,9 +501,11 @@
     }
     
   # Generate a presence/absence plot of sea star species across all sites and time
+    # df: The dataframe which contains the variable being plotted
+    # species_column: The column which contains the species presence/absence data
     presence_absence_SPES <- function(df, species_column) {
       df <- data.frame(Year = df$Year,
-          Site_TA = df$modified_TA,
+          Site_TA = df$Site_TA,
           Species = df[,species_column])
       df <- df[complete.cases(df),]
 
@@ -527,19 +532,23 @@
     }
     
   # Generate a plot of mean limpet size measurements (length and width) across all sites and years
-    limpet_plots_SPES <- function(df, agg_variable, plot_title, plot_yaxis) {
-      agg_mean <- aggregate(get(agg_variable) ~ Year + modified_TA, data = df, FUN = mean)
-      names(agg_mean)[3] <- paste("mean_", agg_variable, sep = "")
+    # df: The dataframe which contains the variable being plotted
+    # varname: The variable to be plotted
+    # plot_title: The title of the plot
+    # plot_yaxis: The title of the y-axis
+    limpet_plots_SPES <- function(df, varname, plot_title, plot_yaxis) {
+      agg_mean <- aggregate(get(varname) ~ Year + modified_TA, data = df, FUN = mean)
+      names(agg_mean)[3] <- paste("mean_", varname, sep = "")
       
-      agg_sd <- aggregate(get(agg_variable) ~ Year + modified_TA, data = df, FUN = function(x) sd(x))
-      names(agg_sd)[3] <- paste("sd_", agg_variable, sep = "")
+      agg_sd <- aggregate(get(varname) ~ Year + modified_TA, data = df, FUN = function(x) sd(x))
+      names(agg_sd)[3] <- paste("sd_", varname, sep = "")
       
       agg_all <- left_join(agg_mean, agg_sd, by = c("Year", "modified_TA"))
       
-      ggplot(data = agg_all, aes(x = Year, y = get(paste("mean_", agg_variable, sep = "")), group = modified_TA, fill = Year)) +
+      ggplot(data = agg_all, aes(x = Year, y = get(paste("mean_", varname, sep = "")), group = modified_TA, fill = Year)) +
         geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
-        geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), 
-                          ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
+        geom_errorbar(aes(ymin = get(paste("mean_", varname, sep = "")) - get(paste("sd_", varname, sep = "")), 
+                          ymax = get(paste("mean_", varname, sep = "")) + get(paste("sd_", varname, sep = ""))),
                       position = position_dodge(width = 0.9), width = 0.25) +
         facet_wrap(~modified_TA) +
         ylab(plot_yaxis) +
@@ -557,6 +566,10 @@
     }
   
   # Generate a plot of species count along intertidal height
+    # df: The dataframe which contains the variable being plotted
+    # count_variable: The organismal count variable to be plotted
+    # scale_fill: The colour scheme for the plot
+    # plot_title: The title of the plot
     plot_count_intertidal_height <- function(df, count_variable, scale_fill = c("lightblue", "darkblue"), plot_title) {
       # Aggregate the data for the specified count variable
       agg_data <- aggregate(df[[count_variable]], by = list(df$intertidal_height), FUN = function(x) round(mean(x, na.rm = TRUE)))
@@ -581,7 +594,7 @@
 
   #=================================================================================================================================
   
-# Transect data visualizations and statistics - PRESENCE ABSENCE NOT WORKING
+# Transect data visualizations and statistics - DONE
   #=================================================================================================================================
   # Density of sea stars per TA from summer 2019-2023
     SS_density_SPES <- plot_count_SPES(transect_SPES, "Density_of_Sea_Stars_Count", 
@@ -844,13 +857,20 @@
 
 # ENVR 400 2024 Data Analysis
 #=================================================================================================================================
-# ENVR 400 2024 visualization functions
+# ENVR 400 2024 visualization functions - FINISH DOCUMENTATION
   #=================================================================================================================================
   # Colours of the three sampled sites (TA-1, TA-4, and TA-6)
+    # skyblue2: TA-1
+    # orchard2: TA-4
+    # coral: TA-6
     site_colors_ENVR <- c("skyblue2", "orchid2", "coral")
     
   # Generate a plot of the mean count of a variable at the three sampled sites
-    plot_count_ENVR <- function(df, varname, plot_varname, plot_title){
+    # df:
+    # varname:
+    # plot_yaxis:
+    # plot_title:
+    plot_count_ENVR <- function(df, varname, plot_yaxis, plot_title){
       
       # create data frame with relevant columns
       df_var <- data.frame(site_TA = df$modified_TA,
@@ -868,7 +888,7 @@
         geom_bar(stat = "identity", position = "dodge") +
         geom_errorbar(aes(ymin = pmax(mean_count - sd_count, 0), ymax = mean_count + sd_count),
                       position = position_dodge(width = 0.9), width = 0.25) +
-        ylab(plot_varname) + xlab("Site") + labs(title = plot_title, fill = "Site") +
+        ylab(plot_yaxis) + xlab("Site") + labs(title = plot_title, fill = "Site") +
         scale_fill_manual(values = site_colors_ENVR) +
         theme_minimal() +
         theme(plot.title=element_text(size=15), #change font size of plot title
@@ -879,7 +899,10 @@
   }
     
   # Generate a presence/absence plot of sea star species across the three sampled sites
-    presence_absence_ENVR <- function(df, species_column, plot_varname) {
+    # df:
+    # species_column:
+    # plot_yaxis:
+    presence_absence_ENVR <- function(df, species_column, plot_yaxis) {
       df <- data.frame(Site_TA = df$Site_TA,
                        Species = df[[species_column]])
       
@@ -894,20 +917,27 @@
       
       ggplot(df_merge, aes(x = as.character(Site_TA), y = "", fill = Species)) +
         geom_tile(colour ='black') +
-        scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red",
-                          labels = c("TRUE" = "Present", "FALSE" = "Absent")), 
-                          na.value = "gray", drop=FALSE) +
-        labs(x = "Sampling Site", y = plot_varname,
-             title = "Sea Star Presence Absence in Winter 2023/2024", fill = paste0(species_column, " Presence/Absence")) +
+        scale_fill_manual(values = c("green", "red", "gray"),
+                          labels = c("Present", "Absent", "Not Counted"),
+                          na.value = "gray",
+                          drop = FALSE) +
+        labs(x = "Sampling Site", y = plot_yaxis,
+             title = "Sea Star Presence Absence in Winter 2023/2024",
+             fill = paste0(species_column, " Presence/Absence")) +
         theme_minimal() +
         theme(panel.grid.major = element_line(color = "black", size = 0.5),  # Customize major gridlines
               panel.grid.minor = element_blank(),  # Remove minor gridlines
               axis.text.y = element_text(angle = 0, hjust = 0.5)) +
         scale_y_discrete(breaks = unique(df_merge$Site_TA))  # Set breaks for y-axis
+      
     }
-  
+
   # Generate a plot of mean limpet size measurements (length and width) across the three sampled sites
-    limpet_plots_ENVR <- function(df, agg_variable, plot_varname, plot_title) {
+    # df:
+    # agg_variable:
+    # plot_yaxis:
+    # plot_title:
+    limpet_plots_ENVR <- function(df, agg_variable, plot_yaxis, plot_title) {
     agg_mean <- aggregate(get(agg_variable) ~ modified_TA, data = df, FUN = mean)
     names(agg_mean)[2] <- paste("mean_", agg_variable, sep = "")
     
@@ -920,8 +950,7 @@
       geom_bar(stat = "identity", position = "dodge") +
       geom_errorbar(aes(ymin = get(paste("mean_", agg_variable, sep = "")) - get(paste("sd_", agg_variable, sep = "")), ymax = get(paste("mean_", agg_variable, sep = "")) + get(paste("sd_", agg_variable, sep = ""))),
                     position = position_dodge(width = 0.9), width = 0.25) +
-      ylab(plot_varname) +
-      xlab("Site") +
+      ylab(plot_yaxis) + xlab("Site") +
       labs(fill = "Site", title = plot_title) +
       scale_fill_manual(values = site_colors_ENVR) +
       scale_y_continuous(limits = c(0, 33)) +
@@ -935,10 +964,10 @@
   
   #=================================================================================================================================
 
-# Transect - cant change TRUE/FALSE to Present/Absent 
+# Transect - DONE 
   #=================================================================================================================================
   # Density of sea stars per TA 
-    SS_density_ENVR <- plot_count_ENVR(transect_ENVR, "Density_of_Sea_Stars_count", "Mean Count of Sea Stars",
+    SS_density_ENVR <- plot_count_ENVR(transect_ENVR, "Density_of_Sea_Stars_Count", "Mean Count of Sea Stars",
                                                  "Mean Count of Sea Stars during Winter 2023/2024")
       SS_density_ENVR
       
@@ -1178,6 +1207,23 @@
               legend.title=element_text(size=14)) # change font size of legend title
     }
 
+  # Aggregate total percent cover data for the percent cover plots
+    aggregate_cover_data_seasonal <- function(df, cover_cols, season_col = "season", site_TA_col = "site_TA", modified_TA_col = "modified_TA") {
+      # Aggregate mean cover data
+      cover_agg <- aggregate(. ~ season + site_TA + modified_TA, data = df[, c(cover_cols, season_col, site_TA_col, modified_TA_col)], FUN = mean, na.action = na.omit)
+      
+      # Aggregate standard deviation of cover data
+      cover_agg_sd <- aggregate(df[[cover_cols[3]]] ~ season + site_TA + modified_TA, data = df[, c(cover_cols[3], season_col, site_TA_col, modified_TA_col)], FUN = function(x) sd(x, na.rm = TRUE), na.action = na.omit)
+      
+      # Rename the standard deviation column
+      colnames(cover_agg_sd) <- c(season_col, site_TA_col, modified_TA_col, "cover_sd")
+      
+      # Merge aggregated data
+      cover_merge <- merge(cover_agg, cover_agg_sd, by = c(season_col, site_TA_col, modified_TA_col))
+      
+      return(cover_merge)
+    }
+    
   # Aggregate seasonal algae and invertebrate percent cover and count data for their respective plots
       # df:
       # percent_cover_col:
@@ -1209,17 +1255,17 @@
     }
   
   # Create a linear model for seasonal statistical analysis
-    # data1:
-    # data2:
-    # var_name:
-    lm_seasonality <- function(data1, data2, var_name) {
+    # df1: The first dataframe used in the linear model - generally SPES data
+    # df2: The second dataframe used in the linear model - generally ENVR data
+    # var_name: The predictor variable - day of year in this case
+    lm_seasonality <- function(df1, df2, var_name) {
       # Create data frames for each dataset
-        Stats1 <- data.frame(DOY = data1$DOY, 
-                           data1[[var_name]])
+        Stats1 <- data.frame(DOY = df1$DOY, 
+                           df1[[var_name]])
           names(Stats1)[2] <- var_name
       
-        Stats2 <- data.frame(DOY = data2$DOY, 
-                           data2[[var_name]])
+        Stats2 <- data.frame(DOY = df2$DOY, 
+                           df2[[var_name]])
           names(Stats2)[2] <- var_name
       
       # Combine data frames from both datasets
@@ -1433,10 +1479,10 @@
           # p-value = 0.4702
   #=================================================================================================================================
   
-# Abiotic Analysis
+# Abiotic Statistical Analysis
 #=================================================================================================================================
-# Find average time of lowest low tide  per month 
-  # Time of lowest low tide height 
+# Monthly average time of lowest low tide and maximum and miniumum temperatures from Janurary 2019-2024
+  # Find the average time of lowest low tide
     monthly_low_tide_time <- tide %>%
       group_by(month, Year) %>%
       summarise(hour_of_min_tide = hour[which.min(SLEV_metres)])
@@ -1444,7 +1490,7 @@
       group_by(month) %>%
       summarise(low_tide_time = mean(hour_of_min_tide))
   
-  # Min temperature 
+  # Find monthly maximum and minimum temperatures
     summarize_monthly_temperature <- function(weather, summary_type = "max") {
       if(summary_type == "max") {
         summarized_data <- weather %>%
@@ -1464,32 +1510,27 @@
       
       return(summarized_data)
     }
-    
-    monthly_min_temperature <- summarize_monthly_temperature(weather, summary_type = "min")
-    monthly_max_temperature <- summarize_monthly_temperature(weather, summary_type = "max")
+      monthly_min_temperature <- summarize_monthly_temperature(weather, summary_type = "min")
+      monthly_max_temperature <- summarize_monthly_temperature(weather, summary_type = "max")
   
-  # merge the abotic dfs by month 
+  # Merge the tide data with the temperature data
     monthly_temperature_data <- merge(monthly_max_temperature, monthly_min_temperature, by = "month")
     monthly_abiotic_data <- merge(monthly_temperature_data, average_low_tide_time, by = "month")
 
-  # plotting - time of minimum tide height - need to figure out temperature scale 
-    monthly_abiotic_data$month <- factor(monthly_abiotic_data$month, levels = 1:12,
-                                         labels = c("January", "February", "March", "April", "May", "June",
-                                                    "July", "August", "September", "October", "November", "December"))
-    file_path <- "~/Desktop/abiotic.csv"
-    write.csv(monthly_abiotic_data, file = file_path, row.names = FALSE)
-    
-  # Create the plot
-    ggplot(monthly_abiotic_data, aes(x = month)) +
-      geom_bar(aes(y = low_tide_time), stat = "identity") +
-      geom_line(aes(y = Avg_Max_Temp, group = 1, color = "Maximum"), show.legend = TRUE) +
-      geom_line(aes(y = Avg_Min_Temp, group = 1, color = "Minimum"), show.legend = TRUE) +
-      scale_y_continuous(name = "Temperature (°C)", limits = c(-5, 33), sec.axis = sec_axis(~. - 5, name = "Low Tide Time (hrs)")) +
-      coord_cartesian(ylim = c(-5, 33)) +  
-      labs(x = "Month",
-           y = "Low Tide Time (hrs)",
-           title = "Average Time of the Lowest Low Tide and Average Maximum and Minimum Temperatures",
-           color = "Temperature") +
-      theme_minimal()
-    
+  # Generate the plot
+    # Generate monthly labels
+      monthly_abiotic_data$month <- factor(monthly_abiotic_data$month, levels = 1:12,
+                                         labels = c("January", "February", "March", "April", "May", "June","July", "August", "September", "October", "November", "December"))
+    # Create the plot
+      ggplot(monthly_abiotic_data, aes(x = month)) +
+        geom_bar(aes(y = low_tide_time), stat = "identity") +
+        geom_line(aes(y = Avg_Max_Temp, group = 1, color = "Maximum"), show.legend = TRUE) +
+        geom_line(aes(y = Avg_Min_Temp, group = 1, color = "Minimum"), show.legend = TRUE) +
+        scale_y_continuous(name = "Temperature (°C)", limits = c(-5, 33), sec.axis = sec_axis(~. - 5, name = "Low Tide Time (hrs)")) +
+        coord_cartesian(ylim = c(-5, 33)) +  
+        labs(x = "Month",
+            y = "Low Tide Time (hrs)",
+            title = "Average Time of the Lowest Low Tide and Average Maximum and Minimum Temperatures",
+            color = "Temperature") +
+        theme_minimal()
 #=================================================================================================================================

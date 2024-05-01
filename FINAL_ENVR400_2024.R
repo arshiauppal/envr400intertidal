@@ -32,7 +32,7 @@
     
 # Clean data
 #===================================================================================================================================
-# Functions - DONE
+# Functions
   #=================================================================================================================================
   # Extracts the year from the date column to create a new column
       # df: the dataframe that the year needs to be extracted from
@@ -99,7 +99,7 @@
     
   #=================================================================================================================================
   
-# SPES data cleaning - DONE
+# SPES data cleaning
   #=================================================================================================================================
   # Add year column
     transect_SPES <- add_year_column(transect_SPES, "Date")
@@ -145,7 +145,7 @@
     
   #=================================================================================================================================
 
-# ENVR 400 2024 data cleaning - DONE
+# ENVR 400 2024 data cleaning
   #=================================================================================================================================
   # Add year column
     transect_ENVR <- add_year_column(transect_ENVR, "Date") 
@@ -198,7 +198,7 @@
       
   #=================================================================================================================================
 
-# Abiotic data cleaning - DONE
+# Abiotic data cleaning 
   #=================================================================================================================================
   # Separate date and time from tide data
     tide <- tide %>%
@@ -223,7 +223,7 @@
     weather$month <- month(as.Date(weather$date))
   #=================================================================================================================================
 
-# General visualization functions - DONE
+# General visualization functions
   #================================================================================================================================
   # Plot the total, algae and invertebrate percent cover across the intertidal zone height
     # df: the dataframe that contains the percent cover data
@@ -268,45 +268,20 @@
     # include_year: selection if the dataframe should include the year or not - TRUE for SPES data for yearly analysis
     # include_season: selection if the dataframe should include the season or not - TRUE for SPES and ENVR data for seasonal analysis
     select_total_cover <- function(df, include_year = TRUE, include_season = TRUE) {
-      if (include_year & include_season) {
-        cover <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          year = df$Year,
-          season = df$season,
-          total_cover = df$Total_Cover,
-          algae_cover = df$Adjusted_Algae_Cover,
-          invert_cover = df$Adjusted_Invert_Cover
-        )
-      } else if (include_year & !include_season) {
-        cover <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          year = df$Year,
-          total_cover = df$Total_Cover,
-          algae_cover = df$Adjusted_Algae_Cover,
-          invert_cover = df$Adjusted_Invert_Cover
-        )
-      } else if (!include_year & include_season) {
-        cover <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          season = df$season,
-          total_cover = df$Total_Cover,
-          algae_cover = df$Adjusted_Algae_Cover,
-          invert_cover = df$Adjusted_Invert_Cover
-        )
-      } else {
-        cover <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          total_cover = df$Total_Cover,
-          algae_cover = df$Adjusted_Algae_Cover,
-          invert_cover = df$Adjusted_Invert_Cover
-        )
-      }
+      # Subset the data based on the selected options
+      cover <- data.frame(
+        site_TA = df$Site_TA,
+        modified_TA = df$modified_TA,
+        year = if(include_year) df$Year else NULL,
+        season = if(include_season) df$season else NULL,
+        total_cover = df$Total_Cover,
+        algae_cover = df$Adjusted_Algae_Cover,
+        invert_cover = df$Adjusted_Invert_Cover
+      )
       
+      # Remove rows with missing or non-numeric values in any of the cover columns
       cover <- cover[complete.cases(cover$total_cover) & complete.cases(cover$algae_cover) & complete.cases(cover$invert_cover), ]
+      
       return(cover)
     }
   
@@ -315,41 +290,19 @@
     # include_year: selection if the dataframe should include the year or not - TRUE for SPES data for yearly analysis
     # include_season: selection if the dataframe should include the season or not - TRUE for SPES and ENVR data for seasonal analysis
     select_algae <- function(df, include_year = TRUE, include_season = TRUE) {
-      if (include_year & include_season) {
-        algae_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          year = df$Year,
-          season = df$Season,
-          algae_percent_cover = df$Algae_Cover,
-          algae_count = df$Algae_Count
-        )
-      } else if (include_year & !include_season) {
-        algae_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          year = df$Year,
-          algae_percent_cover = df$Algae_Cover,
-          algae_count = df$Algae_Count
-        )
-      } else if (!include_year & include_season) {
-        algae_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          season = df$Season,
-          algae_percent_cover = df$Algae_Cover,
-          algae_count = df$Algae_Count
-        )
-      } else {
-        algae_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          algae_percent_cover = df$Algae_Cover,
-          algae_count = df$Algae_Count
-        )
-      }
+      # Subset the data based on the selected options
+      algae_data <- data.frame(
+        site_TA = df$Site_TA,
+        modified_TA = df$modified_TA,
+        year = if(include_year) df$Year else NULL,
+        season = if(include_season) df$Season else NULL,
+        algae_percent_cover = df$Algae_Cover,
+        algae_count = df$Algae_Count
+      )
       
+      # Remove rows with missing or non-numeric values in algae_percent_cover
       algae_data <- algae_data[complete.cases(algae_data$algae_percent_cover) & is.numeric(algae_data$algae_percent_cover), ]
+      
       return(algae_data)
     }
     
@@ -358,45 +311,20 @@
     # include_year: selection if the dataframe should include the year or not - TRUE for SPES data for yearly analysis
     # include_season: selection if the dataframe should include the season or not - TRUE for SPES and ENVR data for seasonal analysis
     select_invertebrate <- function(df, include_year = TRUE, include_season = TRUE) {
-      if (include_year & include_season) {
-        invertebrates_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          year = df$Year,
-          season = df$Season,
-          invert_percent_cover = df$Invertebrates_Cover,
-          sessile_count = df$Sessile_Invertebrates_Count,
-          mobile_count = df$Mobile_Invertebrates_Count
-        )
-      } else if (include_year & !include_season) {
-        invertebrates_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          year = df$Year,
-          invert_percent_cover = df$Invertebrates_Cover,
-          sessile_count = df$Sessile_Invertebrates_Count,
-          mobile_count = df$Mobile_Invertebrates_Count
-        )
-      } else if (!include_year & include_season) {
-        invertebrates_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          season = df$Season,
-          invert_percent_cover = df$Invertebrates_Cover,
-          sessile_count = df$Sessile_Invertebrates_Count,
-          mobile_count = df$Mobile_Invertebrates_Count
-        )
-      } else {
-        invertebrates_data <- data.frame(
-          site_TA = df$Site_TA,
-          modified_TA = df$modified_TA,
-          invert_percent_cover = df$Invertebrates_Cover,
-          sessile_count = df$Sessile_Invertebrates_Count,
-          mobile_count = df$Mobile_Invertebrates_Count
-        )
-      }
+      # Subset the data based on the selected options
+      invertebrates_data <- data.frame(
+        site_TA = df$Site_TA,
+        modified_TA = df$modified_TA,
+        year = if(include_year) df$Year else NULL,
+        season = if(include_season) df$Season else NULL,
+        invert_percent_cover = df$Invertebrates_Cover,
+        sessile_count = df$Sessile_Invertebrates_Count,
+        mobile_count = df$Mobile_Invertebrates_Count
+      )
       
+      # Remove rows with missing or non-numeric values in invert_percent_cover
       invertebrates_data <- invertebrates_data[complete.cases(invertebrates_data$invert_percent_cover) & is.numeric(invertebrates_data$invert_percent_cover), ]
+      
       return(invertebrates_data)
     }
     
@@ -463,7 +391,7 @@
     
 # SPES Data Analysis
 #=================================================================================================================================
-# SPES visualization functions - DONE
+# SPES visualization functions
   #=================================================================================================================================
   # Generate a plot of the mean count/size measurements of an organism at the three sampled sites
     # df: The dataframe that contains the variable being plotted
@@ -562,7 +490,7 @@
 
   #=================================================================================================================================
   
-# Transect data visualizations and statistics - DONE
+# Transect data visualizations and statistics
   #=================================================================================================================================
   # Density of sea stars per TA from summer 2019-2023
     SS_density_SPES <- plot_SPES(transect_SPES, "Density_of_Sea_Stars_Count", 
@@ -589,7 +517,7 @@
       plot_mottled_SPES 
   #=================================================================================================================================
       
-# Limpet size distribution visualizations and statistics -DONE
+# Limpet size distribution visualizations and statistics
   #=================================================================================================================================
   # Limpet length per-TA from summer 2019-2023
     limpet_length_SPES <- plot_SPES(limpet_SPES, "Mean_Length_mm",
@@ -624,7 +552,7 @@
             # p-value = 0.0017
   #=================================================================================================================================
       
-# 1m quadrat data visualization and analysis - DONE
+# 1m quadrat data visualization and analysis
   #=================================================================================================================================
   # Density of littorine snails per TA from summer 2019-2023
     Lit_density_TA <- plot_SPES(quad1m_SPES, "Littorine_snails", 
@@ -681,7 +609,7 @@
               # p-value = 0.874
   #=================================================================================================================================
     
-# 0.25m quadrat data visualization and analysis - DONE
+# 0.25m quadrat data visualization and analysis
   #=================================================================================================================================
   # Total and proportional percent cover of algae and invertebrates per TA from summer 2019-2023
    # Select data
@@ -825,7 +753,7 @@
 
 # ENVR 400 2024 Data Analysis
 #=================================================================================================================================
-# ENVR 400 2024 visualization functions - DONE
+# ENVR 400 2024 visualization functions
   #=================================================================================================================================
   # Colours of the three sampled sites (TA-1, TA-4, and TA-6)
     # skyblue2: TA-1
@@ -903,7 +831,7 @@
   
   #=================================================================================================================================
 
-# Transect - DONE 
+# Transect
   #=================================================================================================================================
   # Density of sea stars per TA 
     SS_density_ENVR <- plot_ENVR(transect_ENVR, "Density_of_Sea_Stars_Count", "Mean Count of Sea Stars",
@@ -936,7 +864,7 @@
       plot_mottled_ENVR
   #=================================================================================================================================
 
-# Limpet data - DONE
+# Limpet data
   #=================================================================================================================================
   # Limpet length per sampled TA
     limpet_length_ENVR <- plot_ENVR(limpet_ENVR, "Mean_Length_mm", "Mean Length (mm)", 
@@ -961,7 +889,7 @@
         # p-value = 0.000953
   #=================================================================================================================================
 
-# 0.25m Quadrat - DONE
+# 0.25m Quadrat
   #=================================================================================================================================
   # Total and proportional percent cover of algae and invertebrates per sampled TA
     # Select data
@@ -1093,7 +1021,7 @@
 
 # Combined SPES and ENVR 400 Seasonal Analysis  
 #=================================================================================================================================
-# Combined analysis functions - FINISH DOCUMENTATION, need to look into aggregate cover data
+# Combined analysis functions
   #=================================================================================================================================
   # Select TA-1, 4 and 6 from SPES data - the TAs which were also sampled in ENVR data
     # df: dataframe which contains the SPES data to be filtered by sampled TAs
@@ -1143,24 +1071,6 @@
               legend.title=element_text(size=14)) # change font size of legend title
     }
 
-  # Aggregate total percent cover data for the percent cover plots
-    # 
-    aggregate_cover_data_seasonal <- function(df, cover_cols, season_col = "season", site_TA_col = "site_TA", modified_TA_col = "modified_TA") {
-      # Aggregate mean cover data
-      cover_agg <- aggregate(. ~ season + site_TA + modified_TA, data = df[, c(cover_cols, season_col, site_TA_col, modified_TA_col)], FUN = mean, na.action = na.omit)
-      
-      # Aggregate standard deviation of cover data
-      cover_agg_sd <- aggregate(df[[cover_cols[3]]] ~ season + site_TA + modified_TA, data = df[, c(cover_cols[3], season_col, site_TA_col, modified_TA_col)], FUN = function(x) sd(x, na.rm = TRUE), na.action = na.omit)
-      
-      # Rename the standard deviation column
-      colnames(cover_agg_sd) <- c(season_col, site_TA_col, modified_TA_col, "cover_sd")
-      
-      # Merge aggregated data
-      cover_merge <- merge(cover_agg, cover_agg_sd, by = c(season_col, site_TA_col, modified_TA_col))
-      
-      return(cover_merge)
-    }
-    
   # Aggregate seasonal algae and invertebrate percent cover and count data for their respective plots
     # df: The dataframe which contains the data to be aggregated
     # percent_cover_col: The column which contains the algae or invertebrates percent cover data
@@ -1216,7 +1126,7 @@
     }
   #=================================================================================================================================
     
-# Transect data - DONE
+# Transect data
   #=================================================================================================================================
    # Density of sea stars at each measured site (TA-1,4, and 6) from spring/summer 2023-winter 2024
     # Determine mean count and standard deviation of SPES and ENVR data
@@ -1240,7 +1150,7 @@
       
   #=================================================================================================================================
     
-# Limpet data - DONE
+# Limpet data
   #=================================================================================================================================
     # Seasonal limpet length from spring/summer 2023 - winter 2024
       # Aggregate length data by season
@@ -1284,7 +1194,7 @@
             # p-value = 1.287e-13
   #=================================================================================================================================
 
-# 0.25m data - ALGAE AND INVERT NOT SELECTING CORRECTLY
+# 0.25m data
   #=================================================================================================================================
   # Total and proportional percent cover of algae and invertebrates per sampled TA from spring/summer 2023-winter 2024
     # Select Data
@@ -1328,8 +1238,8 @@
       algae_ENVR_seasonal <- select_algae(quad0.25m_ENVR, include_year = FALSE, include_season = TRUE)
     
     # Aggregate and combine data  
-      algae_SPES_seasonal_total <- aggregate_count_data_seasonal(algae_SPES_seasonal, "algae_percent_cover", "algae_count")  
-      algae_ENVR_seasonal_total <- aggregate_count_data_seasonal(algae_ENVR_seasonal, "algae_percent_cover", "algae_count")  
+      algae_SPES_seasonal_total <- aggregate_cover_count_seasonal(algae_SPES_seasonal, "algae_percent_cover", "algae_count")  
+      algae_ENVR_seasonal_total <- aggregate_cover_count_seasonal(algae_ENVR_seasonal, "algae_percent_cover", "algae_count")  
         
       algae_agg_combined <- rbind(algae_SPES_seasonal_total$total, algae_ENVR_seasonal_total$total)
       algae_agg_sd_combined <- rbind(algae_SPES_seasonal_total$percent_sd, algae_ENVR_seasonal_total$percent_sd)
@@ -1374,8 +1284,8 @@
       invert_ENVR_seasonal <- select_invertebrate(quad0.25m_ENVR, include_year = FALSE, include_season = TRUE)
       
       # Aggregate the data according to site and season   
-          invert_SPES_seasonal_total <- aggregate_count_data_seasonal(invert_SPES_seasonal, "invert_percent_cover", "sessile_count", "mobile_count")  
-          invert_ENVR_seasonal_total <- aggregate_count_data_seasonal(invert_ENVR_seasonal, "invert_percent_cover", "sessile_count", "mobile_count")  
+          invert_SPES_seasonal_total <- aggregate_cover_count_seasonal(invert_SPES_seasonal, "invert_percent_cover", "sessile_count", "mobile_count")  
+          invert_ENVR_seasonal_total <- aggregate_cover_count_seasonal(invert_ENVR_seasonal, "invert_percent_cover", "sessile_count", "mobile_count")  
       
       # Combine the standard deviation aggregation with the percent cover and count columns    
           invert_agg_combined <- rbind(invert_SPES_seasonal_total$total, invert_ENVR_seasonal_total$total)

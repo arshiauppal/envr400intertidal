@@ -400,6 +400,34 @@ select_invertebrate <- function(df, include_year = TRUE, include_season = TRUE) 
   return(invertebrates_data)
 }
 
+select_invertebrate <- function(df, include_year = TRUE, include_season = TRUE) {
+  # Check for necessary columns and print a message if any are missing
+  required_columns <- c("site_TA", "modified_TA", "Invertebrates_Cover", "Sessile_Invertebrates_Count", "Mobile_Invertebrates_Count")
+  if (include_year) {
+    required_columns <- c(required_columns, "Year")
+  }
+  if (include_season) {
+    required_columns <- c(required_columns, "Season")
+  }
+  
+  missing_cols <- setdiff(required_columns, names(df))
+  if (length(missing_cols) > 0) {
+    stop(paste("Missing required columns:", paste(missing_cols, collapse=", ")))
+  }
+  
+  # Dynamically create the data frame based on input flags
+  invertebrates_data <- df[, required_columns, drop = FALSE]
+  
+  # Ensure that invertebrate cover is numeric and filter complete cases
+  if (!is.numeric(df$Invertebrates_Cover)) {
+    stop("Invertebrates_Cover must be numeric")
+  }
+  
+  invertebrates_data <- invertebrates_data[complete.cases(invertebrates_data), ]
+  
+  return(invertebrates_data)
+}
+
 # Aggregate algae and invertebrate percent cover and count data for their respective plots
 # df: The dataframe which contains the data to be aggregated
 # percent_cover_col: The column which contains the algae or invertebrates percent cover data
@@ -765,8 +793,8 @@ summary(AlgaeCover_Site_anova)
 invert_SPES <- select_invertebrate(quad0.25m_SPES, include_year = TRUE, include_season = FALSE)
 
 # Aggregate and merge data  
-invert_SPES <- aggregate_count_data(invert_SPES, "invert_percent_cover", "sessile_count", "mobile_count")  
-invert_SPES_total <- merge(invert_SPES$total, invert_SPES$percent_sd, by = c("site_TA", "modified_TA", "year"))
+invert_SPES <- aggregate_count_data(invert_SPES, "Invertebrates_cover", "Sessile_Invertebrates_Count", "Mobile_Invetebrates_count")  
+invert_SPES_total <- merge(invert_SPES$total, invert_SPES$percent_sd, by = c("Site_TA", "modified_TA", "Year"))
 
 # Plot data  
 invert_cover_count_SPES <- ggplot(data = invert_SPES_total, aes(x = year, y = percent_cover)) +
@@ -1037,7 +1065,7 @@ summary(AlgaeCover_ENVR_anova)
 
 # Percent cover of invertebrates and count of sessile and mobile species per TA from summer 2019-2023
 # Select data
-invert_ENVR <- select_invertebrate(quad0.25m_ENVR, include_year = FALSE, include_season = FALSE)
+invert_ENVR <- select_invertebrate(quad0.25m_ENVR, include_year = TRUE, include_season = TRUE)
 
 # Aggregate and merge data  
 invert_ENVR <- aggregate_count_data(invert_quad0.25m_ENVR, "invert_percent_cover", "sessile_count", "mobile_count")  
